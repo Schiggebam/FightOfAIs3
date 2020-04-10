@@ -26,6 +26,8 @@ class AI_Barbaric(AI):
         self.previous_army_strength = -1
         self.previous_amount_of_buildings = -1
         self.issue_attack = False                   # make sure this is set to true if the AI commands an attack
+        # values to move to the xml file:
+        self.safety_dist_to_enemy_army = 3
 
     def do_move(self, ai_stat: AI_GameStatus, move: AI_Move):
         self.update_diplo_events(ai_stat)
@@ -191,7 +193,7 @@ class AI_Barbaric(AI):
                 dist_to_army = AI_Toolkit.getDistance(target_tile,
                                                       AI_Toolkit.get_tile_by_xy(ai_stat.armies[0].offset_coordinates,
                                                                                 ai_stat.tiles_walkable))
-                if dist_to_army >= 3:
+                if dist_to_army >= self.safety_dist_to_enemy_army:
                     hint("AI Barbaric: Enemy army far enough away, no need to evade.")
                     return -1, -1
                 for nei in AI_Toolkit.getListDistanceOne(ai_stat.armies[0], ai_stat.tiles_walkable):

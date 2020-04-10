@@ -96,14 +96,14 @@ class PanelLogBattle(SimplePanel):
         super().__init__(center_x, center_y, "Battle", scale=1)
         if log.log_type == LogType.BATTLE_ARMY_VS_ARMY:
             self.attacker = "Attacker (army): " + str(log.init_strength_attacker) + \
-                            " > " + str(log.attacker.strength)
+                            " > " + str(log.after_attacker_strength)
             self.defender = "Defender (army): " + str(log.init_strength_defender) + \
-                            " > " + str(log.defender.strength)
+                            " > " + str(log.after_defender_strength)
         elif log.log_type == LogType.BATTLE_ARMY_VS_BUILDING:
             self.attacker = "Attacker (army): " + str(log.init_strength_attacker) + \
-                            " > " + str(log.attacker.strength)
+                            " > " + str(log.after_attacker_strength)
             self.defender = "Defender (building): " + str(log.init_strength_defender) + \
-                            " > " + str(log.defender.defensive_value)
+                            " > " + str(log.after_defender_strength)
 
     def draw(self):
         super().draw()

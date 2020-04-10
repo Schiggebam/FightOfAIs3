@@ -1,6 +1,7 @@
 import arcade
 
 from src.ai.AI_GameStatus import AI_GameStatus, AI_Move, AI_GameInterface
+from src.misc.animation import Animator
 from src.misc.game_constants import ResourceType, hint, error
 from src.game_accessoires import Scenario, Ground, Resource, Drawable
 from src.game_file_reader import GameFileReader
@@ -18,6 +19,7 @@ class GameLogic:
         self.ai_interface: AI_GameInterface = AI_GameInterface()
         self.scenario: Scenario = Scenario()
         self.income_calc: IncomeCalculator = IncomeCalculator(self.hex_map, self.scenario)
+        self.animator: Animator = Animator()
 
         tex_dict = {}
         self.game_file_reader.read_textures_to_dict(tex_dict)
@@ -110,12 +112,13 @@ class GameLogic:
         self.toggle_fog_of_war()
         # HexMap.hex_distance(self.hex_map.get_hex_by_offset((0,0)), self.hex_map.get_hex_by_offset((2,2)))
 
-
     elapsed = float(0)
+    total_elapsed = float(0)
 
     def update(self, delta_time: float, commands :[]):
         self.__exec_command(commands)
         GameLogic.elapsed = GameLogic.elapsed + delta_time
+        GameLogic.total_elapsed = GameLogic.total_elapsed + delta_time
         if GameLogic.elapsed > float(0.6) and self.automatic:
             self.playNextTurn = True
             GameLogic.elapsed = float(0)
@@ -132,6 +135,8 @@ class GameLogic:
             self.toggle_fog_of_war()
             self.change_in_map_view = False
 
+        self.animator.update(GameLogic.total_elapsed)
+
 
     def play_players_turn(self):
         player = self.player_list[self.current_player]
@@ -144,10 +149,11 @@ class GameLogic:
 
         # continue build buildings
         for b in player.buildings:
-            if b.construction_time == 0 and b.building_state != BuildingState.ACTIVE:
-                b.set_state_active()
-            else:
-                b.construction_time = b.construction_time - 1
+            if b.building_state == BuildingState.UNDER_CONSTRUCTION:
+                if b.construction_time == 0:
+                    b.set_state_active()
+                else:
+                    b.construction_time = b.construction_time - 1
             if b.building_state == BuildingState.DESTROYED:
                 self.del_building(b, player)
 
@@ -200,6 +206,9 @@ class GameLogic:
         self.exec_ai_move(ai_move, player, costs)
         ai_status.clear()
         del ai_status
+        self.__clear_aux_sprites(1)
+        if not player.is_barbaric:
+            self.__add_aux_sprite(player.armies[0].tile, 1, "ou")
 
         hint("                          SUCCESSFULLY PLAYED TURN")
 
@@ -367,10 +376,11 @@ class GameLogic:
         for hex in player.discovered_tiles:
             if hex.ground.walkable:
                 b_set.add(hex)
-        for p in self.player_list:          # enemy buildings are walkable (to attack them)
+        for p in self.player_list:          # enemy buildings are walkable (to attack them) if they are scouted
             if p.id != player.id:
                 for b in p.buildings:
-                    b_set.add(b.tile)
+                    if b.tile in player.discovered_tiles:
+                        b_set.add(b.tile)
         return b_set
 
     def get_known_resources(self, player: Player) -> set:
@@ -465,6 +475,8 @@ class GameLogic:
         #     storage_tile = self.hex_map.get_hex_southwest(building.tile)
         #     church_tile = self.hex_map.get_hex_east(building.tile)
         #
+            #TODO append tile as associated tiles
+
         #     self.extend_building(building, mountain_tile, "vmountain")
         #     self.extend_building(building, mine_tile, "vm_nw")
         #     self.extend_building(building, church_tile, "vk_e")
@@ -474,7 +486,7 @@ class GameLogic:
 
 
     def extend_building(self, building: Building, tile: Hexagon, tex_code: str):
-        building.associated_tiles.append(tile)
+        # building.associated_tiles.append(tile)
         drawable = Drawable()
         drawable.set_sprite_pos(HexMap.offset_to_pixel_coords(tile.offset_coordinates))
         building.associated_drawables.append(drawable)
@@ -523,8 +535,9 @@ class GameLogic:
                             b.set_state_destruction()
         if is_moving:
             if self.hex_map.hex_distance(new_hex, army.tile) == 1:
+                self.animator.add_move_animation(army, new_hex.offset_coordinates, float(.4))
                 army.tile = new_hex
-                army.set_sprite_pos(HexMap.offset_to_pixel_coords(new_hex.offset_coordinates))
+                #army.set_sprite_pos(HexMap.offset_to_pixel_coords(new_hex.offset_coordinates))
                 self.__reorder_spritelist(self.z_levels[2])
             else:
                 print("Army cannot move that far")
@@ -578,6 +591,15 @@ class GameLogic:
         self.z_levels[zlvl].append(aux.sprite)
         self.__reorder_spritelist(self.z_levels[zlvl])
 
+    def __clear_aux_sprites(self, zlvl):
+        to_be_del: [arcade.Sprite] = []
+        for aux in self.scenario.aux_sprites:
+            to_be_del.append(aux)
+        for tbd in to_be_del:
+            if tbd:
+                self.__rmv_aux_sprite(tbd[zlvl].sprite, 1)
+                self.scenario.aux_sprites.remove(tbd)
+
     def __rmv_aux_sprite(self, sprite: arcade.Sprite, zlvl: int):
         self.z_levels[zlvl].remove(sprite)
 
@@ -601,10 +623,4 @@ class GameLogic:
                         for dt in p.discovered_tiles:
                             self.__add_aux_sprite(dt, 1, "ou")
             elif cmd == "clear_aux":
-                to_be_del: [arcade.Sprite] = []
-                for aux in self.scenario.aux_sprites:
-                    to_be_del.append(aux)
-                for tbd in to_be_del:
-                    if tbd:
-                        self.__rmv_aux_sprite(tbd[1].sprite, 1)
-                        self.scenario.aux_sprites.remove(tbd)
+                self.__clear_aux_sprites(1)

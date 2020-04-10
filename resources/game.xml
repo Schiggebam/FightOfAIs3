@@ -108,8 +108,8 @@
         <player2 colour="yellow" spawn_x="4" spawn_y="2" ai="expansionist"
                  army_rel_to_spawn_x="0" army_rel_to_spawn_y="-1">peter pan</player2>
         <barbar1 colour="red" spawn_x="5" spawn_y="7" ai="barbaric"
-                 army_rel_to_spawn_x="-1" army_rel_to_spawn_y="-1">Barbaric 1</barbar1>
-        <village colour="teal" spawn_x="11" spawn_y="12" ai="villager"
-                 army_rel_to_spawn_x="-1" army_rel_to_spawn_y="0">Barbaric 1</village>
+                 army_rel_to_spawn_x="-1" army_rel_to_spawn_y="-1">Barbaric 1</barbar1><!-- former 5 7-->
+        <!--<village colour="teal" spawn_x="11" spawn_y="12" ai="villager"
+                 army_rel_to_spawn_x="-1" army_rel_to_spawn_y="0">Barbaric 1</village>-->
     </players>
 </game>

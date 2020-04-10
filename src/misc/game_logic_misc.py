@@ -76,12 +76,13 @@ class Logger:
             self.log_type = log_tpye
 
     class BattleLog(Log):
-        def __init__(self, log_type: LogType, attacker: Army, defender: Union[Army, Building], init_s_attacker: int, init_s_defender):
+        def __init__(self, log_type: LogType, attacker_strength: int, defender_strength: int,
+                     init_s_attacker: int, init_s_defender):
             super().__init__(log_type)
-            self.attacker: Army = attacker
-            self.defender: Union[Army, Building] = defender
-            self.init_strength_attacker = init_s_attacker
-            self.init_strength_defender = init_s_defender
+            self.after_attacker_strength: int = attacker_strength
+            self.after_defender_strength: int = defender_strength
+            self.init_strength_attacker: int = init_s_attacker
+            self.init_strength_defender: int = init_s_defender
 
     class EventLog(Log, ):
         def __init__(self, log_type, event: int, relative_change: float, loc: (int, int), lifetime: int, player_name: str):
@@ -97,14 +98,14 @@ class Logger:
     @staticmethod
     def log_battle_army_vs_army_log(attacker: Army, defender: Army, attacker_initial_strength: int,
                                     defender_initial_strength: int):
-        log = Logger.BattleLog(LogType.BATTLE_ARMY_VS_ARMY, attacker, defender,
+        log = Logger.BattleLog(LogType.BATTLE_ARMY_VS_ARMY, attacker.strength, defender.strength,
                                attacker_initial_strength, defender_initial_strength)
         Logger.logs.put(log)
 
     @staticmethod
     def log_battle_army_vs_building(attacker: Army, defender: Building, attacker_initial_strength: int,
                                     defender_initial_strength: int):
-        log = Logger.BattleLog(LogType.BATTLE_ARMY_VS_BUILDING, attacker, defender,
+        log = Logger.BattleLog(LogType.BATTLE_ARMY_VS_BUILDING, attacker.strength, defender.defensive_value,
                                attacker_initial_strength, defender_initial_strength)
         Logger.logs.put(log)
 

@@ -43,7 +43,7 @@ class AI_Diplo:
         ai_event = AI_Diplo.AI_DiploEvent(target_id, rel_change, lifetime, event, event_str)
         ai_event.add_loc(loc)
         self.events.append(ai_event)
-        Logger.log_diplomatic_event(event, rel_change, loc, lifetime, player_name)
+        #Logger.log_diplomatic_event(event, rel_change, loc, lifetime, player_name)
 
     def calc_round(self):
         for diplo in self.diplomacy:
