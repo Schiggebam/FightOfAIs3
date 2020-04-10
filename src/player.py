@@ -3,6 +3,8 @@ from typing import Set
 from src.game_accessoires import Army
 from src.misc.building import Building
 from src.hex_map import Hexagon
+from src.misc.game_constants import BuildingType
+
 
 class Player:
     class Player_Colour:
@@ -59,4 +61,13 @@ class Player:
         # self.army = None
         self.armies: [Army] = []
         self.is_barbaric = False
+        self.is_villager = False
         self.attacked_set: Set[int] = set()     # contains a set of player ids and locations which attacked last round
+
+    def get_initial_building_type(self):
+        """returns the initial building the player will spawn with"""
+        if self.is_barbaric:
+            return BuildingType.CAMP_1
+        elif self.is_villager:
+            return BuildingType.VILLAGE
+        return BuildingType.HUT

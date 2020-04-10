@@ -39,6 +39,7 @@ class BuildingType:
     CAMP_2 = 23
     CAMP_3 = 24
     VILLA = 25
+    VILLAGE = 26
 
     @staticmethod
     def get_type_from_strcode(str_code: str) -> int:
@@ -54,6 +55,8 @@ class BuildingType:
             return BuildingType.CAMP_2
         elif str_code == "c3":
             return BuildingType.CAMP_3
+        elif str_code == "v1":
+            return BuildingType.VILLAGE
         return -1
 
 

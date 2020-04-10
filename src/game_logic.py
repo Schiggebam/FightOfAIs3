@@ -42,6 +42,7 @@ class GameLogic:
                        (int(p_info[1]['spawn_x']), int(p_info[1]['spawn_y'])),
                        p_info[1]['ai'])
             p.is_barbaric = p_info[1]['ai'] == "barbaric"
+            p.is_villager = p_info[1]['ai'] == "villager"
             p.init_army_loc = (p.spaw_loc[0] + p_info[1]['army_rel_to_spawn_x'],
                                p.spaw_loc[1] + p_info[1]['army_rel_to_spawn_y'])
             self.player_list.append(p)
@@ -96,11 +97,10 @@ class GameLogic:
             base_hex: Hexagon = self.hex_map.get_hex_by_offset(player.spaw_loc)
             player.discovered_tiles.add(base_hex)
             player.food = 10
-            b_type = BuildingType.CAMP_1 if player.is_barbaric else BuildingType.HUT
+            b_type = player.get_initial_building_type()
             b: Building = Building(base_hex, b_type, player.id)
             self.add_building(b, player)
             b.construction_time = 0
-            #b.finished_building()
             b.set_state_active()
             tmp = self.hex_map.get_neighbours_dist(base_hex, b.sight_range)
             player.discovered_tiles.update(tmp)
@@ -453,15 +453,33 @@ class GameLogic:
         self.z_levels[2].append(building.sprite)
         if building.building_type == BuildingType.FARM:
             for a in building.associated_tiles:
-                print(a.offset_coordinates)
-                d = Drawable()
-                d.set_sprite_pos(HexMap.offset_to_pixel_coords(a.offset_coordinates))
-                building.associated_drawables.append(d)
-                self.__set_sprite(d, "cf")
-                self.z_levels[2].append(d.sprite)
+                self.extend_building(building, a, "cf")
+                #d = Drawable()
+                #d.set_sprite_pos(HexMap.offset_to_pixel_coords(a.offset_coordinates))
+                #building.associated_drawables.append(d)
+                #self.__set_sprite(d, "cf")
+                #self.z_levels[2].append(d.sprite)
+        # if building.building_type == BuildingType.VILLAGE:
+        #     mountain_tile = self.hex_map.get_hex_northeast(building.tile)
+        #     mine_tile = self.hex_map.get_hex_northwest(building.tile)
+        #     storage_tile = self.hex_map.get_hex_southwest(building.tile)
+        #     church_tile = self.hex_map.get_hex_east(building.tile)
+        #
+        #     self.extend_building(building, mountain_tile, "vmountain")
+        #     self.extend_building(building, mine_tile, "vm_nw")
+        #     self.extend_building(building, church_tile, "vk_e")
+        #     self.extend_building(building, storage_tile, "vs_sw")
         self.toggle_fog_of_war()
         self.__reorder_spritelist(self.z_levels[2])
 
+
+    def extend_building(self, building: Building, tile: Hexagon, tex_code: str):
+        building.associated_tiles.append(tile)
+        drawable = Drawable()
+        drawable.set_sprite_pos(HexMap.offset_to_pixel_coords(tile.offset_coordinates))
+        building.associated_drawables.append(drawable)
+        self.__set_sprite(drawable, tex_code)
+        self.z_levels[2].append(drawable.sprite)
 
     def del_building(self, building: Building, player: Player):
         for drawable in building.associated_drawables:
