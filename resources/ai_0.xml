@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<AI>
+    <AI_1 name="expansionist">
+        <characteristics>
+            <eagerness_build>1</eagerness_build>
+            <eagerness_scout>1</eagerness_scout>
+            <eagerness_upgrade>1</eagerness_upgrade>
+        </characteristics>
+
+    </AI_1>
+    <AI_2 name="cultivated">
+        <characteristics>
+            <eagerness_build>2</eagerness_build>
+            <eagerness_scout>2</eagerness_scout>
+            <eagerness_upgrade>2</eagerness_upgrade>
+        </characteristics>
+    </AI_2>
+</AI>
