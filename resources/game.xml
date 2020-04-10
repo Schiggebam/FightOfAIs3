@@ -99,7 +99,7 @@
                  army_rel_to_spawn_x="0" army_rel_to_spawn_y="-1">peter pan</player2>
         <barbar1 colour="red" spawn_x="5" spawn_y="7" ai="barbaric"
                  army_rel_to_spawn_x="-1" army_rel_to_spawn_y="-1">Barbaric 1</barbar1>
-        <village colour="teal" spawn_x="11" spawn_y="12" ai="village"
-                 army_rel_to_spawn_x="-1" army_rel_to_spawn_y="-1">Barbaric 1</village>
+        <!--<village colour="teal" spawn_x="11" spawn_y="12" ai="village"
+                 army_rel_to_spawn_x="-1" army_rel_to_spawn_y="-1">Barbaric 1</village>-->
     </players>
 </game>
