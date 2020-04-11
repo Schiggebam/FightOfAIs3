@@ -235,7 +235,6 @@ class AI_Barbaric(AI):
     def has_been_attacked(self, ai_stat: AI_GameStatus):
         if len(ai_stat.aggressions) > 0:
             for a in ai_stat.aggressions:
-                print(a)
                 self.hostile_player.add(a)
             hint("Barbaric AI: aggression found!")
             return True

@@ -2,9 +2,9 @@
 <game>
     <textures>
         <fog_of_war code="fw" offsetX="0" offsetY="0" scale="1">../resources/map/fog_of_war.png</fog_of_war>
-        <hex_grass_flat code="gr" offsetX="0" offsetY="0" scale="1">../resources/map/grass_flat_1.png</hex_grass_flat>
-        <hex_grass_chopped code="gc" offsetX="0" offsetY="0" scale="1">../resources/map/grass_chopped_trees.png</hex_grass_chopped>
-        <water_deep code="wd" offsetX="0" offsetY="0" scale="1">../resources/map/wasser.png</water_deep>
+        <hex_grass_flat code="gr" offsetX="0" offsetY="0" scale="1">../resources/map/lg_var0.png</hex_grass_flat>
+        <hex_grass_chopped code="gc" offsetX="0" offsetY="0" scale="1">../resources/map/dg_var0.png</hex_grass_chopped>
+        <water_deep code="wd" offsetX="0" offsetY="-5" scale="1">../resources/map/water_transparent.png</water_deep>
         <rock code="r1" offsetX="0" offsetY="0" scale="1">../resources/map/small_mountain_only.png</rock>
         <forest code="f1" offsetX="0" offsetY="23" scale="1">../resources/map/forest_schatten.png</forest>
         <building_hut code="s1" offsetX="0" offsetY="15" scale="1">../resources/map/other_hut_1.png</building_hut>
@@ -28,50 +28,40 @@
         <village_storage_e code="vs_e" offsetX="0" offsetY="0" scale="1">../resources/objects/village/village_storage_e.png</village_storage_e>
         <village_storage_sw code="vs_sw" offsetX="0" offsetY="0" scale="1">../resources/objects/village/village_storage_sw.png</village_storage_sw>
         <barracks code="br" offsetX="10" offsetY="5" scale="1">../resources/objects/barracks.png</barracks>
+        <ocean code="ocean" offsetX="0" offsetY="0" scale="1">../resources/map/ocean_texture.png</ocean>
+        <!-- generated textures -->
+        <dg_lg_1_3_var_0 code="dg_lg_1_3_var_0" offsetX="0" offsetY="0" scale="1">../resources/generated/dg_lg_1_3_var_0.png</dg_lg_1_3_var_0>
+        <dg_lg_1_4_var_0 code="dg_lg_1_4_var_0" offsetX="0" offsetY="0" scale="1">../resources/generated/dg_lg_1_4_var_0.png</dg_lg_1_4_var_0>
+        <dg_lg_1_5_var_0 code="dg_lg_1_5_var_0" offsetX="0" offsetY="0" scale="1">../resources/generated/dg_lg_1_5_var_0.png</dg_lg_1_5_var_0>
+        <dg_lg_2_4_var_0 code="dg_lg_2_4_var_0" offsetX="0" offsetY="0" scale="1">../resources/generated/dg_lg_2_4_var_0.png</dg_lg_2_4_var_0>
+        <dg_lg_2_5_var_0 code="dg_lg_2_5_var_0" offsetX="0" offsetY="0" scale="1">../resources/generated/dg_lg_2_5_var_0.png</dg_lg_2_5_var_0>
+        <dg_lg_2_6_var_0 code="dg_lg_2_6_var_0" offsetX="0" offsetY="0" scale="1">../resources/generated/dg_lg_2_6_var_0.png</dg_lg_2_6_var_0>
+        <dg_lg_3_5_var_0 code="dg_lg_3_5_var_0" offsetX="0" offsetY="0" scale="1">../resources/generated/dg_lg_3_5_var_0.png</dg_lg_3_5_var_0>
+        <dg_lg_3_6_var_0 code="dg_lg_3_6_var_0" offsetX="0" offsetY="0" scale="1">../resources/generated/dg_lg_3_6_var_0.png</dg_lg_3_6_var_0>
+        <dg_lg_4_6_var_0 code="dg_lg_4_6_var_0" offsetX="0" offsetY="0" scale="1">../resources/generated/dg_lg_4_6_var_0.png</dg_lg_4_6_var_0>
+        <!-- end of generated textures -->
     </textures>
     <map>
-        wd  wd  wd  wd  wd  wd  wd  wd  wd  wd  wd  wd  wd  wd  wd  wd  wd
-          wd  gr  gr  gr  gr  gr  gr  gr  gr  gr  gr  gr  gr  gr  gr  wd  wd
-        wd  gr  gr  gr  gr  gr  gr  gr  gr  gr  gr  gr  gr  gr  gr  gr  wd
-          wd  gr  gr  gr  gr  gr  gr  gr  gr  gr  gr  gr  gr  gr  gr  wd  wd
-        wd  gr  gr  gr  gr  gr  gr  gr  gr  gr  gr  gr  gr  gr  gr  gr  wd
-          wd  gr  gr  gr  gr  gr  gr  gr  gr  gc  gc  gr  gr  gc  gr  wd  wd
-        wd  gr  gr  gr  gr  gr  gr  gr  gr  gr  gc  gc  gc  gc  gr  gr  wd
-          wd  gr  gr  gr  gr  gr  gc  gc  gr  gc  gc  gc  gc  gr  gr  wd  wd
-        wd  gr  gr  gr  gr  gr  gc  gc  gc  gc  gc  gc  gc  gc  gr  gr  wd
-          wd  gr  gr  gr  gr  gr  gc  gc  gc  gc  gc  gc  gc  gr  gr  wd  wd
-        wd  gr  gr  gr  gr  gr  gr  gr  gr  gr  gr  gr  gr  gr  gr  gr  wd
-          wd  gr  gr  gr  gr  gr  gr  gr  gr  gr  gr  gr  gr  gr  gr  wd  wd
-        wd  gr  gr  gr  gr  gr  gr  gr  gr  gr  gr  gr  gr  gr  gr  gr  wd
-          wd  gr  gr  gr  gr  gr  gr  gr  gr  gr  gr  gr  gr  gr  gr  wd  wd
-        wd  gr  gr  gr  gr  gr  gr  gr  gr  gr  gr  gr  gr  gr  gr  gr  wd
-          wd  gr  gr  gr  gr  gr  gr  gr  gr  gr  gr  gr  gr  gr  gr  wd  wd
-        wd  gr  gr  gr  gr  gr  gr  gr  gr  gr  gr  gr  gr  gr  gr  gr  wd
-          wd  gr  gr  gr  gr  gr  gr  gr  gr  gr  gr  gr  gr  gr  gr  wd  wd
-        wd  gr  gr  gr  gr  gr  gr  gr  gr  gr  gr  gr  gr  gr  gr  gr  wd
-          wd  gr  gr  gr  gr  gr  gr  gr  gr  gr  gr  gr  gr  gr  gr  wd  wd
-        wd  wd  wd  wd  wd  wd  wd  wd  wd  wd  wd  wd  wd  wd  wd  wd  wd
+        wd  wd  wd  wd  wd  wd  wd  wd
+          wd  gr  gr  gr  gr  gr  wd  wd
+        wd  gr  gr  xx  xx  gr  gr  wd
+          wd  gr  xx  gc  xx  gr  wd  wd
+        wd  gr  xx  gc  gc  xx  gr  wd
+          wd  gr  xx  gc  xx  gr  wd  wd
+        wd  gr  gr  xx  xx  gr  wd  wd
+          wd  gr  gr  gr  gr  wd  wd  wd
+        wd  wd  wd  wd  wd  wd  wd  wd
+
     </map>
     <map_obj>
-        --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --
-          --  --  --  --  --  --  --  --  --  --  --  --  r1  r1  --  --  --
-        --  --  --  --  --  --  --  --  --  --  --  --  r1  f1  r1  --  --
-          --  --  --  --  --  --  --  --  --  --  --  --  r1  r1  --  --  --
-        --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --
-          --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --
-        --  --  --  --  --  --  f1  --  --  --  --  --  --  --  --  --  --
-          --  --  --  --  --  f1  f1  --  --  --  --  --  --  --  --  --  --
-        --  --  --  --  --  --  f1  --  --  --  --  --  --  --  --  --  --
-          --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --
-        --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --
-          --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --
-        --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --
-          --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --
-        --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --
-          --  --  r1  r1  --  --  --  --  r1  r1  --  --  --  --  --  --  --
-        --  --  --  r1  --  --  --  --  --  r1  --  --  --  --  --  --  --
-          --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --
-        --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --
+        --  --  --  --  --  --
+          --  --  --  --  --  --
+        --  --  --  --  --  --
+          --  --  --  --  --  --
+        --  --  --  --  --  --
+          --  --  --  --  --  --
+        --  --  --  --  --  --
+
     </map_obj>
     <resources>
         <rock code="r1" amount="100">description</rock>
@@ -109,10 +99,10 @@
     <players>
         <!--<player1 colour="red" spawn_x="2" spawn_y="2" ai="expansionist"
                  army_rel_to_spawn_x="-1" army_rel_to_spawn_y="-1">peter pan</player1>-->
-        <player2 colour="yellow" spawn_x="4" spawn_y="2" ai="expansionist"
-                 army_rel_to_spawn_x="0" army_rel_to_spawn_y="-1">peter pan</player2>
-        <barbar1 colour="red" spawn_x="5" spawn_y="7" ai="barbaric"
-                 army_rel_to_spawn_x="-1" army_rel_to_spawn_y="-1">Barbaric 1</barbar1><!-- former 5 7-->
+        <!--<player2 colour="yellow" spawn_x="4" spawn_y="2" ai="expansionist"
+                 army_rel_to_spawn_x="0" army_rel_to_spawn_y="-1">peter pan</player2>-->
+        <!--<barbar1 colour="red" spawn_x="5" spawn_y="7" ai="barbaric"
+                 army_rel_to_spawn_x="-1" army_rel_to_spawn_y="-1">Barbaric 1</barbar1>-->
         <!--<village colour="teal" spawn_x="11" spawn_y="9" ai="villager"
                  army_rel_to_spawn_x="-1" army_rel_to_spawn_y="0">Barbaric 1</village>-->
     </players>

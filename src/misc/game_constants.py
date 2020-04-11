@@ -30,6 +30,20 @@ class LogType:
     BATTLE_ARMY_VS_BUILDING = 901
     DIPLO_ENEMY_BUILDING_SCOUTED = 902
 
+#ground
+class GroundType:
+    GRASS = 0
+    WATER_DEEP = 1
+    OTHER = 2
+
+    @staticmethod
+    def get_type_from_strcode(str_code: str):
+        if str_code == "gr" or str_code == "gc":
+            return GroundType.GRASS
+        elif str_code == "wd":
+            return GroundType.WATER_DEEP
+        return GroundType.OTHER
+
 
 # buildings
 class BuildingType:
@@ -40,6 +54,7 @@ class BuildingType:
     CAMP_3 = 24
     VILLA = 25
     VILLAGE = 26
+    BARRACKS = 27
 
     @staticmethod
     def get_type_from_strcode(str_code: str) -> int:
@@ -57,6 +72,8 @@ class BuildingType:
             return BuildingType.CAMP_3
         elif str_code == "v1":
             return BuildingType.VILLAGE
+        elif str_code == "br":
+            return BuildingType.BARRACKS
         return -1
 
 

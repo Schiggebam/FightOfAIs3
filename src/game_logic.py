@@ -8,7 +8,8 @@ from src.game_file_reader import GameFileReader
 from src.hex_map import HexMap, MapStyle, Hexagon
 from src.texture_store import TextureStore
 from src.misc.game_logic_misc import *
-from typing import Optional
+from typing import Optional, List
+
 
 class GameLogic:
     def __init__(self, game_xml_file: str, z_levels: [arcade.SpriteList]):
@@ -67,21 +68,39 @@ class GameLogic:
 
         # setup hex map
         self.hex_map = HexMap((len(map_data[0]), len(map_data)), MapStyle.S_V_C)
-        self.income_calc.hex_map = self.hex_map         # make sure to set the hex_map everywhere. Ugly!
+        self.income_calc.hex_map = self.hex_map         # TODO make sure to set the hex_map everywhere. Ugly!
+
+        #TODO do this somewhere else
+        background: List[Drawable] = []
+        x_off = 213
+        y_off = 165
+        for x in range(3):
+            for y in range(3):
+                d = Drawable()
+                d.set_sprite_pos((x_off * x, y_off * y))
+                self.__set_sprite(d, "ocean")
+                self.z_levels[0].append(d.sprite)
 
         #map
         for y in range(len(map_data)-1, -1, -1):
             for x in range(len(map_data[y])):
                 hex: Hexagon = self.hex_map.get_hex_by_offset((x, y))
-                ground: Ground = Ground(hex, map_data[y][x])
+                ground: Ground = Ground(map_data[y][x])
                 hex.ground = ground
                 ground.set_sprite_pos(HexMap.offset_to_pixel_coords((x, y)))
                 ground.add_texture(self.texture_store.get_texture("fw"))
-                ground.add_texture(self.texture_store.get_texture(map_data[y][x]))
-                ground.set_tex_offset(self.texture_store.get_tex_offest(map_data[y][x]))
-                ground.set_tex_scale(self.texture_store.get_tex_scale(map_data[y][x]))
+                # ground.add_texture(self.texture_store.get_texture(map_data[y][x]))
+                # ground.set_tex_offset(self.texture_store.get_tex_offest(map_data[y][x]))
+                # ground.set_tex_scale(self.texture_store.get_tex_scale(map_data[y][x]))
                 ground.tex_code = map_data[y][x]
-                self.z_levels[0].append(ground.sprite)
+                self.z_levels[1].append(ground.sprite)
+
+        from src.misc.smooth_map import SmoothMap
+        SmoothMap.smooth_map(self.hex_map)
+
+        # assign textures
+        for hexagon in self.hex_map.map:
+            self.__set_sprite(hexagon.ground, hexagon.ground.tex_code)
 
         for map_obj in map_obj_data:
             hex: Hexagon = self.hex_map.get_hex_by_offset((map_obj[1], map_obj[2]))
@@ -428,17 +447,22 @@ class GameLogic:
 
     def toggle_fog_of_war(self):
         v = 255 if self.map_hack else 0
-        for player in self.player_list:
-            for hex in self.hex_map.map:
-                 hex.ground.set_active_texture(1 if self.map_hack else 0)
         for res in self.scenario.resource_list:
             res.sprite.alpha = v
-        for player in self.player_list:
-            for b in player.buildings:
-                b.sprite.alpha = v
-                for a in b.associated_drawables:
-                    a.sprite.alpha = v
-            self.update_fog_of_war(player)
+        if len(self.player_list) == 0:
+            for hex in self.hex_map.map:
+                 hex.ground.set_active_texture(1 if self.map_hack else 0)
+        else:
+            for player in self.player_list:
+                for hex in self.hex_map.map:
+                     hex.ground.set_active_texture(1 if self.map_hack else 0)
+
+            #for player in self.player_list:
+                for b in player.buildings:
+                    b.sprite.alpha = v
+                    for a in b.associated_drawables:
+                        a.sprite.alpha = v
+                self.update_fog_of_war(player)
 
     def add_resource(self, resource: Resource):
         self.scenario.resource_list.append(resource)

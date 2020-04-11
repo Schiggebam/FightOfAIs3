@@ -67,7 +67,6 @@ class AI_Diplo:
 
 
 class AI:
-
     def __init__(self, name, other_players_ids: [int]):
         self.name = name
         self.diplomacy: AI_Diplo = AI_Diplo(other_players_ids)
@@ -76,3 +75,9 @@ class AI:
     def do_move(self, ai_state, move):
         raise NotImplementedError("Please Implement this method")
 
+
+
+#class NonPlayerAI(AI):
+#    def __init__(self, name: str, other_players_ids: [int]):
+#        super().__init__(name, other_players_ids)
+#

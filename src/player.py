@@ -71,3 +71,4 @@ class Player:
         elif self.is_villager:
             return BuildingType.VILLAGE
         return BuildingType.HUT
+

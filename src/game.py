@@ -13,7 +13,7 @@ SCREEN_TITLE = "Fight of AIs"
 DEBUG = True
 NUM_Z_LEVELS = 4
 
-GAME_XML_FILE = "../resources/game.xml"
+GAME_XML_FILE = "../resources/smooth_game.xml"
 SETUP_COMMANDS = "../resources/initial_commands.txt"
 
 

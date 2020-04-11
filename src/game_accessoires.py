@@ -3,7 +3,7 @@ from enum import Enum
 import arcade
 
 from src.hex_map import Hexagon
-from src.misc.game_constants import ResourceType, error, hint
+from src.misc.game_constants import ResourceType, error, hint, GroundType
 
 
 class Drawable:
@@ -42,24 +42,12 @@ class Drawable:
 
 
 class Ground(Drawable):
-    class GroundType(Enum):
-        GRASS = 0
-        WATER_DEEP = 1
 
-        @staticmethod
-        def get_type_from_strcode(str_code: str):
-            if str_code == "gr" or str_code == "gc":
-                return Ground.GroundType.GRASS
-            elif str_code == "wd":
-                return Ground.GroundType.WATER_DEEP
-            return -1
-    # end of class GroundType
-
-    def __init__(self, tile: Hexagon, str_code: str):
+    def __init__(self, str_code: str):
         super().__init__()
         self.walkable: bool = False
         self.buildable: bool = False
-        self.ground_type: Ground.GroundType = Ground.GroundType.get_type_from_strcode(str_code)
+        self.ground_type: GroundType = GroundType.get_type_from_strcode(str_code)
 
 class Resource(Drawable):
     """class ResourceType(Enum):
