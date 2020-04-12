@@ -34,12 +34,15 @@ class LogType:
 class GroundType:
     GRASS = 0
     WATER_DEEP = 1
-    OTHER = 2
+    STONE = 2
+    OTHER = 3
 
     @staticmethod
     def get_type_from_strcode(str_code: str):
         if str_code == "gr" or str_code == "gc":
             return GroundType.GRASS
+        elif str_code == "st":
+            return GroundType.STONE
         elif str_code == "wd":
             return GroundType.WATER_DEEP
         return GroundType.OTHER

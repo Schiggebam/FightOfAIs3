@@ -23,6 +23,7 @@ import glob, os
 
 # ROOT_STORE:
 ROOT = "../../resources/generated/"
+ROOT_FORESTS = "../../resources/objects/forests/"
 TILE_WIDTH = 66
 TILE_HIGHT = 64
 
@@ -50,16 +51,16 @@ def generate_merged_textures(path_tex_1: str, path_tex_2: str, res_str: str, inv
             print(current_mask.size)
             if current_mask.size == (66, 66):
                 current_mask = current_mask.crop((0, 2, TILE_WIDTH, TILE_HIGHT+2)).convert('L')
-            if not inv:             # stored the textures the wrong way:/
-                current_mask = ImageOps.invert(current_mask)
+            # if not inv:
+            #     current_mask = ImageOps.invert(current_mask)
 
         else:
             current_mask = masks[3]
             current_mask = current_mask.crop((MAKS_OFFSET[i-3][0], MAKS_OFFSET[i-3][1],
                                           MAKS_OFFSET[i-3][0] + TILE_WIDTH,
                                           MAKS_OFFSET[i-3][1] + TILE_HIGHT)).convert('L')
-            if inv:
-                current_mask = ImageOps.invert(current_mask)
+        if inv:
+            current_mask = ImageOps.invert(current_mask)
 
         res = Image.composite(tex_1, tex_2, current_mask)
         #res.save(ROOT + res_str + "_" + MASK_CODE[i] + "_var_" + str(var) + '.png', quality=95)
@@ -68,16 +69,22 @@ def generate_merged_textures(path_tex_1: str, path_tex_2: str, res_str: str, inv
 
 def generate_texture_info():
     cur_dir = os.curdir
-    os.chdir(ROOT)
+    os.chdir(ROOT_FORESTS)
     print("<!-- generated textures -->")
     for file in glob.glob("*.png"):
         name = file.split('.')[0]
-        s = '<{} code="{}" offsetX="0" offsetY="0" scale="1">{}{}</{}>'.format(name, name, "../resources/generated/",                                                                     file, name)
+        s = '\t \t<{} code="{}" offsetX="0" offsetY="0" scale="1">{}{}</{}>'.format(name, name,
+                                                                                    "../resources/objects/forests/", file, name)
         print(s)
-    print("<!-- end of generated textures -->")
+    print("\t \t<!-- end of generated textures -->")
 
     os.chdir(cur_dir)
 
-generate_merged_textures("lg_var0.png", "dg_var0.png", "dg_lg")
+# generate_merged_textures("lg_var0.png", "dg_var0.png", "dg_lg")
+# generate_merged_textures("dg_var0.png", "lg_var0.png", "lg_dg")
+# generate_merged_textures("stone_var0.bmp", "lg_var0.png", "st_lg")
+# generate_merged_textures("lg_var0.png", "stone_var0.bmp", "lg_st")
+# generate_merged_textures("stone_var0.bmp", "dg_var0.png", "st_dg")
+# generate_merged_textures("dg_var0.png", "stone_var0.bmp", "dg_st")
 
 generate_texture_info()

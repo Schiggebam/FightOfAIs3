@@ -2,7 +2,7 @@ import arcade
 
 from src.ai.AI_GameStatus import AI_GameStatus, AI_Move, AI_GameInterface
 from src.misc.animation import Animator
-from src.misc.game_constants import ResourceType, hint, error
+from src.misc.game_constants import ResourceType, hint, error, GroundType
 from src.game_accessoires import Scenario, Ground, Resource, Drawable
 from src.game_file_reader import GameFileReader
 from src.hex_map import HexMap, MapStyle, Hexagon
@@ -74,10 +74,10 @@ class GameLogic:
         background: List[Drawable] = []
         x_off = 213
         y_off = 165
-        for x in range(3):
-            for y in range(3):
+        for x in range(6):
+            for y in range(5):
                 d = Drawable()
-                d.set_sprite_pos((x_off * x, y_off * y))
+                d.set_sprite_pos((x_off * x + 100, y_off * y))
                 self.__set_sprite(d, "ocean")
                 self.z_levels[0].append(d.sprite)
 
@@ -104,7 +104,16 @@ class GameLogic:
 
         for map_obj in map_obj_data:
             hex: Hexagon = self.hex_map.get_hex_by_offset((map_obj[1], map_obj[2]))
-            if map_obj[0] == "r1" or map_obj[0] == "g1" or map_obj[0] == "f1":                            # if resource
+            if map_obj[0] == "f2":
+                # get str_code with variance
+                import random
+                var = random.randint(0, 6)
+                var = 0
+                r: Resource = Resource(hex, ResourceType.FOREST)
+                r.tex_code = "forest_3_var{}".format(var)
+                self.add_resource(r)
+
+            elif map_obj[0] == "r1" or map_obj[0] == "g1" or map_obj[0] == "f1":                            # TODO if resource
                 r: Resource = Resource(hex, ResourceType.get_type_from_strcode(map_obj[0]))
                 r.tex_code = map_obj[0]
                 self.add_resource(r)
@@ -145,9 +154,9 @@ class GameLogic:
         if self.playNextTurn:
             if self.current_player == 0:  # next time player 0 plays -> new turn
                 self.turn_nr = self.turn_nr + 1
-
-            self.play_players_turn()
-            self.current_player = (self.current_player + 1) % len(self.player_list)
+            if len(self.player_list) > 0:
+                self.play_players_turn()
+                self.current_player = (self.current_player + 1) % len(self.player_list)
 
         self.playNextTurn = False
         if self.change_in_map_view:
@@ -234,10 +243,10 @@ class GameLogic:
     def updata_map(self):
         """this function makes sure that the map remains well defined"""
         for hex in self.hex_map.map:
-            if hex.ground.ground_type == Ground.GroundType.GRASS:
+            if hex.ground.ground_type == GroundType.GRASS or hex.ground.ground_type == GroundType.STONE:
                 hex.ground.walkable = True
                 hex.ground.buildable = True
-            elif hex.ground.ground_type == Ground.GroundType.WATER_DEEP:
+            elif hex.ground.ground_type == GroundType.WATER_DEEP:
                 hex.ground.walkable = False
                 hex.ground.buildable = False
 
