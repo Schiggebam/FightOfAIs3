@@ -4,6 +4,7 @@ import timeit
 
 from src.console import Console
 from src.game_logic import GameLogic
+from src.misc.game_constants import CAMERA_SENSITIVITY
 from src.ui.ui import UI
 
 SCREEN_WIDTH = 1280
@@ -19,16 +20,65 @@ SETUP_COMMANDS = "../resources/initial_commands.txt"
 
 class ZlvlRenderer:
     def __init__(self, num_levels):
+        self.camera_x = 0
+        self.camera_y = 0
+        self.rel_x = 0
+        self.rel_y = 0
+        self.camera_has_moved = False
         self.z_levels: [arcade.SpriteList] = []
         for i in range(num_levels):
             self.z_levels.append(arcade.SpriteList())
         self.ui = None
+        self.gl = None
+        self.up_key = False
+        self.down_key = False
+        self.left_key = False
+        self.right_key = False
 
     def render(self):
         for z in self.z_levels:
             z.draw()
         self.ui.draw()
 
+    def update_camera(self, rel_x, rel_y):
+        #self.rel_x = rel_x
+        #self.rel_y = rel_y
+        #self.camera_has_moved = True
+        pass
+
+    def update(self, delta_t: float):
+        rel = int(float(CAMERA_SENSITIVITY) * delta_t)
+        if self.up_key:
+            self.camera_has_moved = True
+            self.rel_y = rel
+            self.camera_y = self.camera_y + self.rel_y
+        elif self.down_key:
+            self.camera_has_moved = True
+            self.rel_y = - rel
+            self.camera_y = self.camera_y + self.rel_y
+        if self.left_key:
+            self.camera_has_moved = True
+            self.rel_x = - rel
+            self.camera_x = self.camera_x + self.rel_x
+        elif self.right_key:
+            self.camera_has_moved = True
+            self.rel_x = rel
+            self.camera_x = self.camera_x + self.rel_x
+
+        if self.camera_has_moved:
+            for s_list in self.z_levels:
+                for sp in s_list:
+                    sp.center_x = sp.center_x + self.rel_x
+                    sp.center_y = sp.center_y + self.rel_y
+            #self.camera_x = self.camera_x + self.rel_x
+            #self.camera_y = self.camera_y + self.rel_y
+            print("CAMERA: " + str(self.camera_x) + "|" + str(self.camera_y))
+            self.gl.set_camera_pos(self.camera_x, self.camera_y)
+            self.gl.animator.camera_pos = (self.camera_x, self.camera_y)
+            self.ui.camera_pos = (self.camera_x, self.camera_y)
+            self.camera_has_moved = False
+            self.rel_x = 0
+            self.rel_y = 0
 
 
 class Game(arcade.Window):
@@ -43,6 +93,7 @@ class Game(arcade.Window):
         self.console: Console = Console()
         self.ui = UI(self.game_logic, SCREEN_WIDTH, SCREEN_HEIGHT)
         self.z_level_renderer.ui = self.ui
+        self.z_level_renderer.gl = self.game_logic
 
 
         self.commands: [(str, str)] = []
@@ -65,6 +116,7 @@ class Game(arcade.Window):
         self.commands.extend(self.console.get())
         self.game_logic.update(delta_time, self.commands)
         self.ui.update()
+        self.z_level_renderer.update(delta_time)
         self.commands.clear()
 
         self.num_of_sprites = 0
@@ -102,15 +154,26 @@ class Game(arcade.Window):
     def on_mouse_release(self, x, y, button, key_modifiers):
         self.ui.check_mouse_release_for_buttons(x, y)
 
-    def on_key_press(self, key, modifiers):
+    def on_key_press(self, key: int, modifiers: int):
         if key == arcade.key.UP:
-            self.ZR.update_camera(0, 10)
+            self.z_level_renderer.up_key = True
         if key == arcade.key.DOWN:
-            self.ZR.update_camera(0, -10)
+            self.z_level_renderer.down_key = True
         if key == arcade.key.LEFT:
-            self.ZR.update_camera(-10, 0)
+            self.z_level_renderer.left_key = True
         if key == arcade.key.RIGHT:
-            self.ZR.update_camera(10, 0)
+            self.z_level_renderer.right_key = True
+
+    def on_key_release(self, key: int, modifiers: int):
+        if key == arcade.key.UP:
+            self.z_level_renderer.up_key = False
+        if key == arcade.key.DOWN:
+            self.z_level_renderer.down_key = False
+        if key == arcade.key.LEFT:
+            self.z_level_renderer.left_key = False
+        if key == arcade.key.RIGHT:
+            self.z_level_renderer.right_key = False
+
 
 
 def main():

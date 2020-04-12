@@ -2,6 +2,8 @@
 
 import arcade
 
+from src.misc.game_constants import start_progress, progress, end_progress
+
 
 class TextureStore:
 
@@ -11,13 +13,19 @@ class TextureStore:
         self.textures = {}
 
     def load_textures(self, dict_requested):
+        start_progress("loading textures")
+        total = float(len(dict_requested))
+        prog = 0
         for elem in dict_requested:
             if elem not in self.textures:
                 self.textures[elem] = (arcade.load_texture(dict_requested[elem][0]),
                                        dict_requested[elem][1],  # offsetX
                                        dict_requested[elem][2],  # offsetY
                                        dict_requested[elem][3])  # scale
-                print("tex loaded for : " + elem)
+                # print("tex loaded for : " + elem)
+            prog = prog + 1
+            progress(float(prog)/total)
+        end_progress()
 
     def get_texture(self, key):
         if key in self.textures:

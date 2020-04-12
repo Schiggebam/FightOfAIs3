@@ -58,6 +58,7 @@ class AutomaticIconButton(IconButton):
 
 class UI:
     def __init__(self, gl, screen_width, screen_height):
+        self.camera_pos = (0, 0)
         self.gl = gl # holds an instance of the game logic
         self.buttonlist = []
         self.panel_list = []
@@ -106,7 +107,7 @@ class UI:
             if hex.debug_msg != "":
                 from src.hex_map import HexMap
                 (x, y) = HexMap.offset_to_pixel_coords(hex.offset_coordinates)
-                arcade.draw_text(hex.debug_msg, x, y, arcade.color.WHITE)
+                arcade.draw_text(hex.debug_msg, x + self.camera_pos[0], y + self.camera_pos[1], arcade.color.WHITE)
 
         # bottom pane
         arcade.draw_rectangle_filled(self.screen_width/2, 50, self.screen_width, 100,
@@ -234,7 +235,7 @@ class UI:
         from src.hex_map import HexMap
         candidates = []
         for hex in self.gl.hex_map.map:
-            hex_pix = HexMap.offset_to_pixel_coords(hex.offset_coordinates)
+            hex_pix = tuple(map(sum, zip(HexMap.offset_to_pixel_coords(hex.offset_coordinates), self.camera_pos)))
             dist = sqrt(((x - hex_pix[0])*0.5 * (x - hex_pix[0])*0.5) + ((y - hex_pix[1]) * (y - hex_pix[1])))
             if dist < 30:
                 candidates.append((dist, hex))

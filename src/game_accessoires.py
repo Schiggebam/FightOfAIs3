@@ -14,9 +14,9 @@ class Drawable:
         self.tex_code = ""
         self.offset = (0, 0)
 
-    def set_sprite_pos(self, pos_pixel: (int, int)):
-        self.sprite.center_x = pos_pixel[0] + self.offset[0]
-        self.sprite.center_y = pos_pixel[1] + self.offset[1]
+    def set_sprite_pos(self, pos_pixel: (int, int), camera_pos):
+        self.sprite.center_x = pos_pixel[0] + self.offset[0] + camera_pos[0]
+        self.sprite.center_y = pos_pixel[1] + self.offset[1] + camera_pos[1]
 
     def add_texture(self, tex: arcade.Texture):
         if self.__active_tex == -1:

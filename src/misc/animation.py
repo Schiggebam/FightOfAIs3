@@ -14,6 +14,7 @@ class Animator:
             self.start_time_ms = -1
             self.finished = False
             self.drawable = drawable
+            self.camera_pos = (0, 0)
 
         def update(self, time):
             tpl = Animator.bilinear_interpolation(self.source, self.destination, self.start_time_ms,
@@ -22,7 +23,7 @@ class Animator:
                 error("Animator: serious error, we left the 2d space! len(tpl): " + str(len(tpl)))
                 hint(str(self.source))
                 hint(str(self.destination))
-            self.drawable.set_sprite_pos(tpl)
+            self.drawable.set_sprite_pos(tpl, self.camera_pos)
 
     def __init__(self):
         self.move_animations: List[Animator.MoveAnimation] = []

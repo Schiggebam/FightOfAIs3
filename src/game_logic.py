@@ -25,6 +25,7 @@ class GameLogic:
         tex_dict = {}
         self.game_file_reader.read_textures_to_dict(tex_dict)
         self.texture_store.load_textures(tex_dict)
+        self.__camera_pos: (int, int) = (0, 0)
 
         self.player_list: [Player] = []
         self.map_view: [bool] = []              # true if we show the players view, otherwise false
@@ -77,7 +78,7 @@ class GameLogic:
         for x in range(6):
             for y in range(5):
                 d = Drawable()
-                d.set_sprite_pos((x_off * x + 100, y_off * y))
+                d.set_sprite_pos((x_off * x + 100, y_off * y), self.__camera_pos)
                 self.__set_sprite(d, "ocean")
                 self.z_levels[0].append(d.sprite)
 
@@ -87,7 +88,7 @@ class GameLogic:
                 hex: Hexagon = self.hex_map.get_hex_by_offset((x, y))
                 ground: Ground = Ground(map_data[y][x])
                 hex.ground = ground
-                ground.set_sprite_pos(HexMap.offset_to_pixel_coords((x, y)))
+                ground.set_sprite_pos(HexMap.offset_to_pixel_coords((x, y)), self.__camera_pos)
                 ground.add_texture(self.texture_store.get_texture("fw"))
                 # ground.add_texture(self.texture_store.get_texture(map_data[y][x]))
                 # ground.set_tex_offset(self.texture_store.get_tex_offest(map_data[y][x]))
@@ -475,7 +476,7 @@ class GameLogic:
 
     def add_resource(self, resource: Resource):
         self.scenario.resource_list.append(resource)
-        resource.set_sprite_pos(HexMap.offset_to_pixel_coords(resource.tile.offset_coordinates))
+        resource.set_sprite_pos(HexMap.offset_to_pixel_coords(resource.tile.offset_coordinates), self.__camera_pos)
         self.__set_sprite(resource, resource.tex_code)
         self.z_levels[2].append(resource.sprite)
 
@@ -486,7 +487,7 @@ class GameLogic:
     def add_building(self, building: Building, player: Player):
         hint("adding a building")
         player.buildings.append(building)
-        building.set_sprite_pos(HexMap.offset_to_pixel_coords(building.tile.offset_coordinates))
+        building.set_sprite_pos(HexMap.offset_to_pixel_coords(building.tile.offset_coordinates), self.__camera_pos)
         self.__set_sprite(building, building.tex_code)
         building.set_state_active()
         if building.construction_time > 0:
@@ -521,7 +522,7 @@ class GameLogic:
     def extend_building(self, building: Building, tile: Hexagon, tex_code: str):
         # building.associated_tiles.append(tile)
         drawable = Drawable()
-        drawable.set_sprite_pos(HexMap.offset_to_pixel_coords(tile.offset_coordinates))
+        drawable.set_sprite_pos(HexMap.offset_to_pixel_coords(tile.offset_coordinates), self.__camera_pos)
         building.associated_drawables.append(drawable)
         self.__set_sprite(drawable, tex_code)
         self.z_levels[2].append(drawable.sprite)
@@ -534,7 +535,7 @@ class GameLogic:
 
     def add_army(self, army: Army, player: Player):
         player.armies.append(army)
-        army.set_sprite_pos(HexMap.offset_to_pixel_coords(army.tile.offset_coordinates))
+        army.set_sprite_pos(HexMap.offset_to_pixel_coords(army.tile.offset_coordinates), self.__camera_pos)
         army.is_barbaric = player.is_barbaric
         self.__set_sprite(army, "f1_" + player.colour_code)
         self.z_levels[2].append(army.sprite)
@@ -599,6 +600,9 @@ class GameLogic:
         for s in li:
             sl.append(s)
 
+    def set_camera_pos(self, pos_x, pos_y):
+        self.__camera_pos = (pos_x, pos_y)
+
     def get_map_element(self, offset_coords):
         # do this in zlvl order
         for res in self.scenario.resource_list:
@@ -619,7 +623,7 @@ class GameLogic:
     def __add_aux_sprite(self, hex: Hexagon, zlvl: int, tex_code: str):
         aux = Drawable()
         self.scenario.aux_sprites.append((hex, aux))
-        aux.set_sprite_pos(HexMap.offset_to_pixel_coords(hex.offset_coordinates))
+        aux.set_sprite_pos(HexMap.offset_to_pixel_coords(hex.offset_coordinates), self.__camera_pos)
         self.__set_sprite(aux, tex_code)
         self.z_levels[zlvl].append(aux.sprite)
         self.__reorder_spritelist(self.z_levels[zlvl])
