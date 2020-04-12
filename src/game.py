@@ -70,9 +70,6 @@ class ZlvlRenderer:
                 for sp in s_list:
                     sp.center_x = sp.center_x + self.rel_x
                     sp.center_y = sp.center_y + self.rel_y
-            #self.camera_x = self.camera_x + self.rel_x
-            #self.camera_y = self.camera_y + self.rel_y
-            print("CAMERA: " + str(self.camera_x) + "|" + str(self.camera_y))
             self.gl.set_camera_pos(self.camera_x, self.camera_y)
             self.gl.animator.camera_pos = (self.camera_x, self.camera_y)
             self.ui.camera_pos = (self.camera_x, self.camera_y)

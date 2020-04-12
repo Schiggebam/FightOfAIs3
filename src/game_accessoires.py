@@ -13,6 +13,8 @@ class Drawable:
         self.__active_tex = -1
         self.tex_code = ""
         self.offset = (0, 0)
+        self.update_interval = 0.05
+        self.__time = .0
 
     def set_sprite_pos(self, pos_pixel: (int, int), camera_pos):
         self.sprite.center_x = pos_pixel[0] + self.offset[0] + camera_pos[0]
@@ -39,6 +41,13 @@ class Drawable:
             self.__active_tex = idx
         else:
             error("Drawable: No texture at index: " + str(idx))
+
+    def next_frame(self, d_t):
+        self.__time = self.__time + d_t
+        if self.__time >= self.update_interval:
+            self.__active_tex = (self.__active_tex + 1) % (self.tex_counter+1)
+            self.sprite.set_texture(self.__active_tex)
+            self.__time = .0
 
 
 class Ground(Drawable):

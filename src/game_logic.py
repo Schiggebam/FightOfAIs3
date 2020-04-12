@@ -59,6 +59,7 @@ class GameLogic:
         self.turn_nr = 0
         self.automatic: bool = False
 
+        self.test = None
 
     def setup(self):
         """ load the game """
@@ -70,6 +71,24 @@ class GameLogic:
         # setup hex map
         self.hex_map = HexMap((len(map_data[0]), len(map_data)), MapStyle.S_V_C)
         self.income_calc.hex_map = self.hex_map         # TODO make sure to set the hex_map everywhere. Ugly!
+
+        #TODO test animated sprite
+        self.test: List[Drawable] = []
+        colours = ["red", "blue", "green", "pink", "teal", "yellow"]
+        for c in range(6):
+            d = Drawable()
+            self.test.append(d)
+            for i in range(10):
+                # tex: arcade.texture = arcade.load_texture("../resources/objects/animated/flag_sprites.png",
+                #                                           x=400, y=40*i, width=40, height=40)
+                tex: arcade.texture = arcade.load_texture("../resources/objects/animated/flag_100_sprite_{}.png".format(colours[c]),
+                                                          x=0, y=100*i, width=108, height=100)
+                d.add_texture(tex)
+            self.z_levels[3].append(d.sprite)
+            d.set_sprite_pos((100 + c * 100, 300), (0,0))
+            d.set_tex_scale(0.75)
+            d.sprite.set_texture(0)
+
 
         #TODO do this somewhere else
         background: List[Drawable] = []
@@ -148,10 +167,11 @@ class GameLogic:
         self.__exec_command(commands)
         GameLogic.elapsed = GameLogic.elapsed + delta_time
         GameLogic.total_elapsed = GameLogic.total_elapsed + delta_time
+        for d in self.test:
+            d.next_frame(delta_time)
         if GameLogic.elapsed > float(0.6) and self.automatic:
             self.playNextTurn = True
             GameLogic.elapsed = float(0)
-
         if self.playNextTurn:
             if self.current_player == 0:  # next time player 0 plays -> new turn
                 self.turn_nr = self.turn_nr + 1

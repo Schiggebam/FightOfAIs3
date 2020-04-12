@@ -53,3 +53,4 @@ class Animator:
         x_pos = a[0] + w * (b[0] - a[0])
         y_pos = a[1] + w * (b[1] - a[1])
         return x_pos, y_pos
+
