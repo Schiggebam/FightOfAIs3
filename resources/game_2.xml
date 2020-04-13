@@ -167,29 +167,37 @@
     <buildings>
         <B1 code="s1" construction_cost="5" culture_per_turn="1" resource_per_field="2"
             resource_per_turn="0" sight_range="2" food_consumption="1" construction_time="2"
-            defensive_value="2">description</B1>
+            defensive_value="2" flag_x="0" flag_y="50" grant_pop="0">description</B1>
         <FA code="fa" construction_cost="5" culture_per_turn="0" resource_per_field="0"
             resource_per_turn="0" sight_range="2" food_consumption="0" construction_time="2"
-            defensive_value="2">description</FA>
+            defensive_value="2" flag_x="0" flag_y="50" grant_pop="0">description</FA>
         <B2 code="s2" construction_cost="15" culture_per_turn="0" resource_per_field="2"
             resource_per_turn="0" sight_range="2" food_consumption="2" construction_time="3"
-            defensive_value="2">description</B2>
+            defensive_value="2" flag_x="0" flag_y="50" grant_pop="0">description</B2>
         <C1 code="c1" construction_cost="5" culture_per_turn="0" resource_per_field="0"
             resource_per_turn="1" sight_range="3" food_consumption="0" construction_time="0"
-            defensive_value="2">description</C1>
+            defensive_value="2" flag_x="0" flag_y="20" grant_pop="2">description</C1>
         <C2 code="c2" construction_cost="10" culture_per_turn="0" resource_per_field="0"
             resource_per_turn="1" sight_range="3" food_consumption="0" construction_time="0"
-            defensive_value="5">description</C2>
+            defensive_value="5" flag_x="0" flag_y="20" grant_pop="4">description</C2>
         <C3 code="c3" construction_cost="10" culture_per_turn="0" resource_per_field="0"
             resource_per_turn="1" sight_range="3" food_consumption="0" construction_time="0"
-            defensive_value="10">description</C3>
+            defensive_value="10" flag_x="0" flag_y="20" grant_pop="6">description</C3>
         <V1 code="v1" construction_cost="10" culture_per_turn="0" resource_per_field="0"
             resource_per_turn="1" sight_range="3" food_consumption="0" construction_time="0"
-            defensive_value="10">description</V1>
+            defensive_value="10" flag_x="5" flag_y="65" grant_pop="0">description</V1>
         <Racks code="br" construction_cost="10" culture_per_turn="0" resource_per_field="0"
                resource_per_turn="1" sight_range="3" food_consumption="0" construction_time="0"
-               defensive_value="10">description</Racks>
+               defensive_value="10" flag_x="0" flag_y="50" grant_pop="0">description</Racks>
     </buildings>
+    <units>
+        <Mercenary code="unit_a" name="mercenary" attack="3" defence="1" population="1"
+                   cost_resource="10" cost_culture="0">description</Mercenary>
+        <Knight code="unit_b" name="knight" attack="2" defence="4" population="1"
+                cost_resource="10" cost_culture="5">description</Knight>
+        <Barbaric_Soldier code="unit_c" name="barbaric soldier" attack="1" defence="2" population="1"
+                          cost_resource="10" cost_culture="0">description</Barbaric_Soldier>
+    </units>
     <players>
         <!--<player1 colour="red" spawn_x="2" spawn_y="2" ai="expansionist"
                  army_rel_to_spawn_x="-1" army_rel_to_spawn_y="-1">peter pan</player1>-->
@@ -197,7 +205,7 @@
                  army_rel_to_spawn_x="0" army_rel_to_spawn_y="-1">peter pan</player2>-->
         <barbar1 colour="yellow" spawn_x="5" spawn_y="13" ai="barbaric"
                  army_rel_to_spawn_x="-1" army_rel_to_spawn_y="-1">Barbaric 1</barbar1>
-        <!--<village colour="teal" spawn_x="2" spawn_y="16" ai="villager"
+        <!--<village colour="teal" spawn_x="10" spawn_y="14" ai="villager"
                  army_rel_to_spawn_x="-1" army_rel_to_spawn_y="0">Barbaric 1</village>-->
     </players>
 </game>

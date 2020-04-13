@@ -1,6 +1,15 @@
 from src.misc.game_constants import *
 
 
+def unit_type_conversion(ut: UnitType) -> str:
+    if ut == UnitType.MERCENARY:
+        return "mercenary"
+    elif ut == UnitType.KNIGHT:
+        return "knight"
+    elif ut == UnitType.BABARIC_SOLDIER:
+        return "barbaric soldier"
+    return "unknown unit"
+
 def building_state_conversion(bs: BuildingState) -> str:
     if bs == BuildingState.UNDER_CONSTRUCTION:
         return "under construction"
@@ -8,6 +17,7 @@ def building_state_conversion(bs: BuildingState) -> str:
         return "active"
     elif bs == BuildingState.DESTROYED:
         return "destroyed"
+    return "unknown state"
 
 
 def building_type_conversion(bt: BuildingType) -> str:
@@ -25,3 +35,4 @@ def building_type_conversion(bt: BuildingType) -> str:
         return "barbaric camp level 3"
     elif bt == BuildingType.VILLAGE:
         return "village"
+    return "unknown building"

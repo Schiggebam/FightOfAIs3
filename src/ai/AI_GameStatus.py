@@ -1,8 +1,8 @@
-from typing import Set
+from typing import Set, List
 from src.game_accessoires import Resource, Army
 from src.misc.building import Building
 from src.hex_map import Hexagon
-from src.misc.game_constants import error
+from src.misc.game_constants import error, UnitType
 
 
 class AI_Move:
@@ -15,7 +15,7 @@ class AI_Move:
         self.doMoveArmy = False
         self.doRecruitArmy = False
         self.loc = (0,0)
-        self.info = []
+        self.info = []                  # in case of doBuild, doUpgrade, doUpArmy, this need to be specified
         self.move_army_to = (-1, -1)
         self.str_rep_of_action = "" #just for printing
         self.info_at_tile = [] #a list of tuples ((x, y), "str")
@@ -39,8 +39,11 @@ class AI_Tile(AI_Element):
 class AI_Army(AI_Element):
     def __init__(self):
         super().__init__()
-        self.strength = -1
         self.owner = -1
+        self.population = -1
+        self.knights = -1
+        self.mercenaries = -1
+        self.barbaric_soldiers = -1
 
 class AI_Resource(AI_Element):
     def __init__(self):
@@ -74,17 +77,21 @@ class AI_GameStatus:
         self.costBuildC1: int = -1
         self.costBuildC2: int = -1
         self.costBuildC3: int = -1
-        self.costArmyUp: int = -1
+        self.costUnitBS: (int, int, int) = (-1, -1, -1)      # cost in resources, culture and population
+        self.costUnitKn: (int, int, int) = (-1, -1, -1)
+        self.costUnitMe: (int, int, int) = (-1, -1, -1)
         self.resources: [AI_Resource] = []
         self.own_buildings: [AI_Building] = []
         self.other_players = []
         self.enemy_buildings: [AI_Building] = []
-        self.enemy_armies: [AI_Army] = []
+        self.enemy_armies: List[AI_Army] = []
         self.num_of_enemies: int = -1
         self.armies: [AI_Army] = []
         self.aggressions: Set[int] = set()
+        self.population = 0
+        self.population_limit = 0
 
-    def clear(self):
+    def clear(self):    # TODO does this work he it is supposed to work? leave it to GC?
         for e in self.tiles_buildable:
             del e
         for e in self.tiles_scoutable:
@@ -133,20 +140,26 @@ class AI_GameInterface:
 
     def copy_army_to_ai_army(self, a:Army, ai_a: AI_Army):
         ai_a.offset_coordinates = a.tile.offset_coordinates
-        ai_a.strength = a.strength
+        ai_a.population = a.get_population()
+        ai_a.knights = a.get_population_by_unit(UnitType.KNIGHT)
+        ai_a.mercenaries = a.get_population_by_unit(UnitType.MERCENARY)
+        ai_a.barbaric_soldiers = a.get_population_by_unit(UnitType.BABARIC_SOLDIER)
 
     def create_ai_status(self, ai_stat : AI_GameStatus, turn_nr,
                          p_id, p_food, p_res, p_cult,
                          t_build, t_scout, costs,
                          res_list, t_discovered, own_buildings,
                          num_of_enemies, t_walkable, own_armies,
-                         enemy_buildings, enemy_armies, aggressions:  Set[int]):
+                         enemy_buildings, enemy_armies, aggressions:  Set[int],
+                         pop, pop_limit):
         ai_stat.turn_nr = turn_nr
         ai_stat.player_id = p_id
         ai_stat.player_food = p_food
         ai_stat.player_resources = p_res
         ai_stat.player_culture = p_cult
         ai_stat.num_of_enemies = num_of_enemies
+        ai_stat.population = pop
+        ai_stat.population_limit = pop_limit
         for e_b in t_build:
             ai_tile = AI_Tile()
             self.copy_tile_to_ai_tile(e_b, ai_tile)
@@ -164,11 +177,14 @@ class AI_GameInterface:
         ai_stat.costBuildC3 = costs['c3']
         ai_stat.costBuildS2 = costs['s2']
         ai_stat.costBuildFarm = costs['fa']
-        ai_stat.costArmyUp = costs['army']
+        ai_stat.costUnitBS = costs['bs']
+        ai_stat.costUnitKn = costs['knight']
+        ai_stat.costUnitMe = costs['mercenary']
 
         for army in own_armies:
             ai_my_army = AI_Army()
             self.copy_army_to_ai_army(army, ai_my_army)
+            ai_my_army.owner = p_id
             ai_stat.armies.append(ai_my_army)
 
         for res in res_list:

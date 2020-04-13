@@ -1,10 +1,10 @@
+from __future__ import annotations
 import sys
 
 ######################
 ### Game Constants ###
 ######################
-from enum import Enum, IntEnum
-from typing import Union
+from enum import Enum
 
 import arcade
 
@@ -55,21 +55,21 @@ def end_progress():
 
 
 # logs
-class LogType:
+class LogType(Enum):
     BATTLE_ARMY_VS_ARMY = 900
     BATTLE_ARMY_VS_BUILDING = 901
     DIPLO_ENEMY_BUILDING_SCOUTED = 902
 
 
 # ground
-class GroundType:
+class GroundType(Enum):
     GRASS = 0
     WATER_DEEP = 1
     STONE = 2
     OTHER = 3
 
     @staticmethod
-    def get_type_from_strcode(str_code: str):
+    def get_type_from_strcode(str_code: str) -> GroundType:
         if str_code == "gr" or str_code == "gc":
             return GroundType.GRASS
         elif str_code == "st":
@@ -80,7 +80,7 @@ class GroundType:
 
 
 # buildings
-class BuildingType:
+class BuildingType(Enum):
     HUT = 20
     FARM = 21
     CAMP_1 = 22
@@ -89,9 +89,10 @@ class BuildingType:
     VILLA = 25
     VILLAGE = 26
     BARRACKS = 27
+    OTHER_BUILDING = 29
 
     @staticmethod
-    def get_type_from_strcode(str_code: str) -> int:
+    def get_type_from_strcode(str_code: str) -> BuildingType:
         if str_code == "s1":
             return BuildingType.HUT
         elif str_code == "s2":
@@ -108,40 +109,56 @@ class BuildingType:
             return BuildingType.VILLAGE
         elif str_code == "br":
             return BuildingType.BARRACKS
-        return -1
+        return BuildingType.OTHER_BUILDING
 
 
-class ResourceType:
+class ResourceType(Enum):
     ROCK = 10
     GOLD = 11
     FOREST = 12
+    OTHER_RESOURCE = 19
 
     @staticmethod
-    def get_type_from_strcode(str_code: str):
+    def get_type_from_strcode(str_code: str) -> ResourceType:
         if str_code == "r1":
             return ResourceType.ROCK
         elif str_code == "g1":
             return ResourceType.GOLD
         elif str_code == "f1":
             return ResourceType.FOREST
-        return -1
+        return ResourceType.OTHER_RESOURCE
 
 
-class DiploEventType:
+class DiploEventType(Enum):
     TYPE_ENEMY_ARMY_INVADING = 100
     TYPE_ENEMY_BUILDING_SCOUTED = 101
 
-
-class PlayerColour:
-    YELLOW = 0
-    TEAL = 1
-    RED = 2
-    BLUE = 3
-    GREEN = 4
-    PINK = 5
+class UnitType(Enum):
+    MERCENARY = 0
+    KNIGHT = 1
+    BABARIC_SOLDIER = 2
 
     @staticmethod
     def get_type_from_strcode(str_code: str):
+        if str_code == "unit_a":
+            return UnitType.MERCENARY
+        elif str_code == "unit_b":
+            return UnitType.KNIGHT
+        elif str_code == "unit_c":
+            return UnitType.BABARIC_SOLDIER
+        return -1
+
+class PlayerColour(Enum):
+    YELLOW = 60
+    TEAL = 61
+    RED = 62
+    BLUE = 63
+    GREEN = 64
+    PINK = 65
+    NO_COLOUR = 69
+
+    @staticmethod
+    def get_type_from_strcode(str_code: str) -> PlayerColour:
         if str_code == "yellow":
             return PlayerColour.YELLOW
         elif str_code == "red":
@@ -154,10 +171,10 @@ class PlayerColour:
             return PlayerColour.GREEN
         elif str_code == "blue":
             return PlayerColour.BLUE
-        return -1
+        return PlayerColour.NO_COLOUR
 
     @staticmethod
-    def player_colour_to_arcade_colour(colour) -> arcade.Color:
+    def player_colour_to_arcade_colour(colour: PlayerColour) -> arcade.Color:
         if colour == PlayerColour.YELLOW:
             return arcade.color.YELLOW
         elif colour == PlayerColour.TEAL:
@@ -172,7 +189,7 @@ class PlayerColour:
             return arcade.color.GREEN
 
     @staticmethod
-    def get_colour_code(colour: int) -> str:
+    def get_colour_code(colour: PlayerColour) -> str:
         if colour == PlayerColour.YELLOW:
             return 'yellow'
         elif colour == PlayerColour.TEAL:
@@ -192,7 +209,7 @@ class PlayerColour:
 ### STATES ####
 ###############
 
-class BuildingState:
+class BuildingState(Enum):
     UNDER_CONSTRUCTION = 30
     ACTIVE = 31
     DESTROYED = 32

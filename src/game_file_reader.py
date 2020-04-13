@@ -38,8 +38,8 @@ class GameFileReader():
                                   {'amount': int(elem.get_attribute('amount'))}))
 
     def read_building_info(self, building_info: [(int, {})]):
+        from src.misc.game_constants import BuildingType
         for elem in self.xml_parser.game.buildings.children:
-            from src.misc.game_constants import BuildingType
             building_info.append((BuildingType.get_type_from_strcode(elem.get_attribute('code')),
                                   {'tex_code': elem.get_attribute('code'),
                                    'construction_cost': int(elem.get_attribute('construction_cost')),
@@ -50,6 +50,9 @@ class GameFileReader():
                                    'food_consumption': int(elem.get_attribute('food_consumption')),
                                    'construction_time': int(elem.get_attribute('construction_time')),
                                    'defensive_value': int(elem.get_attribute('defensive_value')),
+                                   'flag_x': int(elem.get_attribute('flag_x')),
+                                   'flag_y': int(elem.get_attribute('flag_y')),
+                                   'grant_pop': int(elem.get_attribute('grant_pop')),
                                    'description': elem.cdata}))
 
     def read_player_info(self, player_info: [(str, {})]):
@@ -61,3 +64,17 @@ class GameFileReader():
                                  'ai'     : elem.get_attribute('ai'),
                                  'army_rel_to_spawn_x': int(elem.get_attribute('army_rel_to_spawn_x')),
                                  'army_rel_to_spawn_y': int(elem.get_attribute('army_rel_to_spawn_y'))}))
+
+    def read_unit_info(self, unit_info: [(int, {})]):
+        from src.misc.game_constants import UnitType
+        for elem in self.xml_parser.game.units.children:
+            unit_info.append((UnitType.get_type_from_strcode(elem.get_attribute('code')),
+                              {'attack': int(elem.get_attribute('attack')),
+                               'defence': int(elem.get_attribute('defence')),
+                               'name': elem.get_attribute('name'),
+                               'population': int(elem.get_attribute('population')),
+                               'cost_resource': int(elem.get_attribute('cost_resource')),
+                               'cost_culture': int(elem.get_attribute('cost_culture')),
+                               'description': elem.cdata}))
+
+

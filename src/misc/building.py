@@ -33,6 +33,8 @@ class Building(Drawable):
                 self.food_consumption = b_info[1]['food_consumption']
                 self.construction_time = b_info[1]['construction_time']
                 self.defensive_value = b_info[1]['defensive_value']
+                self.flag_offset = (b_info[1]['flag_x'], b_info[1]['flag_y'])
+                self.grant_pop = b_info[1]['grant_pop']
 
     def has_texture_construction(self) -> bool:
         return not self.__idx_texture_construction == -1

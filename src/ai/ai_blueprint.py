@@ -1,5 +1,4 @@
-from src.misc.game_constants import DiploEventType, hint
-from src.misc.game_logic_misc import Logger
+from src.misc.game_constants import DiploEventType
 
 
 class AI_Diplo:
@@ -9,13 +8,13 @@ class AI_Diplo:
     class AI_DiploEvent:
 
 
-        def __init__(self, target_id: int, rel_change: float, lifetime: int, event: int, description: str):
+        def __init__(self, target_id: int, rel_change: float, lifetime: int, event: DiploEventType, description: str):
             self.rel_change = rel_change
             self.lifetime = lifetime
             self.lifetime_max = lifetime
             self.description = description
             self.loc = (-1, -1)
-            self.event: int = event
+            self.event: DiploEventType = event
             self.target_id: int = target_id
 
         def add_loc(self, loc: (int, int)):
@@ -27,7 +26,7 @@ class AI_Diplo:
         for o_p in other_players:
             self.diplomacy.append([o_p, float(AI_Diplo.DIPLO_BASE_VALUE)])
 
-    def add_event(self, target_id: int, loc: (int, int), event: int, rel_change: float, lifetime: int,
+    def add_event(self, target_id: int, loc: (int, int), event: DiploEventType, rel_change: float, lifetime: int,
                   player_name:str):
         # check if this exists already:
         for e in self.events:

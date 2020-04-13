@@ -2,7 +2,7 @@ from typing import Set
 from src.game_accessoires import Army
 from src.misc.building import Building
 from src.hex_map import Hexagon
-from src.misc.game_constants import BuildingType, PlayerColour
+from src.misc.game_constants import BuildingType, PlayerColour, UnitType
 
 
 class Player:
@@ -24,7 +24,6 @@ class Player:
         self.has_lost = False
         self.buildings: [Building] = []
         self.discovered_tiles: Set[Hexagon] = set()
-        # self.army = None
         self.armies: [Army] = []
         self.is_barbaric = False
         self.is_villager = False
@@ -38,3 +37,22 @@ class Player:
             return BuildingType.VILLAGE
         return BuildingType.HUT
 
+    def get_initial_unit_type(self):
+        """returns the type of initial unit"""
+        if self.is_barbaric:
+            return UnitType.BABARIC_SOLDIER
+        elif self.is_villager:
+            return UnitType.KNIGHT
+        return UnitType.MERCENARY
+
+    def get_population_limit(self) -> int:
+        value = 0
+        for b in self.buildings:
+            value = value + b.grant_pop
+        return value
+
+    def get_population(self) -> int:
+        value = 0
+        for a in self.armies:
+            value = value + a.get_population()
+        return value

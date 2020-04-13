@@ -61,7 +61,7 @@ class AI_Barbaric(AI):
 
         # keep values
         if len(ai_stat.armies) > 0:
-            self.previous_army_strength = ai_stat.armies[0].strength
+            self.previous_army_strength = ai_stat.armies[0].population
         else:
             self.previous_army_strength = 0
         self.previous_amount_of_buildings = len(ai_stat.own_buildings)
@@ -90,26 +90,33 @@ class AI_Barbaric(AI):
                 self.state = AI_Barbaric.AI_State.PASSIVE
 
     def weight_scores(self, ai_stat: AI_GameStatus, move: AI_Move, score_b: int, score_u: int, score_a: int):
-        army_building_ratio = 2
+        army_building_ratio = 0.5
         if self.state == AI_Barbaric.AI_State.AGGRESSIVE:
-            army_building_ratio = 4
+            army_building_ratio = 1
         elif self.state == AI_Barbaric.AI_State.DEFENSIVE:
-            army_building_ratio = 3
+            army_building_ratio = 0.8
+
+        wait: bool = False
         if len(ai_stat.armies) == 0:
             if score_a > 0:
                 hint("AI Barbaric: Decision: Recruit new army")
                 move.doRecruitArmy = True
             else:
                 hint("AI Barbaric: Decision: Store more resources (not enough resources to recruit new army)")
-                move.doNothing = True
-        elif ai_stat.armies[0].strength < army_building_ratio * len(ai_stat.own_buildings):
-            if score_a > 0:
-                hint("AI Barbaric: Decision: Upgrade the army")
-                move.doUpArmy = True
+                wait = True
+        elif ai_stat.armies[0].population < army_building_ratio * ai_stat.population_limit:
+            if ai_stat.population < ai_stat.population_limit:
+                if score_a > 0:
+                    hint("AI Barbaric: Decision: Upgrade the army")
+                    move.doUpArmy = True
+                else:
+                    hint("AI Barbaric: Decision: Store more resources (not enough resources to upgrade the army)")
+                    wait = True
             else:
-                hint("AI Barbaric: Decision: Store more resources (not enough resources to upgrade the army)")
-                move.doNothing = True
-        else:
+                hint("Population ceiling reached")
+                move.doNothing = True   # but wait is false because we check the building options in this case
+
+        if not wait:              # so far no valid option found
             if score_u > 0:
                 hint("AI Barbaric: Decision: Upgrade")
                 move.doUpgrade = True
@@ -118,7 +125,10 @@ class AI_Barbaric(AI):
                 move.doBuild = True
             else:
                 hint("AI Barbaric: Decision: Store more resources")
-                move.doNothing = True
+                wait = True
+        # ...
+        if wait:
+            move.doNothing = True       # Ai decides to wait
 
 
     def calculate_heatmaps(self):
@@ -147,7 +157,7 @@ class AI_Barbaric(AI):
         return 1, list_of_upgradable_buildings[idx].offset_coordinates
 
     def evaluate_move_up_army(self, ai_stat: AI_GameStatus) -> int:
-        if ai_stat.player_resources >= ai_stat.costArmyUp:
+        if ai_stat.player_resources >= ai_stat.costUnitBS[0]:
             return 1
         return -1
 
@@ -242,8 +252,8 @@ class AI_Barbaric(AI):
             return True         # lost a building
         if len(ai_stat.armies) == 0 and not self.issue_attack:
             return True         # lost army without commanding an attack
-        if self.previous_army_strength > ai_stat.armies[0].strength and not self.issue_attack:
-            return True         # army got attacked without commanding it
+        # if self.previous_army_strength > ai_stat.armies[0].strength and not self.issue_attack:
+        #     return True         # army got attacked without commanding it
         return False
 
     def get_army_spawn_loc(self, ai_stat: AI_GameStatus) -> (int, int):

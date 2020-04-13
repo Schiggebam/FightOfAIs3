@@ -1,3 +1,5 @@
+from typing import List
+
 import arcade
 
 from src.player import Player
@@ -49,16 +51,25 @@ class PanelDiplo(SimplePanel):
 
 
 class PanelArmy(SimplePanel):
-    def __init__(self, center_x, center_y, army_strength, army_owner):
-        super().__init__(center_x, center_y, "Army", scale=1)
-        self.army_owner =  "Owner   : " + str(army_owner)
-        self.army_strength = "Strength: " + str(army_strength)
+    def __init__(self, center_x, center_y, army_strength, army_owner, units: {}, is_barbaric: bool):
+        super().__init__(center_x, center_y, "Barbaric Army" if is_barbaric else "Army", scale=1)
+        self.army_owner = "Owner   : " + str(army_owner)
+        self.army_strength = "Population: " + str(army_strength)
+        self.is_barbaric = is_barbaric
+        self.unit_text = ""
+        if self.is_barbaric:
+            self.unit_text = "{}: {}".format(unit_type_conversion(UnitType.BABARIC_SOLDIER), units[UnitType.BABARIC_SOLDIER])
+        else:
+            for ut, amount  in units.items():
+                self.unit_text = self.unit_text + "{}: {} \n".format(unit_type_conversion(ut), amount)
 
     def draw(self):
         super().draw()
         arcade.draw_text(self.army_owner, self.text_box_x, self.text_box_y,
                          arcade.color.WHITE, font_size=15, font_name='verdana')
         arcade.draw_text(self.army_strength, self.text_box_x, self.text_box_y-20,
+                         arcade.color.WHITE, font_size=15, font_name='verdana')
+        arcade.draw_text(self.unit_text, self.text_box_x, self.text_box_y - 100,
                          arcade.color.WHITE, font_size=15, font_name='verdana')
 
 

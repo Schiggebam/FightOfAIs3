@@ -1,9 +1,11 @@
-from enum import Enum
+from __future__ import annotations
+from typing import List
 
 import arcade
 
 from src.hex_map import Hexagon
-from src.misc.game_constants import ResourceType, error, hint, GroundType, PlayerColour
+from src.misc.game_constants import ResourceType, error, GroundType, PlayerColour, UnitType
+
 
 class Drawable:
     def __init__(self):
@@ -58,22 +60,6 @@ class Ground(Drawable):
         self.ground_type: GroundType = GroundType.get_type_from_strcode(str_code)
 
 class Resource(Drawable):
-    """class ResourceType(Enum):
-        ROCK = 10
-        GOLD = 11
-        FOREST = 12
-
-        @staticmethod
-        def get_type_from_strcode(str_code:str):
-            if str_code == "r1":
-                return Resource.ResourceType.ROCK
-            elif str_code == "g1":
-                return Resource.ResourceType.GOLD
-            elif str_code == "f1":
-                return Resource.ResourceType.GOLD
-            return -1"""
-    # end of class ResourceType
-
     # e.g. ('Resource.ResourceType.GOLD', {amount: 150, ...}
     resource_info: [(int, {})] = [] # a dict containing all information about the resources
 
@@ -96,25 +82,95 @@ class Resource(Drawable):
             return remaining
 
 
+class Unit:
+    unit_info: [(int, {})] = []
+    def __init__(self, type: UnitType):
+        self.unit_type: UnitType = type
+        for u_info in Unit.unit_info:
+            if u_info[0] == self.unit_type:
+                self.name = u_info[1]['name']
+                self.attack_value = u_info[1]['attack']
+                self.defence_value = u_info[1]['defence']
+                self.population = u_info[1]['population']
+                self.cost_resource = u_info[1]['cost_resource']
+                self.cost_culture = u_info[1]['cost_culture']
+
+    @staticmethod
+    def get_unit_cost(ut: UnitType) -> (int, int, int):
+        """returns a tuple of the cost in resources, culture and population"""
+        for u_info in Unit.unit_info:
+            if u_info[0] == ut:
+                return u_info[1]['cost_resource'], u_info[1]['cost_culture'], u_info[1]['population']
+        return -1, -1, -1
+
+    @staticmethod
+    def get_unit_stats(ut: UnitType) -> (int, int, int):
+        """returns a tuple of the attack and defence value of the unit"""
+        for u_info in Unit.unit_info:
+            if u_info[0] == ut:
+                return u_info[1]['attack'], u_info[1]['defence']
+        return -1, -1, -1
 
 
 class Army(Drawable):
     def __init__(self, tile: Hexagon, owner_id):
         super().__init__()
         self.tile: Hexagon = tile
-        self.strength: int = 1
         self.owner_id: int = owner_id
         self.is_barbaric: bool = False
+        self.__units: List[Unit] = []
 
-    def upgrade(self):
-        self.strength = self.strength + 1
+    def add_unit(self, unit: Unit):
+        self.__units.append(unit)
 
-    def get_upgrade_cost(self):
-        if not self.is_barbaric:
-            return int(self.strength * 3)           # culture
-        else:
-            return int(self.strength * 2)       # resources
+    def remove_units_of_type(self, amount: int, ut: UnitType):
+        tbr = []
+        count = 0
+        for u in self.__units:
+            if count >= amount:
+                break
+            if u.unit_type == ut:
+                tbr.append(u)
+                count = count + 1
+        for r in tbr:
+            self.__units.remove(r)
+        if count != amount:
+            error("Army: unexpected amount of removed units. requested to remove: {}, removed: {}".format(amount, count))
 
+    def remove_all_units(self):
+        self.__units.clear()
+
+    def get_attack_strength(self) -> int:
+        value = 0
+        for u in self.__units:
+            value = value + u.attack_value
+        return value
+
+    def get_defence_strength(self) -> int:
+        value = 0
+        for u in self.__units:
+            value = value + u.defence_value
+        return value
+
+    def get_population(self) -> int:
+        value = 0
+        for u in self.__units:
+            value = value + u.population
+        return value
+
+    def get_amount_by_unit(self, ut: UnitType):
+        value = 0
+        for u in self.__units:
+            if u.unit_type == ut:
+                value = value + 1
+        return value
+
+    def get_population_by_unit(self, ut: UnitType):
+        value = 0
+        for u in self.__units:
+            if u.unit_type == ut:
+                value = value + u.population
+        return value
 
 class Flag(Drawable):
     def __init__(self, position: (int, int), colour: PlayerColour):
