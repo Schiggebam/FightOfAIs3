@@ -3,8 +3,7 @@ from enum import Enum
 import arcade
 
 from src.hex_map import Hexagon
-from src.misc.game_constants import ResourceType, error, hint, GroundType
-
+from src.misc.game_constants import ResourceType, error, hint, GroundType, PlayerColour
 
 class Drawable:
     def __init__(self):
@@ -115,6 +114,13 @@ class Army(Drawable):
             return int(self.strength * 3)           # culture
         else:
             return int(self.strength * 2)       # resources
+
+
+class Flag(Drawable):
+    def __init__(self, position: (int, int), colour: PlayerColour):
+        super().__init__()
+        self.position: (int, int) = position
+        self.colour: PlayerColour = colour
 
 
 class Scenario():

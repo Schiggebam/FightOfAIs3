@@ -3,7 +3,7 @@ import arcade
 from src.ai.AI_GameStatus import AI_GameStatus, AI_Move, AI_GameInterface
 from src.misc.animation import Animator
 from src.misc.game_constants import ResourceType, hint, error, GroundType
-from src.game_accessoires import Scenario, Ground, Resource, Drawable
+from src.game_accessoires import Scenario, Ground, Resource, Drawable, Flag
 from src.game_file_reader import GameFileReader
 from src.hex_map import HexMap, MapStyle, Hexagon
 from src.texture_store import TextureStore
@@ -25,6 +25,7 @@ class GameLogic:
         tex_dict = {}
         self.game_file_reader.read_textures_to_dict(tex_dict)
         self.texture_store.load_textures(tex_dict)
+
         self.__camera_pos: (int, int) = (0, 0)
 
         self.player_list: [Player] = []
@@ -53,6 +54,13 @@ class GameLogic:
             self.map_view.append(False)
             id = id + 1
 
+        # load textures which depend on player
+        idx_fun = lambda i: (0, 100 * i)
+        for p in self.player_list:
+            c = p.colour_code
+            self.texture_store.load_animated_texture("{}_flag".format(c), 10, idx_fun, 108, 100,
+                                                     "../resources/objects/animated/flag_100_sprite_{}.png".format(c))
+
         # game status
         self.playNextTurn: bool = False
         self.current_player: int = 0
@@ -71,24 +79,6 @@ class GameLogic:
         # setup hex map
         self.hex_map = HexMap((len(map_data[0]), len(map_data)), MapStyle.S_V_C)
         self.income_calc.hex_map = self.hex_map         # TODO make sure to set the hex_map everywhere. Ugly!
-
-        #TODO test animated sprite
-        self.test: List[Drawable] = []
-        colours = ["red", "blue", "green", "pink", "teal", "yellow"]
-        for c in range(6):
-            d = Drawable()
-            self.test.append(d)
-            for i in range(10):
-                # tex: arcade.texture = arcade.load_texture("../resources/objects/animated/flag_sprites.png",
-                #                                           x=400, y=40*i, width=40, height=40)
-                tex: arcade.texture = arcade.load_texture("../resources/objects/animated/flag_100_sprite_{}.png".format(colours[c]),
-                                                          x=0, y=100*i, width=108, height=100)
-                d.add_texture(tex)
-            self.z_levels[3].append(d.sprite)
-            d.set_sprite_pos((100 + c * 100, 300), (0,0))
-            d.set_tex_scale(0.75)
-            d.sprite.set_texture(0)
-
 
         #TODO do this somewhere else
         background: List[Drawable] = []
@@ -109,14 +99,12 @@ class GameLogic:
                 hex.ground = ground
                 ground.set_sprite_pos(HexMap.offset_to_pixel_coords((x, y)), self.__camera_pos)
                 ground.add_texture(self.texture_store.get_texture("fw"))
-                # ground.add_texture(self.texture_store.get_texture(map_data[y][x]))
-                # ground.set_tex_offset(self.texture_store.get_tex_offest(map_data[y][x]))
-                # ground.set_tex_scale(self.texture_store.get_tex_scale(map_data[y][x]))
                 ground.tex_code = map_data[y][x]
                 self.z_levels[1].append(ground.sprite)
 
         from src.misc.smooth_map import SmoothMap
         SmoothMap.smooth_map(self.hex_map)
+        #SmoothMap.adjust_elevation(self.hex_map)
 
         # assign textures
         for hexagon in self.hex_map.map:
@@ -128,7 +116,6 @@ class GameLogic:
                 # get str_code with variance
                 import random
                 var = random.randint(0, 6)
-                var = 0
                 r: Resource = Resource(hex, ResourceType.FOREST)
                 r.tex_code = "forest_3_var{}".format(var)
                 self.add_resource(r)
@@ -167,8 +154,10 @@ class GameLogic:
         self.__exec_command(commands)
         GameLogic.elapsed = GameLogic.elapsed + delta_time
         GameLogic.total_elapsed = GameLogic.total_elapsed + delta_time
-        for d in self.test:
-            d.next_frame(delta_time)
+        #update animations
+        for p in self.player_list:
+            for b in p.buildings:
+                b.flag.next_frame(delta_time)
         if GameLogic.elapsed > float(0.6) and self.automatic:
             self.playNextTurn = True
             GameLogic.elapsed = float(0)
@@ -504,10 +493,21 @@ class GameLogic:
         self.scenario.resource_list.remove(resource)
         self.z_levels[2].remove(resource.sprite)
 
+    def add_flag(self, flag: Flag, colour_code: str):
+        a_tex = self.texture_store.get_animated_texture('{}_flag'.format(colour_code))
+        for tex in a_tex:
+            flag.add_texture(tex)
+        flag.set_sprite_pos(flag.position, self.__camera_pos)
+        flag.set_tex_scale(0.20)
+        flag.update_interval = 0.1
+        flag.sprite.set_texture(0)
+        self.z_levels[2].append(flag.sprite)
+
     def add_building(self, building: Building, player: Player):
         hint("adding a building")
         player.buildings.append(building)
-        building.set_sprite_pos(HexMap.offset_to_pixel_coords(building.tile.offset_coordinates), self.__camera_pos)
+        position = HexMap.offset_to_pixel_coords(building.tile.offset_coordinates)
+        building.set_sprite_pos(position, self.__camera_pos)
         self.__set_sprite(building, building.tex_code)
         building.set_state_active()
         if building.construction_time > 0:
@@ -515,6 +515,10 @@ class GameLogic:
             building.set_state_construction()
         building.add_tex_destruction(self.texture_store.get_texture("ds"))
         self.z_levels[2].append(building.sprite)
+        # add the flag:
+        flag = Flag((position[0], position[1] + 20), player.colour)
+        self.add_flag(flag, player.colour_code)
+        building.flag = flag
         if building.building_type == BuildingType.FARM:
             for a in building.associated_tiles:
                 self.extend_building(building, a, "cf")

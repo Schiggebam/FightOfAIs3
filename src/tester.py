@@ -1,26 +1,12 @@
-class A:
-    def __init__(self):
-        self.var = False
-
-    def __str__(self):
-        return str(self.var)
 
 
 
-a1 = A()
-a2 = A()
-a3 = A()
-a4 = A()
 
-li = []
-li.append(a1)
-li.append(a2)
-li.append(a3)
-li.append(a4)
+def fun_1(amount, index_fun):
+    for i in range(amount):
+        print(index_fun(i))
 
-a2.var = True
-a3.var = True
 
-print(li)
-li[:] = [x for x in li if not x.var]
-print(li)
+
+f = lambda i: (0, 100*i)
+fun_1(10, f)

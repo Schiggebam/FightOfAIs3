@@ -1,6 +1,8 @@
+from typing import Optional
+
 import arcade
 
-from src.game_accessoires import Drawable
+from src.game_accessoires import Drawable, Flag
 from src.hex_map import Hexagon
 from src.misc.game_constants import BuildingType, BuildingState, error, hint
 
@@ -18,6 +20,7 @@ class Building(Drawable):
         self.building_state: BuildingState = BuildingState.ACTIVE
         self.__idx_texture_construction: int = -1
         self.__idx_texture_destruction: int = -1
+        self.flag: Optional[Flag] = None
         for b_info in Building.building_info:
             if b_info[0] == bui_type:
                 self.tex_code = b_info[1]['tex_code']

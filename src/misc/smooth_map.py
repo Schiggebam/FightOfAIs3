@@ -67,6 +67,11 @@ class SmoothMap:
                     outer_tex = "dg"
                     inner_tex = "st"
                     inv = True
+                elif current_hex.ground.tex_code == "uu":
+                    inner = "gr"
+                    outer_tex = "lg"
+                    inner_tex = "st"
+                    inv = True
                 else:
                     continue
 
@@ -87,7 +92,7 @@ class SmoothMap:
                 if sum(edge) == 2 or sum(edge) == 1 or sum(edge) == 0:           # in-place replacement would not work -> store reference
                     if sum(edge) == 1 or sum(edge) == 0:
                         for i in range(6):
-                            edge[i] = nei[i] == "wd" or nei[i] == "xx" or nei[i] == "ww" or nei[i] == "vv"
+                            edge[i] = nei[i] == "wd" or nei[i] == "xx" or nei[i] == "ww" or nei[i] == "vv" or nei[i] == "uu"
 
                     if edge[0] and edge[2]:         # 1_3
                         mode = SmoothMap.__1_TO_3
@@ -159,5 +164,16 @@ class SmoothMap:
             h.ground.tex_code = s
 
     @staticmethod
-    def __get_orientation():
-        pass
+    def adjust_elevation(hex_map: HexMap):
+        for hex in hex_map.map:
+            ground = hex.ground
+            if ground.ground_type == GroundType.WATER_DEEP:
+                continue
+            nei = hex_map.get_neighbours(hex)
+            count = 0
+            for n in nei:
+                if n.ground.ground_type != GroundType.WATER_DEEP:
+                    count = count + 1
+            if count == 6:
+                ground.sprite.center_y = ground.sprite.center_y + 10
+

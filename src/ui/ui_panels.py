@@ -3,6 +3,7 @@ import arcade
 from src.player import Player
 from src.ui.SimplePanel import SimplePanel
 from src.ui.lang_en import *
+from src.misc.game_constants import PlayerColour
 
 
 class PanelAI(SimplePanel):
@@ -143,7 +144,7 @@ class PanelGameWon(SimplePanel):
         super().__init__(center_x, center_y, "END", scale=2)
         self.text1 = "CONGRATULATIONS: " + winner.name + " won!"
         self.text2 = "However, you can continue playing.. "
-        self.colour: arcade.color = Player.Player_Colour.player_colour_to_arcade_colour(winner.colour)
+        self.colour: arcade.color = PlayerColour.player_colour_to_arcade_colour(winner.colour)
 
     def draw(self):
         super().draw()

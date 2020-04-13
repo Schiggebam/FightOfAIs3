@@ -1,0 +1,203 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<game>
+    <textures>
+        <fog_of_war code="fw" offsetX="0" offsetY="0" scale="1">../resources/map/fog_of_war.png</fog_of_war>
+        <hex_grass_flat code="gr" offsetX="0" offsetY="0" scale="1">../resources/map/lg_var0.png</hex_grass_flat>
+        <hex_grass_chopped code="gc" offsetX="0" offsetY="0" scale="1">../resources/map/dg_var0.png</hex_grass_chopped>
+        <hex_stone code="st" offsetX="0" offsetY="0" scale="1">../resources/map/stone_var0.bmp</hex_stone>
+        <water_deep code="wd" offsetX="0" offsetY="-5" scale="1">../resources/map/water_transparent.png</water_deep>
+        <rock code="r1" offsetX="0" offsetY="0" scale="1">../resources/map/small_mountain_only.png</rock>
+        <forest code="f1" offsetX="0" offsetY="23" scale="1">../resources/map/forest_schatten.png</forest>
+        <building_hut code="s1" offsetX="0" offsetY="15" scale="1">../resources/map/other_hut_1.png</building_hut>
+        <building_farm code="fa" offsetX="0" offsetY="5" scale="1">../resources/objects/simple_hut.png</building_farm>
+        <building_villa code="s2" offsetX="0" offsetY="0" scale="1">../resources/objects/simple_villa.png</building_villa>
+        <outline code="ou" offsetX="0" offsetY="0" scale="1">../resources/map/outline_selected.png</outline>
+        <flag_red code="f1_red" offsetX="5" offsetY="25" scale="0.75">../resources/objects/flag_red.png</flag_red>
+        <flag_yellow code="f1_yellow" offsetX="5" offsetY="25" scale="0.75">../resources/objects/flag_yellow.png</flag_yellow>
+        <flag_teal code="f1_teal" offsetX="5" offsetY="25" scale="0.75">../resources/objects/flag_teal.png</flag_teal>
+        <camp_1 code="c1" offsetX="5" offsetY="0" scale="1">../resources/objects/camp_1.png</camp_1>
+        <camp_2 code="c2" offsetX="5" offsetY="0" scale="1">../resources/objects/camp_2.png</camp_2>
+        <camp_3 code="c3" offsetX="5" offsetY="0" scale="1">../resources/objects/camp_3.png</camp_3>
+        <corn_field code="cf" offsetX="0" offsetY="0" scale="1">../resources/objects/corn_field.png</corn_field>
+        <construction_site code="cs" offsetX="0" offsetY="5" scale="1">../resources/objects/construction_site.png</construction_site>
+        <destruction_site code="ds" offsetX="0" offsetY="5" scale="1">../resources/objects/destruction_site.png</destruction_site>
+        <village_center code="v1" offsetX="10" offsetY="5" scale="1">../resources/objects/village/small_3.png</village_center>
+        <village_church_e code="vk_e" offsetX="5" offsetY="10" scale="1">../resources/objects/village/village_church_e.png</village_church_e>
+        <village_church_sw code="vk_sw" offsetX="0" offsetY="0" scale="1">../resources/objects/village/village_church_sw.png</village_church_sw>
+        <village_mine code="vm_nw" offsetX="-5" offsetY="0" scale="1">../resources/objects/village/village_mine_nw_2.png</village_mine>
+        <village_mountain code="vmountain" offsetX="-25" offsetY="20" scale="1">../resources/objects/village/village_mountain.png</village_mountain>
+        <village_storage_e code="vs_e" offsetX="0" offsetY="0" scale="1">../resources/objects/village/village_storage_e.png</village_storage_e>
+        <village_storage_sw code="vs_sw" offsetX="0" offsetY="0" scale="1">../resources/objects/village/village_storage_sw.png</village_storage_sw>
+        <barracks code="br" offsetX="10" offsetY="5" scale="1">../resources/objects/barracks.png</barracks>
+        <ocean code="ocean" offsetX="0" offsetY="0" scale="1">../resources/map/ocean_texture.png</ocean>
+        <!-- forest -->
+	 	<boreal_2_var0 code="boreal_2_var0" offsetX="0" offsetY="0" scale="1">../resources/objects/forests/boreal_2_var0.png</boreal_2_var0>
+	 	<boreal_2_var1 code="boreal_2_var1" offsetX="0" offsetY="0" scale="1">../resources/objects/forests/boreal_2_var1.png</boreal_2_var1>
+	 	<boreal_3_var0 code="boreal_3_var0" offsetX="0" offsetY="0" scale="1">../resources/objects/forests/boreal_3_var0.png</boreal_3_var0>
+	 	<boreal_3_var1 code="boreal_3_var1" offsetX="0" offsetY="0" scale="1">../resources/objects/forests/boreal_3_var1.png</boreal_3_var1>
+	 	<boreal_3_var2 code="boreal_3_var2" offsetX="0" offsetY="0" scale="1">../resources/objects/forests/boreal_3_var2.png</boreal_3_var2>
+	 	<forest_2_var0 code="forest_2_var0" offsetX="0" offsetY="0" scale="1">../resources/objects/forests/forest_2_var0.png</forest_2_var0>
+	 	<forest_2_var1 code="forest_2_var1" offsetX="0" offsetY="0" scale="1">../resources/objects/forests/forest_2_var1.png</forest_2_var1>
+	 	<forest_2_var2 code="forest_2_var2" offsetX="0" offsetY="0" scale="1">../resources/objects/forests/forest_2_var2.png</forest_2_var2>
+	 	<forest_3_var0 code="forest_3_var0" offsetX="0" offsetY="27" scale="1">../resources/objects/forests/forest_3_var0.png</forest_3_var0>
+	 	<forest_3_var1 code="forest_3_var1" offsetX="0" offsetY="0" scale="1">../resources/objects/forests/forest_3_var1.png</forest_3_var1>
+	 	<forest_3_var2 code="forest_3_var2" offsetX="0" offsetY="0" scale="1">../resources/objects/forests/forest_3_var2.png</forest_3_var2>
+	 	<forest_3_var3 code="forest_3_var3" offsetX="0" offsetY="0" scale="1">../resources/objects/forests/forest_3_var3.png</forest_3_var3>
+	 	<forest_3_var4 code="forest_3_var4" offsetX="0" offsetY="0" scale="1">../resources/objects/forests/forest_3_var4.png</forest_3_var4>
+	 	<forest_3_var5 code="forest_3_var5" offsetX="0" offsetY="0" scale="1">../resources/objects/forests/forest_3_var5.png</forest_3_var5>
+	 	<forest_3_var6 code="forest_3_var6" offsetX="0" offsetY="0" scale="1">../resources/objects/forests/forest_3_var6.png</forest_3_var6>
+	 	<forest_4_var0 code="forest_4_var0" offsetX="0" offsetY="0" scale="1">../resources/objects/forests/forest_4_var0.png</forest_4_var0>
+
+        <!-- generated textures -->
+        <dg_lg_1_3_var_0 code="dg_lg_1_3_var_0" offsetX="0" offsetY="0" scale="1">../resources/generated/dg_lg_1_3_var_0.png</dg_lg_1_3_var_0>
+        <dg_lg_1_4_var_0 code="dg_lg_1_4_var_0" offsetX="0" offsetY="0" scale="1">../resources/generated/dg_lg_1_4_var_0.png</dg_lg_1_4_var_0>
+        <dg_lg_1_5_var_0 code="dg_lg_1_5_var_0" offsetX="0" offsetY="0" scale="1">../resources/generated/dg_lg_1_5_var_0.png</dg_lg_1_5_var_0>
+        <dg_lg_2_4_var_0 code="dg_lg_2_4_var_0" offsetX="0" offsetY="0" scale="1">../resources/generated/dg_lg_2_4_var_0.png</dg_lg_2_4_var_0>
+        <dg_lg_2_5_var_0 code="dg_lg_2_5_var_0" offsetX="0" offsetY="0" scale="1">../resources/generated/dg_lg_2_5_var_0.png</dg_lg_2_5_var_0>
+        <dg_lg_2_6_var_0 code="dg_lg_2_6_var_0" offsetX="0" offsetY="0" scale="1">../resources/generated/dg_lg_2_6_var_0.png</dg_lg_2_6_var_0>
+        <dg_lg_3_5_var_0 code="dg_lg_3_5_var_0" offsetX="0" offsetY="0" scale="1">../resources/generated/dg_lg_3_5_var_0.png</dg_lg_3_5_var_0>
+        <dg_lg_3_6_var_0 code="dg_lg_3_6_var_0" offsetX="0" offsetY="0" scale="1">../resources/generated/dg_lg_3_6_var_0.png</dg_lg_3_6_var_0>
+        <dg_lg_4_6_var_0 code="dg_lg_4_6_var_0" offsetX="0" offsetY="0" scale="1">../resources/generated/dg_lg_4_6_var_0.png</dg_lg_4_6_var_0>
+        <dg_st_1_3_var_0 code="dg_st_1_3_var_0" offsetX="0" offsetY="0" scale="1">../resources/generated/dg_st_1_3_var_0.png</dg_st_1_3_var_0>
+        <dg_st_1_4_var_0 code="dg_st_1_4_var_0" offsetX="0" offsetY="0" scale="1">../resources/generated/dg_st_1_4_var_0.png</dg_st_1_4_var_0>
+        <dg_st_1_5_var_0 code="dg_st_1_5_var_0" offsetX="0" offsetY="0" scale="1">../resources/generated/dg_st_1_5_var_0.png</dg_st_1_5_var_0>
+        <dg_st_2_4_var_0 code="dg_st_2_4_var_0" offsetX="0" offsetY="0" scale="1">../resources/generated/dg_st_2_4_var_0.png</dg_st_2_4_var_0>
+        <dg_st_2_5_var_0 code="dg_st_2_5_var_0" offsetX="0" offsetY="0" scale="1">../resources/generated/dg_st_2_5_var_0.png</dg_st_2_5_var_0>
+        <dg_st_2_6_var_0 code="dg_st_2_6_var_0" offsetX="0" offsetY="0" scale="1">../resources/generated/dg_st_2_6_var_0.png</dg_st_2_6_var_0>
+        <dg_st_3_5_var_0 code="dg_st_3_5_var_0" offsetX="0" offsetY="0" scale="1">../resources/generated/dg_st_3_5_var_0.png</dg_st_3_5_var_0>
+        <dg_st_3_6_var_0 code="dg_st_3_6_var_0" offsetX="0" offsetY="0" scale="1">../resources/generated/dg_st_3_6_var_0.png</dg_st_3_6_var_0>
+        <dg_st_4_6_var_0 code="dg_st_4_6_var_0" offsetX="0" offsetY="0" scale="1">../resources/generated/dg_st_4_6_var_0.png</dg_st_4_6_var_0>
+        <lg_dg_1_3_var_0 code="lg_dg_1_3_var_0" offsetX="0" offsetY="0" scale="1">../resources/generated/lg_dg_1_3_var_0.png</lg_dg_1_3_var_0>
+        <lg_dg_1_4_var_0 code="lg_dg_1_4_var_0" offsetX="0" offsetY="0" scale="1">../resources/generated/lg_dg_1_4_var_0.png</lg_dg_1_4_var_0>
+        <lg_dg_1_5_var_0 code="lg_dg_1_5_var_0" offsetX="0" offsetY="0" scale="1">../resources/generated/lg_dg_1_5_var_0.png</lg_dg_1_5_var_0>
+        <lg_dg_2_4_var_0 code="lg_dg_2_4_var_0" offsetX="0" offsetY="0" scale="1">../resources/generated/lg_dg_2_4_var_0.png</lg_dg_2_4_var_0>
+        <lg_dg_2_5_var_0 code="lg_dg_2_5_var_0" offsetX="0" offsetY="0" scale="1">../resources/generated/lg_dg_2_5_var_0.png</lg_dg_2_5_var_0>
+        <lg_dg_2_6_var_0 code="lg_dg_2_6_var_0" offsetX="0" offsetY="0" scale="1">../resources/generated/lg_dg_2_6_var_0.png</lg_dg_2_6_var_0>
+        <lg_dg_3_5_var_0 code="lg_dg_3_5_var_0" offsetX="0" offsetY="0" scale="1">../resources/generated/lg_dg_3_5_var_0.png</lg_dg_3_5_var_0>
+        <lg_dg_3_6_var_0 code="lg_dg_3_6_var_0" offsetX="0" offsetY="0" scale="1">../resources/generated/lg_dg_3_6_var_0.png</lg_dg_3_6_var_0>
+        <lg_dg_4_6_var_0 code="lg_dg_4_6_var_0" offsetX="0" offsetY="0" scale="1">../resources/generated/lg_dg_4_6_var_0.png</lg_dg_4_6_var_0>
+        <lg_st_1_3_var_0 code="lg_st_1_3_var_0" offsetX="0" offsetY="0" scale="1">../resources/generated/lg_st_1_3_var_0.png</lg_st_1_3_var_0>
+        <lg_st_1_4_var_0 code="lg_st_1_4_var_0" offsetX="0" offsetY="0" scale="1">../resources/generated/lg_st_1_4_var_0.png</lg_st_1_4_var_0>
+        <lg_st_1_5_var_0 code="lg_st_1_5_var_0" offsetX="0" offsetY="0" scale="1">../resources/generated/lg_st_1_5_var_0.png</lg_st_1_5_var_0>
+        <lg_st_2_4_var_0 code="lg_st_2_4_var_0" offsetX="0" offsetY="0" scale="1">../resources/generated/lg_st_2_4_var_0.png</lg_st_2_4_var_0>
+        <lg_st_2_5_var_0 code="lg_st_2_5_var_0" offsetX="0" offsetY="0" scale="1">../resources/generated/lg_st_2_5_var_0.png</lg_st_2_5_var_0>
+        <lg_st_2_6_var_0 code="lg_st_2_6_var_0" offsetX="0" offsetY="0" scale="1">../resources/generated/lg_st_2_6_var_0.png</lg_st_2_6_var_0>
+        <lg_st_3_5_var_0 code="lg_st_3_5_var_0" offsetX="0" offsetY="0" scale="1">../resources/generated/lg_st_3_5_var_0.png</lg_st_3_5_var_0>
+        <lg_st_3_6_var_0 code="lg_st_3_6_var_0" offsetX="0" offsetY="0" scale="1">../resources/generated/lg_st_3_6_var_0.png</lg_st_3_6_var_0>
+        <lg_st_4_6_var_0 code="lg_st_4_6_var_0" offsetX="0" offsetY="0" scale="1">../resources/generated/lg_st_4_6_var_0.png</lg_st_4_6_var_0>
+        <st_dg_1_3_var_0 code="st_dg_1_3_var_0" offsetX="0" offsetY="0" scale="1">../resources/generated/st_dg_1_3_var_0.png</st_dg_1_3_var_0>
+        <st_dg_1_4_var_0 code="st_dg_1_4_var_0" offsetX="0" offsetY="0" scale="1">../resources/generated/st_dg_1_4_var_0.png</st_dg_1_4_var_0>
+        <st_dg_1_5_var_0 code="st_dg_1_5_var_0" offsetX="0" offsetY="0" scale="1">../resources/generated/st_dg_1_5_var_0.png</st_dg_1_5_var_0>
+        <st_dg_2_4_var_0 code="st_dg_2_4_var_0" offsetX="0" offsetY="0" scale="1">../resources/generated/st_dg_2_4_var_0.png</st_dg_2_4_var_0>
+        <st_dg_2_5_var_0 code="st_dg_2_5_var_0" offsetX="0" offsetY="0" scale="1">../resources/generated/st_dg_2_5_var_0.png</st_dg_2_5_var_0>
+        <st_dg_2_6_var_0 code="st_dg_2_6_var_0" offsetX="0" offsetY="0" scale="1">../resources/generated/st_dg_2_6_var_0.png</st_dg_2_6_var_0>
+        <st_dg_3_5_var_0 code="st_dg_3_5_var_0" offsetX="0" offsetY="0" scale="1">../resources/generated/st_dg_3_5_var_0.png</st_dg_3_5_var_0>
+        <st_dg_3_6_var_0 code="st_dg_3_6_var_0" offsetX="0" offsetY="0" scale="1">../resources/generated/st_dg_3_6_var_0.png</st_dg_3_6_var_0>
+        <st_dg_4_6_var_0 code="st_dg_4_6_var_0" offsetX="0" offsetY="0" scale="1">../resources/generated/st_dg_4_6_var_0.png</st_dg_4_6_var_0>
+        <st_lg_1_3_var_0 code="st_lg_1_3_var_0" offsetX="0" offsetY="0" scale="1">../resources/generated/st_lg_1_3_var_0.png</st_lg_1_3_var_0>
+        <st_lg_1_4_var_0 code="st_lg_1_4_var_0" offsetX="0" offsetY="0" scale="1">../resources/generated/st_lg_1_4_var_0.png</st_lg_1_4_var_0>
+        <st_lg_1_5_var_0 code="st_lg_1_5_var_0" offsetX="0" offsetY="0" scale="1">../resources/generated/st_lg_1_5_var_0.png</st_lg_1_5_var_0>
+        <st_lg_2_4_var_0 code="st_lg_2_4_var_0" offsetX="0" offsetY="0" scale="1">../resources/generated/st_lg_2_4_var_0.png</st_lg_2_4_var_0>
+        <st_lg_2_5_var_0 code="st_lg_2_5_var_0" offsetX="0" offsetY="0" scale="1">../resources/generated/st_lg_2_5_var_0.png</st_lg_2_5_var_0>
+        <st_lg_2_6_var_0 code="st_lg_2_6_var_0" offsetX="0" offsetY="0" scale="1">../resources/generated/st_lg_2_6_var_0.png</st_lg_2_6_var_0>
+        <st_lg_3_5_var_0 code="st_lg_3_5_var_0" offsetX="0" offsetY="0" scale="1">../resources/generated/st_lg_3_5_var_0.png</st_lg_3_5_var_0>
+        <st_lg_3_6_var_0 code="st_lg_3_6_var_0" offsetX="0" offsetY="0" scale="1">../resources/generated/st_lg_3_6_var_0.png</st_lg_3_6_var_0>
+        <st_lg_4_6_var_0 code="st_lg_4_6_var_0" offsetX="0" offsetY="0" scale="1">../resources/generated/st_lg_4_6_var_0.png</st_lg_4_6_var_0>
+        <!-- end of generated textures -->
+    </textures>
+    <map>
+        wd  wd  wd  wd  wd  wd  wd  wd  wd  wd  wd  wd  wd  wd  wd  wd  wd  wd  wd  wd
+          wd  wd  gr  gr  gr  gr  gr  gr  gr  gr  gr  gr  gr  gr  gr  gr  gr  gr  wd  wd
+        wd  wd  gr  gr  xx  xx  xx  xx  gr  gr  gr  gr  gr  xx  xx  xx  xx  gr  wd  wd
+          wd  wd  gr  xx  gc  gc  gc  xx  gr  gr  gr  gr  xx  gc  gc  gc  xx  gr  wd  wd
+        wd  wd  gr  xx  gc  gc  gc  gc  xx  gr  gr  gr  xx  gc  gc  gc  gc  xx  wd  wd
+          wd  wd  xx  gc  gc  gc  gc  gc  xx  gr  gr  gr  xx  gc  gc  gc  xx  gr  wd  wd
+        wd  wd  gr  xx  gc  gc  gc  gc  gc  xx  gr  gr  gr  xx  gc  gc  xx  gr  wd  wd
+          wd  wd  xx  gc  gc  gc  gc  gc  xx  gr  gr  gr  xx  gc  gc  xx  gr  gr  wd  wd
+        wd  wd  gr  xx  xx  gc  gc  xx  xx  gr  gr  gr  gr  xx  xx  xx  gr  gr  wd  wd
+          wd  wd  gr  gr  xx  xx  xx  gr  gr  gr  gr  gr  gr  gr  gr  gr  gr  gr  wd  wd
+        wd  wd  gr  gr  gr  gr  gr  gr  gr  gr  gr  gr  gr  gr  gr  gr  gr  gr  wd  wd
+          wd  wd  gr  gr  gr  gr  gr  gr  gr  gr  gr  gr  gr  gr  gr  gr  gr  gr  wd  wd
+        wd  wd  gr  gr  gr  gr  gr  gr  gr  gr  gr  gr  gr  gr  gr  gr  gr  gr  wd  wd
+          wd  wd  gr  gr  gr  gr  gr  gr  gr  gr  gr  gr  gr  gr  gr  gr  gr  gr  wd  wd
+        wd  wd  gr  gr  gr  gr  gr  gr  gr  gr  gr  gr  gr  gr  gr  gr  gr  gr  wd  wd
+          wd  wd  gr  gr  gr  gr  gr  gr  gr  gr  gr  gr  gr  gr  gr  gr  gr  gr  wd  wd
+        wd  wd  gr  gr  gr  gr  gr  uu  uu  uu  uu  uu  uu  gr  gr  gr  gr  gr  wd  wd
+          wd  wd  gr  gr  gr  gr  uu  st  st  st  st  st  uu  gr  gr  gr  gr  wd  wd  wd
+        wd  wd  gr  gr  gr  gr  uu  st  st  st  st  st  st  uu  gr  gr  gr  wd  wd  wd
+          wd  wd  gr  gr  gr  gr  uu  st  st  st  st  st  uu  gr  gr  gr  gr  wd  wd  wd
+        wd  wd  wd  gr  gr  gr  gr  uu  uu  uu  uu  uu  uu  gr  gr  gr  gr  gr  wd  wd
+          wd  wd  wd  gr  gr  gr  gr  gr  gr  gr  gr  gr  gr  gr  gr  gr  gr  wd  wd  wd
+        wd  wd  wd  wd  wd  gr  gr  gr  gr  gr  gr  gr  gr  gr  gr  gr  gr  wd  wd  wd
+          wd  wd  wd  wd  wd  wd  wd  wd  wd  wd  wd  wd  wd  wd  wd  wd  wd  wd  wd  wd
+        wd  wd  wd  wd  wd  wd  wd  wd  wd  wd  wd  wd  wd  wd  wd  wd  wd  wd  wd  wd
+    </map>
+    <map_obj>
+        --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --
+          --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --
+        --  --  --  --  --  f2  --  --  --  --  --  --  --  --  --  --  --  --  --  --
+          --  --  --  f2  f2  f2  --  --  --  --  --  --  --  --  --  f2  --  --  --  --
+        --  --  --  f2  f2  f2  --  --  --  --  --  --  --  --  f2  f2  f2  --  --  --
+          --  --  --  --  f2  --  --  --  --  --  --  --  --  --  f2  f2  --  --  --  --
+        --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --
+          --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --
+        --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --
+          --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --
+        --  --  --  --  --  --  --  --  f2  f2  f2  --  --  --  --  --  --  --  --  --
+          --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --
+        --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --
+          --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --
+        --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --
+          --  --  r1  r1  --  --  --  --  --  --  --  --  --  --  --  r1  r1  --  --  --
+        --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --
+          --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --
+        --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --
+          --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --
+        --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --
+          --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --
+        --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --
+    </map_obj>
+    <resources>
+        <rock code="r1" amount="100">description</rock>
+        <gold code="g1" amount="200">description</gold>
+        <forest code="f1" amount="80">description</forest>
+    </resources>
+
+    <!-- make sure to add all buildings in the Buildings.BuildingType section-->
+    <buildings>
+        <B1 code="s1" construction_cost="5" culture_per_turn="1" resource_per_field="2"
+            resource_per_turn="0" sight_range="2" food_consumption="1" construction_time="2"
+            defensive_value="2">description</B1>
+        <FA code="fa" construction_cost="5" culture_per_turn="0" resource_per_field="0"
+            resource_per_turn="0" sight_range="2" food_consumption="0" construction_time="2"
+            defensive_value="2">description</FA>
+        <B2 code="s2" construction_cost="15" culture_per_turn="0" resource_per_field="2"
+            resource_per_turn="0" sight_range="2" food_consumption="2" construction_time="3"
+            defensive_value="2">description</B2>
+        <C1 code="c1" construction_cost="5" culture_per_turn="0" resource_per_field="0"
+            resource_per_turn="1" sight_range="3" food_consumption="0" construction_time="0"
+            defensive_value="2">description</C1>
+        <C2 code="c2" construction_cost="10" culture_per_turn="0" resource_per_field="0"
+            resource_per_turn="1" sight_range="3" food_consumption="0" construction_time="0"
+            defensive_value="5">description</C2>
+        <C3 code="c3" construction_cost="10" culture_per_turn="0" resource_per_field="0"
+            resource_per_turn="1" sight_range="3" food_consumption="0" construction_time="0"
+            defensive_value="10">description</C3>
+        <V1 code="v1" construction_cost="10" culture_per_turn="0" resource_per_field="0"
+            resource_per_turn="1" sight_range="3" food_consumption="0" construction_time="0"
+            defensive_value="10">description</V1>
+        <Racks code="br" construction_cost="10" culture_per_turn="0" resource_per_field="0"
+               resource_per_turn="1" sight_range="3" food_consumption="0" construction_time="0"
+               defensive_value="10">description</Racks>
+    </buildings>
+    <players>
+        <!--<player1 colour="red" spawn_x="2" spawn_y="2" ai="expansionist"
+                 army_rel_to_spawn_x="-1" army_rel_to_spawn_y="-1">peter pan</player1>-->
+        <!--<player2 colour="yellow" spawn_x="4" spawn_y="2" ai="expansionist"
+                 army_rel_to_spawn_x="0" army_rel_to_spawn_y="-1">peter pan</player2>-->
+        <barbar1 colour="yellow" spawn_x="5" spawn_y="13" ai="barbaric"
+                 army_rel_to_spawn_x="-1" army_rel_to_spawn_y="-1">Barbaric 1</barbar1>
+        <!--<village colour="teal" spawn_x="2" spawn_y="16" ai="villager"
+                 army_rel_to_spawn_x="-1" army_rel_to_spawn_y="0">Barbaric 1</village>-->
+    </players>
+</game>

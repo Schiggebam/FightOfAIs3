@@ -1,4 +1,4 @@
-
+from typing import Callable
 
 import arcade
 
@@ -11,6 +11,7 @@ class TextureStore:
         # this dictionary contains all textures
         # key is a str_code
         self.textures = {}
+        self.animated_textures = {}
 
     def load_textures(self, dict_requested):
         start_progress("loading textures")
@@ -43,3 +44,15 @@ class TextureStore:
         if key in self.textures:
             return self.textures[key][3]
         print("TextureStore: Unable to find texture: " + key)
+
+    def load_animated_texture(self, name: str, amount: int, index_function,
+                              width, height, path: str):
+        self.animated_textures[name] = []
+        for i in range(amount):
+            pixel_pos: (int, int) = index_function(i)
+            tex: arcade.Texture = arcade.load_texture(path, x=pixel_pos[0], y=pixel_pos[1],
+                                                      width=width, height=height)
+            self.animated_textures[name].append(tex)
+
+    def get_animated_texture(self, name:str):
+        return self.animated_textures[name]

@@ -4,6 +4,10 @@ import sys
 ######################
 ### Game Constants ###
 ######################
+from enum import Enum, IntEnum
+from typing import Union
+
+import arcade
 
 CAMERA_SENSITIVITY = 250
 
@@ -124,6 +128,62 @@ class ResourceType:
 class DiploEventType:
     TYPE_ENEMY_ARMY_INVADING = 100
     TYPE_ENEMY_BUILDING_SCOUTED = 101
+
+
+class PlayerColour:
+    YELLOW = 0
+    TEAL = 1
+    RED = 2
+    BLUE = 3
+    GREEN = 4
+    PINK = 5
+
+    @staticmethod
+    def get_type_from_strcode(str_code: str):
+        if str_code == "yellow":
+            return PlayerColour.YELLOW
+        elif str_code == "red":
+            return PlayerColour.RED
+        elif str_code == "teal":
+            return PlayerColour.TEAL
+        elif str_code == "pink":
+            return PlayerColour.PINK
+        elif str_code == "green":
+            return PlayerColour.GREEN
+        elif str_code == "blue":
+            return PlayerColour.BLUE
+        return -1
+
+    @staticmethod
+    def player_colour_to_arcade_colour(colour) -> arcade.Color:
+        if colour == PlayerColour.YELLOW:
+            return arcade.color.YELLOW
+        elif colour == PlayerColour.TEAL:
+            return arcade.color.PALE_BLUE
+        elif colour == PlayerColour.RED:
+            return arcade.color.RED
+        elif colour == PlayerColour.PINK:
+            return arcade.color.PINK
+        elif colour == PlayerColour.BLUE:
+            return arcade.color.BLUE
+        elif colour == PlayerColour.GREEN:
+            return arcade.color.GREEN
+
+    @staticmethod
+    def get_colour_code(colour: int) -> str:
+        if colour == PlayerColour.YELLOW:
+            return 'yellow'
+        elif colour == PlayerColour.TEAL:
+            return 'teal'
+        elif colour == PlayerColour.RED:
+            return 'red'
+        elif colour == PlayerColour.PINK:
+            return 'pink'
+        elif colour == PlayerColour.BLUE:
+            return 'blue'
+        elif colour == PlayerColour.GREEN:
+            return 'green'
+        return 'no_colour'
 
 ###############
 ### STATES ####
