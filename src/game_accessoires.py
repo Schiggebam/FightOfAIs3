@@ -77,7 +77,7 @@ class Resource(Drawable):
     # e.g. ('Resource.ResourceType.GOLD', {amount: 150, ...}
     resource_info: [(int, {})] = [] # a dict containing all information about the resources
 
-    def __init__(self, tile: Hexagon, res_type: int):
+    def __init__(self, tile: Hexagon, res_type: ResourceType):
         super().__init__()
         self.tile: Hexagon = tile
         self.remaining_amount: int = int(0)

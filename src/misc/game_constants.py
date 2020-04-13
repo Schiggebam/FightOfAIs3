@@ -1,4 +1,3 @@
-
 import sys
 
 ######################
@@ -10,6 +9,7 @@ from typing import Union
 import arcade
 
 CAMERA_SENSITIVITY = 250
+
 
 ########################
 ### Helper functions ###
@@ -31,9 +31,10 @@ def error(msg: str):
 
 def start_progress(title):
     global progress_x
-    sys.stdout.write(title + ": [" + "-"*40 + "]" + chr(8)*41)
+    sys.stdout.write(title + ": [" + "-" * 40 + "]" + chr(8) * 41)
     sys.stdout.flush()
     progress_x = 0
+
 
 def progress(x):
     global progress_x
@@ -42,10 +43,10 @@ def progress(x):
     sys.stdout.flush()
     progress_x = x
 
+
 def end_progress():
     sys.stdout.write("#" * (40 - progress_x) + "]\n")
     sys.stdout.flush()
-
 
 
 #####################
@@ -59,7 +60,8 @@ class LogType:
     BATTLE_ARMY_VS_BUILDING = 901
     DIPLO_ENEMY_BUILDING_SCOUTED = 902
 
-#ground
+
+# ground
 class GroundType:
     GRASS = 0
     WATER_DEEP = 1
@@ -184,6 +186,7 @@ class PlayerColour:
         elif colour == PlayerColour.GREEN:
             return 'green'
         return 'no_colour'
+
 
 ###############
 ### STATES ####

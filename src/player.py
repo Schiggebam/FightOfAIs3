@@ -1,4 +1,3 @@
-import arcade
 from typing import Set
 from src.game_accessoires import Army
 from src.misc.building import Building

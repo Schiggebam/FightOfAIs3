@@ -84,7 +84,6 @@ class AI_GameStatus:
         self.armies: [AI_Army] = []
         self.aggressions: Set[int] = set()
 
-
     def clear(self):
         for e in self.tiles_buildable:
             del e

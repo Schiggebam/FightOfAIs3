@@ -10,7 +10,7 @@ from src.misc.game_constants import BuildingType, BuildingState, error, hint
 class Building(Drawable):
 
     building_info: [(int, {})] = []
-    def __init__(self, tile: Hexagon, bui_type: int, owner_id):
+    def __init__(self, tile: Hexagon, bui_type: BuildingType, owner_id):
         super().__init__()
         self.tile: Hexagon = tile
         self.associated_tiles: [Hexagon] = []

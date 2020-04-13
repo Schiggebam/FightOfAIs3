@@ -1,4 +1,5 @@
 from enum import Enum
+from typing import Optional
 
 TILE_HIGHT = 52 * 1
 TILE_WIDTH = 66 * 1
@@ -30,13 +31,13 @@ class HexMap:
             for x in range(map_dim[0]):
                 self.map.append(Hexagon((x, y)))
 
-    def get_hex_by_cube(self, cube_c: (int, int, int)) -> Hexagon:
+    def get_hex_by_cube(self, cube_c: (int, int, int)) -> Optional[Hexagon]:
         x, y = HexMap.cube_to_offset_coords(cube_c)
         if (0 <= x < self.map_dim[0]) and (0 <= y < self.map_dim[1]):
             return self.map[self.offset_to_linear_mapping(HexMap.cube_to_offset_coords(cube_c))]
         return None
 
-    def get_hex_by_offset(self, offset_c: (int, int)) -> Hexagon:
+    def get_hex_by_offset(self, offset_c: (int, int)) -> Optional[Hexagon]:
         if (0 <= offset_c[0] < self.map_dim[0]) and (0 <= offset_c[1] < self.map_dim[1]):
             return self.map[self.offset_to_linear_mapping(offset_c)]
         return None
