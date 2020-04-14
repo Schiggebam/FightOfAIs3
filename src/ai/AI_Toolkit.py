@@ -1,4 +1,30 @@
 import copy
+import queue
+from typing import List, Callable, Union, Tuple
+
+from src.ai.AI_GameStatus import AI_Tile, AI_Element
+
+AI_OBJ = Union[AI_Element, AI_Tile]
+
+def simple_heat_map(initial_set: List[AI_OBJ], working_set: List[AI_OBJ],
+                    condition) -> List[Tuple[int, AI_OBJ]]:
+    heat_map: List[Tuple[int, AI_OBJ]] = []
+    tmp = queue.Queue()
+    discovered = set()
+    for i in initial_set:
+        tmp.put((-1, i))
+    while not tmp.empty():
+        d, s = tmp.get()
+        if s in discovered:
+            continue
+        discovered.add(s)
+        if d >= 0:
+            heat_map.append((d, s))
+        nei = getListDistanceOne(s, working_set)
+        for n in nei:
+            if n not in discovered and condition(n):
+                tmp.put((d + 1, n))
+    return heat_map
 
 def estimate_income(list_buildings):
     pass
@@ -100,9 +126,10 @@ def offset_to_cube_coord(hex):
 def cube_distance(a, b):
     return (abs(a[0] - b[0]) + abs(a[1] - b[1]) + abs(a[2] - b[2])) / 2
 
-def is_tile_in_list(tile, list) -> bool:
+def is_obj_in_list(obj: AI_OBJ, list) -> bool:
+    """check whether a the offset coordinates of an object match the ones of an element in the list"""
     for e in list:
-        if e.offset_coordinates == tile.offset_coordinates:
+        if e.offset_coordinates == obj.offset_coordinates:
             return True
     return False
 

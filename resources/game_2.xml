@@ -31,22 +31,22 @@
         <barracks code="br" offsetX="10" offsetY="5" scale="1">../resources/objects/barracks.png</barracks>
         <ocean code="ocean" offsetX="0" offsetY="0" scale="1">../resources/map/ocean_texture.png</ocean>
         <!-- forest -->
-	 	<boreal_2_var0 code="boreal_2_var0" offsetX="0" offsetY="0" scale="1">../resources/objects/forests/boreal_2_var0.png</boreal_2_var0>
-	 	<boreal_2_var1 code="boreal_2_var1" offsetX="0" offsetY="0" scale="1">../resources/objects/forests/boreal_2_var1.png</boreal_2_var1>
-	 	<boreal_3_var0 code="boreal_3_var0" offsetX="0" offsetY="0" scale="1">../resources/objects/forests/boreal_3_var0.png</boreal_3_var0>
-	 	<boreal_3_var1 code="boreal_3_var1" offsetX="0" offsetY="0" scale="1">../resources/objects/forests/boreal_3_var1.png</boreal_3_var1>
-	 	<boreal_3_var2 code="boreal_3_var2" offsetX="0" offsetY="0" scale="1">../resources/objects/forests/boreal_3_var2.png</boreal_3_var2>
-	 	<forest_2_var0 code="forest_2_var0" offsetX="0" offsetY="0" scale="1">../resources/objects/forests/forest_2_var0.png</forest_2_var0>
-	 	<forest_2_var1 code="forest_2_var1" offsetX="0" offsetY="0" scale="1">../resources/objects/forests/forest_2_var1.png</forest_2_var1>
-	 	<forest_2_var2 code="forest_2_var2" offsetX="0" offsetY="0" scale="1">../resources/objects/forests/forest_2_var2.png</forest_2_var2>
+	 	<boreal_2_var0 code="boreal_2_var0" offsetX="0" offsetY="27" scale="1">../resources/objects/forests/boreal_2_var0.png</boreal_2_var0>
+	 	<boreal_2_var1 code="boreal_2_var1" offsetX="0" offsetY="27" scale="1">../resources/objects/forests/boreal_2_var1.png</boreal_2_var1>
+	 	<boreal_3_var0 code="boreal_3_var0" offsetX="0" offsetY="27" scale="1">../resources/objects/forests/boreal_3_var0.png</boreal_3_var0>
+	 	<boreal_3_var1 code="boreal_3_var1" offsetX="0" offsetY="27" scale="1">../resources/objects/forests/boreal_3_var1.png</boreal_3_var1>
+	 	<boreal_3_var2 code="boreal_3_var2" offsetX="0" offsetY="27" scale="1">../resources/objects/forests/boreal_3_var2.png</boreal_3_var2>
+	 	<forest_2_var0 code="forest_2_var0" offsetX="0" offsetY="27" scale="1">../resources/objects/forests/forest_2_var0.png</forest_2_var0>
+	 	<forest_2_var1 code="forest_2_var1" offsetX="0" offsetY="27" scale="1">../resources/objects/forests/forest_2_var1.png</forest_2_var1>
+	 	<forest_2_var2 code="forest_2_var2" offsetX="0" offsetY="27" scale="1">../resources/objects/forests/forest_2_var2.png</forest_2_var2>
 	 	<forest_3_var0 code="forest_3_var0" offsetX="0" offsetY="27" scale="1">../resources/objects/forests/forest_3_var0.png</forest_3_var0>
-	 	<forest_3_var1 code="forest_3_var1" offsetX="0" offsetY="0" scale="1">../resources/objects/forests/forest_3_var1.png</forest_3_var1>
-	 	<forest_3_var2 code="forest_3_var2" offsetX="0" offsetY="0" scale="1">../resources/objects/forests/forest_3_var2.png</forest_3_var2>
-	 	<forest_3_var3 code="forest_3_var3" offsetX="0" offsetY="0" scale="1">../resources/objects/forests/forest_3_var3.png</forest_3_var3>
-	 	<forest_3_var4 code="forest_3_var4" offsetX="0" offsetY="0" scale="1">../resources/objects/forests/forest_3_var4.png</forest_3_var4>
-	 	<forest_3_var5 code="forest_3_var5" offsetX="0" offsetY="0" scale="1">../resources/objects/forests/forest_3_var5.png</forest_3_var5>
-	 	<forest_3_var6 code="forest_3_var6" offsetX="0" offsetY="0" scale="1">../resources/objects/forests/forest_3_var6.png</forest_3_var6>
-	 	<forest_4_var0 code="forest_4_var0" offsetX="0" offsetY="0" scale="1">../resources/objects/forests/forest_4_var0.png</forest_4_var0>
+	 	<forest_3_var1 code="forest_3_var1" offsetX="0" offsetY="27" scale="1">../resources/objects/forests/forest_3_var1.png</forest_3_var1>
+	 	<forest_3_var2 code="forest_3_var2" offsetX="0" offsetY="27" scale="1">../resources/objects/forests/forest_3_var2.png</forest_3_var2>
+	 	<forest_3_var3 code="forest_3_var3" offsetX="0" offsetY="27" scale="1">../resources/objects/forests/forest_3_var3.png</forest_3_var3>
+	 	<forest_3_var4 code="forest_3_var4" offsetX="0" offsetY="27" scale="1">../resources/objects/forests/forest_3_var4.png</forest_3_var4>
+	 	<forest_3_var5 code="forest_3_var5" offsetX="0" offsetY="27" scale="1">../resources/objects/forests/forest_3_var5.png</forest_3_var5>
+	 	<forest_3_var6 code="forest_3_var6" offsetX="0" offsetY="27" scale="1">../resources/objects/forests/forest_3_var6.png</forest_3_var6>
+	 	<forest_4_var0 code="forest_4_var0" offsetX="0" offsetY="27" scale="1">../resources/objects/forests/forest_4_var0.png</forest_4_var0>
 
         <!-- generated textures -->
         <dg_lg_1_3_var_0 code="dg_lg_1_3_var_0" offsetX="0" offsetY="0" scale="1">../resources/generated/dg_lg_1_3_var_0.png</dg_lg_1_3_var_0>
@@ -150,7 +150,7 @@
         --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --
           --  --  r1  r1  --  --  --  --  --  --  --  --  --  --  --  r1  r1  --  --  --
         --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --
-          --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --
+          --  --  f2  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --
         --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --
           --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --
         --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --
@@ -167,7 +167,7 @@
     <buildings>
         <B1 code="s1" construction_cost="5" culture_per_turn="1" resource_per_field="2"
             resource_per_turn="0" sight_range="2" food_consumption="1" construction_time="2"
-            defensive_value="2" flag_x="0" flag_y="50" grant_pop="0">description</B1>
+            defensive_value="2" flag_x="30" flag_y="25" grant_pop="5">description</B1>
         <FA code="fa" construction_cost="5" culture_per_turn="0" resource_per_field="0"
             resource_per_turn="0" sight_range="2" food_consumption="0" construction_time="2"
             defensive_value="2" flag_x="0" flag_y="50" grant_pop="0">description</FA>
@@ -199,8 +199,8 @@
                           cost_resource="10" cost_culture="0">description</Barbaric_Soldier>
     </units>
     <players>
-        <!--<player1 colour="red" spawn_x="2" spawn_y="2" ai="expansionist"
-                 army_rel_to_spawn_x="-1" army_rel_to_spawn_y="-1">peter pan</player1>-->
+        <player1 colour="red" spawn_x="4" spawn_y="5" ai="expansionist"
+                 army_rel_to_spawn_x="-1" army_rel_to_spawn_y="-1">peter pan</player1>
         <!--<player2 colour="yellow" spawn_x="4" spawn_y="2" ai="expansionist"
                  army_rel_to_spawn_x="0" army_rel_to_spawn_y="-1">peter pan</player2>-->
         <barbar1 colour="yellow" spawn_x="5" spawn_y="13" ai="barbaric"

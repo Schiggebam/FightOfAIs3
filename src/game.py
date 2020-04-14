@@ -11,7 +11,7 @@ SCREEN_WIDTH = 1280
 SCREEN_HEIGHT = 720
 SCREEN_TITLE = "Fight of AIs"
 
-DEBUG = True
+
 NUM_Z_LEVELS = 4
 
 GAME_XML_FILE = "../resources/game_2.xml"
@@ -50,19 +50,19 @@ class ZlvlRenderer:
         rel = int(float(CAMERA_SENSITIVITY) * delta_t)
         if self.up_key:
             self.camera_has_moved = True
-            self.rel_y = rel
+            self.rel_y = - rel
             self.camera_y = self.camera_y + self.rel_y
         elif self.down_key:
             self.camera_has_moved = True
-            self.rel_y = - rel
+            self.rel_y = rel
             self.camera_y = self.camera_y + self.rel_y
         if self.left_key:
             self.camera_has_moved = True
-            self.rel_x = - rel
+            self.rel_x = rel
             self.camera_x = self.camera_x + self.rel_x
         elif self.right_key:
             self.camera_has_moved = True
-            self.rel_x = rel
+            self.rel_x = - rel
             self.camera_x = self.camera_x + self.rel_x
 
         if self.camera_has_moved:

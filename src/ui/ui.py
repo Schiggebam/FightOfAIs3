@@ -3,6 +3,7 @@ from typing import List
 
 import arcade
 
+from src.game_logic import GameLogic
 from src.misc.game_logic_misc import Logger
 from src.ui.IconButton import IconButton
 from src.ui.SimpleButton import TextButton
@@ -60,7 +61,7 @@ class AutomaticIconButton(IconButton):
 class UI:
     def __init__(self, gl, screen_width, screen_height):
         self.camera_pos = (0, 0)
-        self.gl = gl # holds an instance of the game logic
+        self.gl: GameLogic = gl # holds an instance of the game logic
         self.buttonlist = []
         self.panel_list = []
         sb = NextTurnButton(screen_width-150, 70, self.callBack1)
@@ -108,7 +109,7 @@ class UI:
             if hex.debug_msg != "":
                 from src.hex_map import HexMap
                 (x, y) = HexMap.offset_to_pixel_coords(hex.offset_coordinates)
-                arcade.draw_text(hex.debug_msg, x + self.camera_pos[0], y + self.camera_pos[1], arcade.color.WHITE)
+                arcade.draw_text(hex.debug_msg, x + self.camera_pos[0], y + self.camera_pos[1], arcade.color.BLACK)
 
         # bottom pane
         arcade.draw_rectangle_filled(self.screen_width/2, 50, self.screen_width, 100,

@@ -21,6 +21,7 @@ class Console:
         self.list_of_commands.append(ConsoleCommand("set_scouted", 3, "[args: player_id x_grid y_grid]"))
         self.list_of_commands.append(ConsoleCommand("hl_scouted", 1, "[args: player_id] Highlights all scouted tiles of a player"))
         self.list_of_commands.append(ConsoleCommand("clear_aux", 0, "[no args] clears all auxiliary sprites"))
+        self.list_of_commands.append(ConsoleCommand("hl_walkable", 0, "[no args] highlights all walkable tiles"))
 
         self.input_queue = queue.Queue()
         input_thread = threading.Thread(target=self.add_input)

@@ -1,9 +1,12 @@
-from src.misc.game_constants import DiploEventType
+from src.misc.game_constants import DiploEventType, error
+from src.misc.game_logic_misc import Logger
 
 
 class AI_Diplo:
 
     DIPLO_BASE_VALUE = float(5)
+    LOGGED_EVENTS = (DiploEventType.ENEMY_BUILDING_IN_CLAIMED_ZONE,
+                     DiploEventType.ENEMY_ARMY_INVADING_CLAIMED_ZONE)
 
     class AI_DiploEvent:
 
@@ -39,10 +42,17 @@ class AI_Diplo:
             event_str = "Enemy building scouted at: " + str(loc)
         elif event == DiploEventType.TYPE_ENEMY_ARMY_INVADING:
             event_str = "Enemy army scouted at: " + str(loc)
+        elif event == DiploEventType.ENEMY_BUILDING_IN_CLAIMED_ZONE:
+            event_str = "Enemy building is located in claimed zone"
+        elif event == DiploEventType.ENEMY_ARMY_INVADING_CLAIMED_ZONE:
+            event_str = "Enemy army is invading claimed zone"
+        else:
+            error("Unknown event!")
         ai_event = AI_Diplo.AI_DiploEvent(target_id, rel_change, lifetime, event, event_str)
         ai_event.add_loc(loc)
         self.events.append(ai_event)
-        #Logger.log_diplomatic_event(event, rel_change, loc, lifetime, player_name)
+        if event in AI_Diplo.LOGGED_EVENTS:
+            Logger.log_diplomatic_event(event, rel_change, loc, lifetime, player_name)
 
     def calc_round(self):
         for diplo in self.diplomacy:

@@ -32,11 +32,11 @@ def sim_fight(attacker_constellation, defender_constellation):
 
 # setup
 Unit.unit_info = [(UnitType.MERCENARY, {'name': "", 'attack': int(3), 'defence': int(1), 'population': int(1),
-                                        'population': 1, 'cost_resource': 1, 'cost_culture': 1}),
+                                        'cost_resource': 1, 'cost_culture': 1}),
                   (UnitType.KNIGHT, {'name': "", 'attack': int(2), 'defence': int(4), 'population': int(1),
-                                     'population': 1, 'cost_resource': 1, 'cost_culture': 1}),
+                                     'cost_resource': 1, 'cost_culture': 1}),
                   (UnitType.BABARIC_SOLDIER, {'name': "", 'attack': int(1), 'defence': int(2), 'population': int(1),
-                                              'population': 1, 'cost_resource': 1, 'cost_culture': 1})]
+                                              'cost_resource': 1, 'cost_culture': 1})]
 
 attacker_constellation = (5, 1, 0)
 defender_constellation = (1, 3, 0)

@@ -35,7 +35,7 @@ class AI_Barbaric(AI):
         self.evaluate_state(ai_stat)
         hint("Barbaric AI: hostile players: " + str(self.hostile_player))
 
-        self.calculate_heatmaps()
+        # self.calculate_heatmaps()
         score_b, loc_b = self.evaluate_move_building(ai_stat)
         score_u, loc_u = self.evaluate_move_upgrade(ai_stat)
         score_a = self.evaluate_move_up_army(ai_stat)

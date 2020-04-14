@@ -1,7 +1,3 @@
-from typing import List
-
-import arcade
-
 from src.player import Player
 from src.ui.SimplePanel import SimplePanel
 from src.ui.lang_en import *

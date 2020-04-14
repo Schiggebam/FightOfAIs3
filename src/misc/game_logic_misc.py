@@ -120,7 +120,7 @@ class Logger:
             self.init_strength_defender: int = init_s_defender
 
     class EventLog(Log, ):
-        def __init__(self, log_type, event: int, relative_change: float, loc: (int, int), lifetime: int, player_name: str):
+        def __init__(self, log_type, event: DiploEventType, relative_change: float, loc: (int, int), lifetime: int, player_name: str):
             super().__init__(log_type)
             self.event_type = event
             self.relative_change = relative_change
@@ -131,23 +131,23 @@ class Logger:
     logs: queue.Queue = queue.Queue()
 
     @staticmethod
-    def log_battle_army_vs_army_log(attacker: Army, defender: Army, attacker_initial_strength: int,
-                                    defender_initial_strength: int):
-        # log = Logger.BattleLog(LogType.BATTLE_ARMY_VS_ARMY, attacker.strength, defender.strength,
-        #                        attacker_initial_strength, defender_initial_strength)
-        # Logger.logs.put(log)
-        raise NotImplementedError("Logger logged error:)")  # TODO implement this method
+    def log_battle_army_vs_army_log(attacker: Army, defender: Army, attacker_initial_population: int,
+                                    defender_initial_population: int):
+        log = Logger.BattleLog(LogType.BATTLE_ARMY_VS_ARMY, attacker.get_population(),
+                               defender.get_population(),
+                               attacker_initial_population, defender_initial_population)
+        Logger.logs.put(log)
 
     @staticmethod
-    def log_battle_army_vs_building(attacker: Army, defender: Building, attacker_initial_strength: int,
-                                    defender_initial_strength: int):
-        # log = Logger.BattleLog(LogType.BATTLE_ARMY_VS_BUILDING, attacker.strength, defender.defensive_value,
-        #                        attacker_initial_strength, defender_initial_strength)
-        # Logger.logs.put(log)
-        raise NotImplementedError("Logger logged error:)")  # TODO implement this method
+    def log_battle_army_vs_building(attacker: Army, defender: Building, attacker_initial_population: int,
+                                    defender_initial_population: int):
+        log = Logger.BattleLog(LogType.BATTLE_ARMY_VS_BUILDING, attacker.get_population(),
+                               defender.defensive_value,
+                               attacker_initial_population, defender_initial_population)
+        Logger.logs.put(log)
 
     @staticmethod
-    def log_diplomatic_event(event: int, relative_change: float, loc: (int, int), lifetime: int, player_name:str):
+    def log_diplomatic_event(event: DiploEventType, relative_change: float, loc: (int, int), lifetime: int, player_name:str):
         if event == DiploEventType.TYPE_ENEMY_BUILDING_SCOUTED or \
                 event == DiploEventType.TYPE_ENEMY_ARMY_INVADING:
             log = Logger.EventLog(LogType.DIPLO_ENEMY_BUILDING_SCOUTED,

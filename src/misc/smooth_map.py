@@ -162,6 +162,7 @@ class SmoothMap:
         # set the tex_code
         for h, s in adjusted_tiles:
             h.ground.tex_code = s
+            h.ground.ground_type = GroundType.MIXED
 
     @staticmethod
     def adjust_elevation(hex_map: HexMap):

@@ -1,4 +1,6 @@
 from __future__ import annotations
+
+import inspect
 import sys
 
 ######################
@@ -9,24 +11,60 @@ from enum import Enum
 import arcade
 
 CAMERA_SENSITIVITY = 250
+ERRORS_ARE_FATAL = False
+DEBUG = True
+DETAILED_DEBUG_INFO = 1     # 0: no info, 1: includes calling class, 2: includes calling method
+
+
+class bcolors:
+    HEADER = '\033[95m'
+    OKBLUE = '\033[94m'
+    OKGREEN = '\033[92m'
+    WARNING = '\033[93m'
+    FAIL = '\033[91m'
+    ENDC = '\033[0m'
+    BOLD = '\033[1m'
+    UNDERLINE = '\033[4m'
 
 
 ########################
 ### Helper functions ###
 ########################
+def get_caller() -> str:
+    stack = inspect.stack()
+    the_class = stack[2][0].f_locals["self"].__class__.__name__
+    the_method = stack[2][0].f_code.co_name
+    if DETAILED_DEBUG_INFO == 2:
+        return "(Class: {} Function: {})".format(the_class, the_method)
+    elif DETAILED_DEBUG_INFO == 1:
+        return "(Class: {})".format(the_class)
+
+
+def debug(msg: str):
+    if not DEBUG:
+        return
+    caller = ""
+    if DETAILED_DEBUG_INFO != 0:
+        caller = get_caller()
+    print("[DEBUG]{} : {}{}{}".format(caller, bcolors.OKBLUE, str(msg), bcolors.ENDC))
+
+
 def hint(msg: str):
-    print("[HINT] : " + msg)
-
-
-ERRORS_ARE_FATAL = False
+    caller = ""
+    if DETAILED_DEBUG_INFO:
+        caller = get_caller()
+    print("[HINT]{} : {}{}{}".format(caller, bcolors.WARNING, str(msg), bcolors.ENDC))
 
 
 def error(msg: str):
+    caller = ""
+    if DETAILED_DEBUG_INFO:
+        caller = get_caller()
     if ERRORS_ARE_FATAL:
-        print("[FATAL]: " + msg)
+        print("[FATAL]{} : {}{}{}".format(caller, bcolors.FAIL, str(msg), bcolors.ENDC))
         sys.exit(-1)
     else:
-        print("[ERROR]: " + msg)
+        print("[ERROR]{} : {}{}{}".format(caller, bcolors.FAIL, str(msg), bcolors.ENDC))
 
 
 def start_progress(title):
@@ -53,6 +91,12 @@ def end_progress():
 ### TYPES ###########
 #####################
 
+class Priority(Enum):
+    P_NO = 0
+    P_LOW = 1
+    P_MEDIUM = 2
+    P_HIGH = 3
+    P_CRITICAL = 4
 
 # logs
 class LogType(Enum):
@@ -67,6 +111,9 @@ class GroundType(Enum):
     WATER_DEEP = 1
     STONE = 2
     OTHER = 3
+    MIXED = 4  # currently a workaround for mixed tiles which are walkable and buildable
+
+    # (they have no associated str_code)
 
     @staticmethod
     def get_type_from_strcode(str_code: str) -> GroundType:
@@ -132,6 +179,9 @@ class ResourceType(Enum):
 class DiploEventType(Enum):
     TYPE_ENEMY_ARMY_INVADING = 100
     TYPE_ENEMY_BUILDING_SCOUTED = 101
+    ENEMY_BUILDING_IN_CLAIMED_ZONE = 102
+    ENEMY_ARMY_INVADING_CLAIMED_ZONE = 103
+
 
 class UnitType(Enum):
     MERCENARY = 0
@@ -147,6 +197,7 @@ class UnitType(Enum):
         elif str_code == "unit_c":
             return UnitType.BABARIC_SOLDIER
         return -1
+
 
 class PlayerColour(Enum):
     YELLOW = 60

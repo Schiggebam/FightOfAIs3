@@ -2,7 +2,7 @@ import arcade
 
 from src.ai.AI_GameStatus import AI_GameStatus, AI_Move, AI_GameInterface
 from src.misc.animation import Animator
-from src.misc.game_constants import ResourceType, hint, error, GroundType
+from src.misc.game_constants import ResourceType, error, GroundType
 from src.game_accessoires import Scenario, Ground, Resource, Drawable, Flag, Unit
 from src.game_file_reader import GameFileReader
 from src.hex_map import HexMap, MapStyle, Hexagon
@@ -261,12 +261,16 @@ class GameLogic:
     def updata_map(self):
         """this function makes sure that the map remains well defined"""
         for hex in self.hex_map.map:
-            if hex.ground.ground_type == GroundType.GRASS or hex.ground.ground_type == GroundType.STONE:
+            if hex.ground.ground_type == GroundType.GRASS or\
+                    hex.ground.ground_type == GroundType.STONE or\
+                    hex.ground.ground_type == GroundType.MIXED:
                 hex.ground.walkable = True
                 hex.ground.buildable = True
             elif hex.ground.ground_type == GroundType.WATER_DEEP:
                 hex.ground.walkable = False
                 hex.ground.buildable = False
+            else:
+                hint("GameLogic cannot update map! Unknown ground type")
 
         for player in self.player_list:
             for building in player.buildings:
@@ -300,7 +304,7 @@ class GameLogic:
             else:
                 print("No army available")
 
-        if ai_move.doUpArmy:
+        if ai_move.doUpArmy or ai_move.doRecruitUnit:
             if len(player.armies) == 1:             #TODO support for only 1 army here
                 if player.is_barbaric:
                     cost_bs = Unit.get_unit_cost(UnitType.BABARIC_SOLDIER)[0]
@@ -314,7 +318,7 @@ class GameLogic:
                 else:
                     if len(ai_move.info) == 0:
                         error("You need to specify which unit should be constructed -> ai_move.info")
-                    if ai_move.info[0] == UnitType.KNIGHT or ai_move[0] == UnitType.MERCENARY:
+                    if ai_move.info[0] == UnitType.KNIGHT or ai_move.info[0] == UnitType.MERCENARY:
                         type = ai_move.info[0]
                         cost = Unit.get_unit_cost(type)
                         if player.amount_of_resources < cost[0]:
@@ -598,20 +602,21 @@ class GameLogic:
             if p != player:
                 for hostile_army in p.armies:
                     if hostile_army.tile.offset_coordinates == new_hex.offset_coordinates:
+                        army_population = army.get_population()
+                        h_army_population = army.get_population()
                         FightCalculator.army_vs_army(army, hostile_army)
-                        # TODO reincarnate logger
-                        # Logger.log_battle_army_vs_army_log(army, hostile_army, army_strength, h_army_strengh)
+                        Logger.log_battle_army_vs_army_log(army, hostile_army, army_population, h_army_population)
                         p.attacked_set.add(player.id)
-                        # hint("Game Logic: hostile_army_strength: " + str(hostile_army.strength))
                         if hostile_army.get_population() == 0:
                             self.del_army(hostile_army, p)
                         # does not execute moving the army
                         is_moving = False
                 for b in p.buildings:
                     if b.tile.offset_coordinates == new_hex.offset_coordinates:
+                        b_strength = b.defensive_value
+                        army_population = army.get_population()
                         FightCalculator.army_vs_building(army, b)
-                        # TODO reincarnate logger
-                        # Logger.log_battle_army_vs_building(army, b, army_strength, b_strengh)
+                        Logger.log_battle_army_vs_building(army, b, army_population, b_strength)
                         p.attacked_set.add(player.id)
                         if b.defensive_value == -1:
                             b.set_state_destruction()
@@ -707,5 +712,9 @@ class GameLogic:
                     if p.id == int(c[1]):
                         for dt in p.discovered_tiles:
                             self.__add_aux_sprite(dt, 1, "ou")
+            elif cmd == "hl_walkable":
+                for hex in self.hex_map.map:
+                    if hex.ground.walkable:
+                        self.__add_aux_sprite(hex, 1, "ou")
             elif cmd == "clear_aux":
                 self.__clear_aux_sprites(1)
