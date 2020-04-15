@@ -12,20 +12,21 @@ class AI_Move:
         self.doBuild = False
         self.doScout = False
         self.doUpgrade = False
-        self.doUpArmy = False   # TODO get rid of this field -> doRecruitUnit
-                                # TODO (also: should be same field as recruitArmy)
+        self.doUpArmy = False  # TODO get rid of this field -> doRecruitUnit
+        # TODO (also: should be same field as recruitArmy)
         self.doMoveArmy = False
         self.doRecruitArmy = False
         self.doRecruitUnit = False
         self.loc = (0, 0)
-        self.type: Union[BuildingType, UnitType, None] = None   # TODO handle change
-        self.info = []                  # in case of doBuild, doUpgrade, doUpArmy, this need to be specified
+        self.type: Union[BuildingType, UnitType, None] = None
+        self.info = []  # currently only for the associated tiles
         self.move_army_to = (-1, -1)
-        self.str_rep_of_action = "" #just for printing
-        self.info_at_tile = [] #a list of tuples ((x, y), "str")
+        self.str_rep_of_action = ""  # just for printing
+        self.info_at_tile = []  # a list of tuples ((x, y), "str")
 
     def check_validity(self):
         return self.doBuild + self.doNothing + self.doScout == 1
+
 
 class AI_Element:
     def __init__(self):
@@ -37,8 +38,9 @@ class AI_Tile(AI_Element):
         super().__init__()
         self.str_code = "--"
 
-        self.pre = None # for pathfinding
+        self.pre = None  # for pathfinding
         self.dist = 0
+
 
 class AI_Army(AI_Element):
     def __init__(self):
@@ -49,17 +51,19 @@ class AI_Army(AI_Element):
         self.mercenaries: int = -1
         self.barbaric_soldiers: int = -1
 
+
 class AI_Resource(AI_Element):
     def __init__(self):
         super().__init__()
         self.type = -1
         self.amount = -1
 
+
 class AI_Building(AI_Element):
     def __init__(self):
         super().__init__()
         self.type: Optional[BuildingType] = None
-        self.owner = -1 #if this is -1, it means that this is not a enemy building. Otherwise the player_id is stored here
+        self.owner = -1  # if this is -1, it means that this is not a enemy building. Otherwise the player_id is stored here
         self.associated_tiles = []
 
 
@@ -82,8 +86,8 @@ class AI_GameStatus:
         self.costBuildC1: int = -1
         self.costBuildC2: int = -1
         self.costBuildC3: int = -1
-        self.costUnitBS: Tuple[int, int, int] = (-1, -1, -1)      # cost in resources, culture and population
-        self.costUnitKn: Tuple[int, int, int] = (-1, -1, -1)      # TODO: transform this to a dataclass
+        self.costUnitBS: Tuple[int, int, int] = (-1, -1, -1)  # cost in resources, culture and population
+        self.costUnitKn: Tuple[int, int, int] = (-1, -1, -1)  # TODO: transform this to a dataclass
         self.costUnitMe: Tuple[int, int, int] = (-1, -1, -1)
         self.resources: List[AI_Resource] = []
         self.own_buildings: List[AI_Building] = []
@@ -96,7 +100,7 @@ class AI_GameStatus:
         self.population = 0
         self.population_limit = 0
 
-    def clear(self):    # TODO does this work he it is supposed to work? leave it to GC?
+    def clear(self):  # TODO does this work he it is supposed to work? leave it to GC?
         for e in self.tiles_buildable:
             del e
         for e in self.tiles_scoutable:
@@ -114,7 +118,7 @@ class AI_GameInterface:
         self.dict_of_ais = {}
         print("AI Game interface has been initialized")
 
-    def launch_AI(self, id: int, ai_str:str, other_players: [int]):
+    def launch_AI(self, id: int, ai_str: str, other_players: [int]):
         from src.ai.AI_Barbaric import AI_Barbaric
         from src.ai.AI_Macedon import AI_Mazedonian
         if ai_str == "cultivated":
@@ -124,17 +128,16 @@ class AI_GameInterface:
         elif ai_str == "barbaric":
             self.dict_of_ais[id] = AI_Barbaric(id, other_players)
 
-
-    def copy_tile_to_ai_tile(self, t:Hexagon, ai_t:AI_Tile):
+    def copy_tile_to_ai_tile(self, t: Hexagon, ai_t: AI_Tile):
         ai_t.offset_coordinates = t.offset_coordinates
         ai_t.str_code = t.ground.tex_code
 
-    def copy_res_to_ai_res(self, r:Resource, ai_r:AI_Resource):
+    def copy_res_to_ai_res(self, r: Resource, ai_r: AI_Resource):
         ai_r.offset_coordinates = r.tile.offset_coordinates
         ai_r.resource_type = r.resource_type
         ai_r.amount = r.remaining_amount
 
-    def copy_building_to_ai_building(self, b:Building, ai_b:AI_Building):
+    def copy_building_to_ai_building(self, b: Building, ai_b: AI_Building):
         ai_b.offset_coordinates = b.tile.offset_coordinates
         ai_b.type = b.building_type
         for a in b.associated_tiles:
@@ -142,19 +145,19 @@ class AI_GameInterface:
             self.copy_tile_to_ai_tile(a, t)
             ai_b.associated_tiles.append(t)
 
-    def copy_army_to_ai_army(self, a:Army, ai_a: AI_Army):
+    def copy_army_to_ai_army(self, a: Army, ai_a: AI_Army):
         ai_a.offset_coordinates = a.tile.offset_coordinates
         ai_a.population = a.get_population()
         ai_a.knights = a.get_population_by_unit(UnitType.KNIGHT)
         ai_a.mercenaries = a.get_population_by_unit(UnitType.MERCENARY)
         ai_a.barbaric_soldiers = a.get_population_by_unit(UnitType.BABARIC_SOLDIER)
 
-    def create_ai_status(self, ai_stat : AI_GameStatus, turn_nr,
+    def create_ai_status(self, ai_stat: AI_GameStatus, turn_nr,
                          p_id, p_food, p_res, p_cult,
                          t_build, t_scout, costs,
                          res_list, t_discovered, own_buildings,
                          num_of_enemies, t_walkable, own_armies,
-                         enemy_buildings, enemy_armies, aggressions:  Set[int],
+                         enemy_buildings, enemy_armies, aggressions: Set[int],
                          pop, pop_limit):
         ai_stat.turn_nr = turn_nr
         ai_stat.player_id = p_id
@@ -227,7 +230,7 @@ class AI_GameInterface:
         for a in aggressions:
             ai_stat.aggressions.add(a)
 
-    def do_a_move(self, ai_stat: AI_GameStatus, move:AI_Move, player_id):
+    def do_a_move(self, ai_stat: AI_GameStatus, move: AI_Move, player_id):
         self.dict_of_ais[player_id].do_move(ai_stat, move)
 
     def query_ai(self, query, arg, player_id) -> str:
@@ -237,4 +240,3 @@ class AI_GameInterface:
             return self.dict_of_ais[player_id].get_state_as_str()
         else:
             error("WRONG QUERY")
-

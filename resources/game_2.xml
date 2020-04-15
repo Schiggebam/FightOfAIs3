@@ -148,8 +148,8 @@
         --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --
           --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --
         --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --
-          --  --  r1  r1  --  --  --  --  --  --  --  --  --  --  --  r1  r1  --  --  --
-        --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --
+          --  --  --  r1  --  --  --  --  --  --  --  --  --  --  --  r1  r1  --  --  --
+        --  --  --  --  r1  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --
           --  --  f2  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --
         --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --
           --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --
@@ -165,12 +165,12 @@
 
     <!-- make sure to add all buildings in the Buildings.BuildingType section-->
     <buildings>
-        <B1 code="s1" construction_cost="5" culture_per_turn="1" resource_per_field="2"
+        <B1 code="s1" construction_cost="10" culture_per_turn="1" resource_per_field="2"
             resource_per_turn="0" sight_range="2" food_consumption="1" construction_time="2"
             defensive_value="2" flag_x="30" flag_y="25" grant_pop="5">description</B1>
-        <FA code="fa" construction_cost="5" culture_per_turn="0" resource_per_field="0"
+        <FA code="fa" construction_cost="10" culture_per_turn="0" resource_per_field="0"
             resource_per_turn="0" sight_range="2" food_consumption="0" construction_time="2"
-            defensive_value="2" flag_x="0" flag_y="50" grant_pop="0">description</FA>
+            defensive_value="2" flag_x="-5" flag_y="30" grant_pop="0">description</FA>
         <B2 code="s2" construction_cost="15" culture_per_turn="0" resource_per_field="2"
             resource_per_turn="0" sight_range="2" food_consumption="2" construction_time="3"
             defensive_value="2" flag_x="0" flag_y="50" grant_pop="0">description</B2>
@@ -203,8 +203,8 @@
                  army_rel_to_spawn_x="-1" army_rel_to_spawn_y="-1">peter pan</player1>
         <!--<player2 colour="yellow" spawn_x="4" spawn_y="2" ai="expansionist"
                  army_rel_to_spawn_x="0" army_rel_to_spawn_y="-1">peter pan</player2>-->
-        <barbar1 colour="yellow" spawn_x="5" spawn_y="13" ai="barbaric"
-                 army_rel_to_spawn_x="-1" army_rel_to_spawn_y="-1">Barbaric 1</barbar1>
+        <!--<barbar1 colour="yellow" spawn_x="5" spawn_y="13" ai="barbaric"
+                 army_rel_to_spawn_x="-1" army_rel_to_spawn_y="-1">Barbaric 1</barbar1>-->
         <!--<village colour="teal" spawn_x="10" spawn_y="14" ai="villager"
                  army_rel_to_spawn_x="-1" army_rel_to_spawn_y="0">Barbaric 1</village>-->
     </players>

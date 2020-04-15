@@ -70,7 +70,7 @@ class Building(Drawable):
         super().set_active_texture(0)
 
     @staticmethod
-    def get_construction_cost(bui_type: int):
+    def get_construction_cost(bui_type: BuildingType):
         """in case we want to know the construction cost before the building is instance"""
         for b_info in Building.building_info:
             if b_info[0] == bui_type:

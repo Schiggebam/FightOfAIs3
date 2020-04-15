@@ -56,7 +56,7 @@ class AI_Hellenic(AI):
                     sour = AI_Toolkit.getListDistanceOne(best_building_pos, ai_stat.tiles_buildable)
                     amount_of_fields = max(3, len(sour))
                     sampled = random.sample(sour, amount_of_fields)
-                    for sample in sampled:              # 2 fields
+                    for sample in sampled:              # 3 fields
                         move.info.append(sample.offset_coordinates)
                 if len(self.build_order) > 0:
                     self.build_order.pop(0)

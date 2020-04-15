@@ -84,6 +84,7 @@ class UI:
         self.screen_width = screen_width
         self.screen_height = screen_height
         self.sprite_list = arcade.SpriteList()
+        self.playerinfo = {}
         self.volatile_panel = []
         self.win_screen_shown = False
         x_offset = 60
@@ -112,9 +113,9 @@ class UI:
                 arcade.draw_text(hex.debug_msg, x + self.camera_pos[0], y + self.camera_pos[1], arcade.color.BLACK)
 
         # bottom pane
-        arcade.draw_rectangle_filled(self.screen_width/2, 50, self.screen_width, 100,
+        arcade.draw_rectangle_filled(self.screen_width/2, 50, self.screen_width, 120,
                                      arcade.color.BISTRE)
-        arcade.draw_rectangle_filled(self.screen_width / 2, 50, self.screen_width-20, 90,
+        arcade.draw_rectangle_filled(self.screen_width / 2, 50, self.screen_width-20, 110,
                                      arcade.color.ANTIQUE_BRONZE)
 
         #draw turn number
@@ -136,18 +137,28 @@ class UI:
             num_b = str(len(p.buildings))
             cult = str(p.culture)
             food = str(p.food)
-            arcade.draw_text(str(p.name) + " [" + str(p.id) + "]", x_offset, 80, arcade.color.WHITE, 14)
+            pop = str(p.get_population())
+            arcade.draw_text(str(p.name) + " [" + str(p.id) + "]", x_offset, 100, arcade.color.WHITE, 14)
             if not p.has_lost:
-                arcade.draw_text("Resources: " + res, x_offset + 10, 67, arcade.color.WHITE, 12)
-                arcade.draw_text("Buildings: " + num_b, x_offset + 10, 54, arcade.color.WHITE, 12)
-                arcade.draw_text("Culture: " + cult, x_offset + 10, 41, arcade.color.WHITE, 12)
-                arcade.draw_text("Food: " + food, x_offset + 10, 28, arcade.color.WHITE, 12)
+                # arcade.draw_text("Resources: " + res, x_offset + 10, 67, arcade.color.WHITE, 12)
+                # arcade.draw_text("Buildings: " + num_b, x_offset + 10, 54, arcade.color.WHITE, 12)
+                # arcade.draw_text("Culture: " + cult, x_offset + 10, 41, arcade.color.WHITE, 12)
+                # arcade.draw_text("Food: " + food, x_offset + 10, 28, arcade.color.WHITE, 12)
+                # arcade.draw_text(f"Population: {} / {}", x_offset + 10, 15, arcade.color.WHITE, 12)
+                arcade.draw_text(self.playerinfo[p.id], x_offset + 10, 15, arcade.color.WHITE)
             else:
                 arcade.draw_text("LOST", x_offset + 10, 67, arcade.color.RED, 14)
 
             x_offset = x_offset + 250
 
     def update(self):
+        for player in self.gl.player_list:
+            s = f"Resources: {player.amount_of_resources} \n"
+            s = s + f"Buildings: {len(player.buildings)} \n"
+            s = s + f"Culture: {player.culture} \n"
+            s = s + f"Food: {player.food} \n"
+            s = s + f"Population {player.get_population()} / {player.get_population_limit()}\n"
+            self.playerinfo[player.id] = s
         if self.gl.winner and not self.win_screen_shown:
             won_panel = PanelGameWon(self.screen_width/2, self.screen_height/2, self.gl.winner)
             self.show_volatile_panel(won_panel)

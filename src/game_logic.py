@@ -134,7 +134,7 @@ class GameLogic:
             self.ai_interface.launch_AI(player.id, player.ai_str, other_players_ids)
             base_hex: Hexagon = self.hex_map.get_hex_by_offset(player.spaw_loc)
             player.discovered_tiles.add(base_hex)
-            player.food = 10
+            player.food = 20
             b_type = player.get_initial_building_type()
             b: Building = Building(base_hex, b_type, player.id)
             self.add_building(b, player)
@@ -252,9 +252,9 @@ class GameLogic:
         self.exec_ai_move(ai_move, player, costs)
         ai_status.clear()
         del ai_status
-        self.__clear_aux_sprites(1)
-        if not player.is_barbaric:
-            self.__add_aux_sprite(player.armies[0].tile, 1, "ou")
+        # self.__clear_aux_sprites(1)
+        # if not player.is_barbaric:
+        #     self.__add_aux_sprite(player.armies[0].tile, 1, "ou")
 
         hint("                          SUCCESSFULLY PLAYED TURN")
 
@@ -304,6 +304,14 @@ class GameLogic:
             else:
                 print("No army available")
 
+        if ai_move.doRecruitArmy:
+            if len(player.armies) == 0:
+                base_hex = self.hex_map.get_hex_by_offset(ai_move.loc)
+                army = Army(base_hex, player.id)
+                self.add_army(army, player)
+            else:
+                error("Not more than one armies allowed")
+
         if ai_move.doUpArmy or ai_move.doRecruitUnit:
             if len(player.armies) == 1:             #TODO support for only 1 army here
                 if player.is_barbaric:
@@ -338,14 +346,6 @@ class GameLogic:
             else:
                 error("No army. Recruit new army first!")
 
-        if ai_move.doRecruitArmy:
-            if len(player.armies) == 0:
-                base_hex = self.hex_map.get_hex_by_offset(ai_move.loc)
-                army = Army(base_hex, player.id)
-                self.add_army(army, player)
-            else:
-                error("Not more than one armies allowed")
-
         if ai_move.doBuild:
             if not self.hex_map.get_hex_by_offset(ai_move.loc).ground.buildable:
                 print("Exec AI Move: Location is not buildable!")
@@ -354,18 +354,15 @@ class GameLogic:
             if player.is_barbaric:
                 b_type = BuildingType.CAMP_1
             else:
-                if ai_move.info[0] == "s1":             # TODO use BuildingType instead of strings
-                    b_type = BuildingType.HUT
-                elif ai_move.info[0] == "farm":
-                    b_type = BuildingType.FARM
+                b_type = ai_move.type
             if Building.get_construction_cost(b_type) <= player.amount_of_resources:
                 base_hex = self.hex_map.get_hex_by_offset(ai_move.loc)
                 b = Building(base_hex, b_type, player.id)
                 if not player.is_barbaric:
-                    if ai_move.info[0] == "farm":
+                    if ai_move.type == BuildingType.FARM:
+                        b.associated_tiles.append(self.hex_map.get_hex_by_offset(ai_move.info[0]))
                         b.associated_tiles.append(self.hex_map.get_hex_by_offset(ai_move.info[1]))
                         b.associated_tiles.append(self.hex_map.get_hex_by_offset(ai_move.info[2]))
-                        b.associated_tiles.append(self.hex_map.get_hex_by_offset(ai_move.info[3]))
                 self.add_building(b, player)
                 player.amount_of_resources = player.amount_of_resources - Building.get_construction_cost(b_type)
                 # The sight range is only extended with the player is not barbaric

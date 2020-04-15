@@ -34,7 +34,8 @@ class IncomeCalculator:
         if player.is_barbaric:
             return 0  # no food mechancis for barbaric players
         for building in player.buildings:
-            if building.construction_time > 0:
+            if building.construction_time > 0 or building.building_state == BuildingState.UNDER_CONSTRUCTION or \
+                 building.building_state == BuildingState.DESTROYED:
                 continue
             if building.building_type == BuildingType.FARM:
                 food_inc = food_inc + len(building.associated_tiles)
