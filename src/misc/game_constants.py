@@ -14,7 +14,7 @@ CAMERA_SENSITIVITY = 250
 ERRORS_ARE_FATAL = False
 DEBUG = True
 DETAILED_DEBUG_INFO = 1     # 0: no info, 1: includes calling class, 2: includes calling method
-
+ENABLE_KEYFRAME_ANIMATIONS = False
 
 class bcolors:
     HEADER = '\033[95m'

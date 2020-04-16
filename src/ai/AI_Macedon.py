@@ -228,11 +228,12 @@ class AI_Mazedonian(AI):
     def create_heat_maps(self, ai_stat: AI_GameStatus, move: AI_Move):
         cond = lambda n: AI_Toolkit.is_obj_in_list(n, ai_stat.map.walkable_tiles)
         heat_map = AI_Toolkit.simple_heat_map(ai_stat.map.building_list, ai_stat.map.walkable_tiles, cond)
+        self.claimed_tiles.clear()
         for d, s in heat_map:
             if d <= self.claiming_distance:
                 self.claimed_tiles.add(s)
         # for d, s in heat_map:
-        #    move.info_at_tile.append((s.offset_coordinates, str(d)))
+        #     move.info_at_tile.append((s.offset_coordinates, str(d)))
 
     def update_diplo_events(self, ai_stat: AI_GameStatus):
         # for ai_stat.aggressions:
@@ -527,7 +528,7 @@ class AI_Mazedonian(AI):
                 if res_next_to_can == 0:  # very hard constraint (go by value would be better)
                     candidates.append(c)
 
-            # hint(f"possible candidates for a barracks: {len(candidates)}")
+            hint(f"possible candidates for a barracks: {len(candidates)}")
             if len(candidates) > 0:
                 idx = random.randint(0, len(candidates) - 1)
                 c = 0

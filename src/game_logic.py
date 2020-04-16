@@ -4,7 +4,7 @@ import timeit
 
 from src.ai.AI_GameStatus import AI_GameStatus, AI_Move, AI_GameInterface
 from src.misc.animation import Animator
-from src.misc.game_constants import ResourceType, error, GroundType, debug
+from src.misc.game_constants import ResourceType, error, GroundType, debug, ENABLE_KEYFRAME_ANIMATIONS
 from src.game_accessoires import Scenario, Ground, Resource, Drawable, Flag, Unit
 from src.game_file_reader import GameFileReader
 from src.hex_map import HexMap, MapStyle, Hexagon
@@ -139,7 +139,7 @@ class GameLogic:
             self.ai_interface.launch_AI(player.id, player.ai_str, other_players_ids)
             base_hex: Hexagon = self.hex_map.get_hex_by_offset(player.spaw_loc)
             player.discovered_tiles.add(base_hex)
-            player.food = 20
+            player.food = 35
             b_type = player.get_initial_building_type()
             b: Building = Building(base_hex, b_type, player.id)
             self.add_building(b, player)
@@ -154,11 +154,13 @@ class GameLogic:
 
         self.__reorder_spritelist(self.z_levels[2])
         self.toggle_fog_of_war()
+        self.show_key_frame_animation = ENABLE_KEYFRAME_ANIMATIONS
+        debug(f"Keyframes are {'enabled' if ENABLE_KEYFRAME_ANIMATIONS else 'disabled (enable by typing <switch_ka> in console)'}")
         # HexMap.hex_distance(self.hex_map.get_hex_by_offset((0,0)), self.hex_map.get_hex_by_offset((2,2)))
 
     elapsed = float(0)
     total_elapsed = float(0)
-    ith_iteration = 0
+    # ith_iteration = 0
     def update(self, delta_time: float, commands :[]):
         timestamp_start = timeit.default_timer()
         self.__exec_command(commands)
@@ -169,8 +171,9 @@ class GameLogic:
         #for p in self.player_list:
         #    for b in p.buildings:
         #        b.flag.next_frame(delta_time)
-        GameLogic.ith_iteration = GameLogic.ith_iteration + 1
-        if GameLogic.ith_iteration % 3 == 0:
+        #GameLogic.ith_iteration = GameLogic.ith_iteration + 1
+        #if GameLogic.ith_iteration % 3 == 0:
+        if self.show_key_frame_animation:
             for k_f in self.animator.key_frame_animations:
                 k_f.next_frame(delta_time)
         self.animator_time = timestamp_start - timeit.default_timer()
@@ -192,7 +195,6 @@ class GameLogic:
         if self.change_in_map_view:
             self.toggle_fog_of_war()
             self.change_in_map_view = False
-
 
         self.animator.update(GameLogic.total_elapsed)
         self.total_time = timestamp_start - timeit.default_timer()
@@ -764,3 +766,6 @@ class GameLogic:
                         self.__add_aux_sprite(hex, 1, "ou")
             elif cmd == "clear_aux":
                 self.__clear_aux_sprites(1)
+            elif cmd == "switch_ka":
+                self.show_key_frame_animation = not self.show_key_frame_animation
+                debug(f"keyframes are {'enabled' if self.show_key_frame_animation else 'disabled'}")

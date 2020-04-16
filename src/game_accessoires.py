@@ -123,6 +123,10 @@ class Army(Drawable):
     def add_unit(self, unit: Unit):
         self.__units.append(unit)
 
+    def get_units(self) -> List[Unit]:
+        # returns only a copy (not sure if that makes sense since this lacks consistancy to the rest of the code)
+        return list(self.__units)
+
     def remove_units_of_type(self, amount: int, ut: UnitType):
         tbr = []
         count = 0
