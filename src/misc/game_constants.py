@@ -98,6 +98,26 @@ class Priority(Enum):
     P_HIGH = 3
     P_CRITICAL = 4
 
+    @staticmethod
+    def increase(p: Priority):
+        if p == Priority.P_NO:
+            return Priority.P_LOW
+        elif p == Priority.P_LOW:
+            return Priority.P_MEDIUM
+        elif p == Priority.P_MEDIUM:
+            return Priority.P_HIGH
+        return Priority.P_CRITICAL
+
+    @staticmethod
+    def decrease(p: Priority):
+        if p == Priority.P_CRITICAL:
+            return Priority.P_HIGH
+        elif p == Priority.P_HIGH:
+            return Priority.P_MEDIUM
+        elif p == Priority.P_MEDIUM:
+            return Priority.P_LOW
+        return Priority.P_NO
+
 # logs
 class LogType(Enum):
     BATTLE_ARMY_VS_ARMY = 900

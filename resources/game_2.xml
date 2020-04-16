@@ -170,7 +170,7 @@
             defensive_value="2" flag_x="30" flag_y="25" grant_pop="5">description</B1>
         <FA code="fa" construction_cost="10" culture_per_turn="0" resource_per_field="0"
             resource_per_turn="0" sight_range="2" food_consumption="0" construction_time="2"
-            defensive_value="2" flag_x="-5" flag_y="30" grant_pop="0">description</FA>
+            defensive_value="2" flag_x="-5" flag_y="33" grant_pop="0">description</FA>
         <B2 code="s2" construction_cost="15" culture_per_turn="0" resource_per_field="2"
             resource_per_turn="0" sight_range="2" food_consumption="2" construction_time="3"
             defensive_value="2" flag_x="0" flag_y="50" grant_pop="0">description</B2>
@@ -188,7 +188,7 @@
             defensive_value="10" flag_x="5" flag_y="65" grant_pop="0">description</V1>
         <Racks code="br" construction_cost="10" culture_per_turn="0" resource_per_field="0"
                resource_per_turn="1" sight_range="3" food_consumption="0" construction_time="0"
-               defensive_value="10" flag_x="0" flag_y="50" grant_pop="0">description</Racks>
+               defensive_value="10" flag_x="20" flag_y="40" grant_pop="0">description</Racks>
     </buildings>
     <units>
         <Mercenary code="unit_a" name="mercenary" attack="3" defence="1" population="1"

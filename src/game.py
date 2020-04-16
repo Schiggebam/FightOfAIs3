@@ -102,6 +102,8 @@ class Game(arcade.Window):
         self.fps_start_timer = None
         self.fps = None
         self.num_of_sprites: int = 0
+        self.fps_colour = arcade.color.WHITE
+        self.draw_time_colour = arcade.color.WHITE
 
     def setup(self):
         arcade.set_background_color(arcade.color.DARK_BLUE)
@@ -122,6 +124,20 @@ class Game(arcade.Window):
         update_time = timeit.default_timer() - timestamp_start
         self.max_update_time = max(update_time, self.max_update_time)
 
+        # set colour for framerate
+        if self.fps:
+            self.fps_colour = arcade.color.WHITE
+            if 30 < self.fps < 45:
+                self.fps_colour = arcade.color.ORANGE
+            if self.fps <= 30:
+                self.fps_colour = arcade.color.RED
+        self.draw_time_colour = arcade.color.WHITE
+        if 0.15 < self.draw_time < 0.2:
+            self.draw_time_colour = arcade.color.ORANGE
+        if self.draw_time >= 0.2:
+            self.draw_time_colour = arcade.color.RED
+
+
     def on_draw(self):
         timestamp_start = timeit.default_timer()
         if self.frame_count % 60 == 0:
@@ -136,11 +152,11 @@ class Game(arcade.Window):
 
         output = f"Drawing time: {self.draw_time:.3f} #sprites: {self.num_of_sprites}"
         output_update = f"Max Update time: {self.max_update_time:.3f}"
-        arcade.draw_text(output, 20, SCREEN_HEIGHT - 40, arcade.color.WHITE, 16)
+        arcade.draw_text(output, 20, SCREEN_HEIGHT - 40, self.draw_time_colour, 16)
         arcade.draw_text(output_update, 20, SCREEN_HEIGHT - 60, arcade.color.WHITE, 16)
         if self.fps is not None:
             output = f"FPS: {self.fps:.0f}"
-            arcade.draw_text(output, 20, SCREEN_HEIGHT - 80, arcade.color.WHITE, 16)
+            arcade.draw_text(output, 20, SCREEN_HEIGHT - 80, self.fps_colour, 16)
         self.draw_time = timeit.default_timer() - timestamp_start
 
     def on_mouse_press(self, x, y, button, key_modifiers):

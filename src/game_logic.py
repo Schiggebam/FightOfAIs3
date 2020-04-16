@@ -8,7 +8,7 @@ from src.game_file_reader import GameFileReader
 from src.hex_map import HexMap, MapStyle, Hexagon
 from src.texture_store import TextureStore
 from src.misc.game_logic_misc import *
-from typing import Optional, List
+from typing import Optional, List, Set
 
 
 class GameLogic:
@@ -181,6 +181,7 @@ class GameLogic:
 
 
     def play_players_turn(self):
+        # self.__clear_aux_sprites(1)
         player = self.player_list[self.current_player]
         print("Play turn of: " + player.name)
         self.updata_map()
@@ -220,8 +221,8 @@ class GameLogic:
         player_population_limit = player.get_population_limit()
 
         #print(known_resources)
-        #for s in known_resources:
-        #    self.__add_aux_sprite(s.tile, 1, "ou")
+        # for s in buildable_tiles:
+        #    self.__add_aux_sprite(s, 1, "ou")
 
         costs = {'scout': int(1)}
         for b_info in Building.building_info:
@@ -252,7 +253,7 @@ class GameLogic:
         self.exec_ai_move(ai_move, player, costs)
         ai_status.clear()
         del ai_status
-        # self.__clear_aux_sprites(1)
+
         # if not player.is_barbaric:
         #     self.__add_aux_sprite(player.armies[0].tile, 1, "ou")
 
@@ -324,10 +325,8 @@ class GameLogic:
                     else:
                         error("Not enough resources to upgrade the (barbaric) army")
                 else:
-                    if len(ai_move.info) == 0:
-                        error("You need to specify which unit should be constructed -> ai_move.info")
-                    if ai_move.info[0] == UnitType.KNIGHT or ai_move.info[0] == UnitType.MERCENARY:
-                        type = ai_move.info[0]
+                    if ai_move.type == UnitType.KNIGHT or ai_move.type == UnitType.MERCENARY:
+                        type = ai_move.type
                         cost = Unit.get_unit_cost(type)
                         if player.amount_of_resources < cost[0]:
                             error("Not enough resources to recruit unit: " + str(type))
@@ -340,7 +339,7 @@ class GameLogic:
                             player.culture = player.culture - cost[1]
                             u: Unit = Unit(type)
                             player.armies[0].add_unit(u)
-                            hint("new unit recruited - type: " + type)
+                            hint("new unit recruited - type: " + str(type))
                     else:
                         error("unknown unit type.")
             else:
@@ -348,11 +347,11 @@ class GameLogic:
 
         if ai_move.doBuild:
             if not self.hex_map.get_hex_by_offset(ai_move.loc).ground.buildable:
-                print("Exec AI Move: Location is not buildable!")
+                error("Exec AI Move: Location is not buildable!")
                 return
             b_type = 0
             if player.is_barbaric:
-                b_type = BuildingType.CAMP_1
+                b_type = BuildingType.CAMP_1        # not very good to hard-code this here
             else:
                 b_type = ai_move.type
             if Building.get_construction_cost(b_type) <= player.amount_of_resources:
@@ -360,9 +359,11 @@ class GameLogic:
                 b = Building(base_hex, b_type, player.id)
                 if not player.is_barbaric:
                     if ai_move.type == BuildingType.FARM:
-                        b.associated_tiles.append(self.hex_map.get_hex_by_offset(ai_move.info[0]))
-                        b.associated_tiles.append(self.hex_map.get_hex_by_offset(ai_move.info[1]))
-                        b.associated_tiles.append(self.hex_map.get_hex_by_offset(ai_move.info[2]))
+                        for loc in ai_move.info:
+                            # hint(f"adding Associated Tile at location: {loc}")
+                            b.associated_tiles.append(self.hex_map.get_hex_by_offset(loc))
+                        # b.associated_tiles.append(self.hex_map.get_hex_by_offset(ai_move.info[1]))
+                        # b.associated_tiles.append(self.hex_map.get_hex_by_offset(ai_move.info[2]))
                 self.add_building(b, player)
                 player.amount_of_resources = player.amount_of_resources - Building.get_construction_cost(b_type)
                 # The sight range is only extended with the player is not barbaric
@@ -370,7 +371,7 @@ class GameLogic:
                     tmp = self.hex_map.get_neighbours_dist(base_hex, b.sight_range)
                     player.discovered_tiles.update(tmp)
             else:
-                print("Exec AI Move: Cannot build building! BuildingType:" + str(b_type))
+                error("Exec AI Move: Cannot build building! BuildingType:" + str(b_type))
         if ai_move.doScout:
             if player.amount_of_resources >= costs['scout']:
                 player.discovered_tiles.add(self.hex_map.get_hex_by_offset(ai_move.loc))
@@ -424,7 +425,7 @@ class GameLogic:
                         s_set.add(h)
         return set(filter(None, s_set))
 
-    def get_buildable_tiles(self, player: Player) -> set:
+    def get_buildable_tiles(self, player: Player) -> Set[Hexagon]:
         b_set = set()
         for hex in player.discovered_tiles:
             if hex.ground.buildable:

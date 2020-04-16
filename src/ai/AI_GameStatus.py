@@ -63,8 +63,8 @@ class AI_Building(AI_Element):
     def __init__(self):
         super().__init__()
         self.type: Optional[BuildingType] = None
-        self.owner = -1  # if this is -1, it means that this is not a enemy building. Otherwise the player_id is stored here
-        self.associated_tiles = []
+        self.owner: int = -1  # if this is -1, it means that this is not a enemy building. Otherwise the player_id is stored here
+        self.associated_tiles: List[AI_Tile] = []
 
 
 class AI_GameStatus:

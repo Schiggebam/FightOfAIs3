@@ -4,7 +4,7 @@ import arcade
 
 from src.game_accessoires import Drawable, Flag
 from src.hex_map import Hexagon
-from src.misc.game_constants import BuildingType, BuildingState, error, hint
+from src.misc.game_constants import BuildingType, BuildingState, error
 
 
 class Building(Drawable):
@@ -54,7 +54,7 @@ class Building(Drawable):
         self.building_state = BuildingState.UNDER_CONSTRUCTION
         if self.has_texture_construction():
             super().set_active_texture(self.__idx_texture_construction)
-            hint("Construction texture at: " + str(self.__idx_texture_construction))
+            # hint("Construction texture at: " + str(self.__idx_texture_construction))
         else:
             error("Building does not have a construction texture!")
 

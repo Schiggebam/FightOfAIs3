@@ -30,6 +30,9 @@ def estimate_income(list_buildings):
     pass
 
 def dijkstra(start, target, domain, path):
+    if not start or not target:
+        path = []
+        return
     #print("Start: " + str(start.x_grid)  + "|" + str(start.y_grid))
     #print("target: " + str(target.x_grid)  + "|" + str(target.y_grid))
     #print("domain: ")
