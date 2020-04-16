@@ -1,6 +1,6 @@
 import arcade
 import timeit
-from threading import Thread
+# from threading import Thread
 
 from src.ai.AI_GameStatus import AI_GameStatus, AI_Move, AI_GameInterface
 from src.misc.animation import Animator
@@ -158,31 +158,35 @@ class GameLogic:
 
     elapsed = float(0)
     total_elapsed = float(0)
-
+    ith_iteration = 0
     def update(self, delta_time: float, commands :[]):
         timestamp_start = timeit.default_timer()
         self.__exec_command(commands)
         GameLogic.elapsed = GameLogic.elapsed + delta_time
         GameLogic.total_elapsed = GameLogic.total_elapsed + delta_time
         #update animations
-        if self.animator.is_active():           # -> move this to own thread possibly
-            for p in self.player_list:
-                for b in p.buildings:
-                    b.flag.next_frame(delta_time)
+        # if self.animator.is_active():           # -> move this to own thread possibly
+        #for p in self.player_list:
+        #    for b in p.buildings:
+        #        b.flag.next_frame(delta_time)
+        GameLogic.ith_iteration = GameLogic.ith_iteration + 1
+        if GameLogic.ith_iteration % 3 == 0:
+            for k_f in self.animator.key_frame_animations:
+                k_f.next_frame(delta_time)
         self.animator_time = timestamp_start - timeit.default_timer()
         if GameLogic.elapsed > float(1) and self.automatic:
             self.playNextTurn = True
             GameLogic.elapsed = float(0)
         if self.playNextTurn:
-            if not self.ai_running:
-                if self.current_player == 0:  # next time player 0 plays -> new turn
-                    self.turn_nr = self.turn_nr + 1
-                if len(self.player_list) > 0:
-                    # self.play_players_turn()
-                    thread = Thread(target= self.run_ai())
-                    self.current_player = (self.current_player + 1) % len(self.player_list)
-            else:
-                debug("AI is still calculating move... ")
+            #if not self.ai_running:
+            if self.current_player == 0:  # next time player 0 plays -> new turn
+                self.turn_nr = self.turn_nr + 1
+            if len(self.player_list) > 0:
+                self.play_players_turn()
+                #thread = Thread(target= self.run_ai())
+                self.current_player = (self.current_player + 1) % len(self.player_list)
+            #else:
+            #    debug("AI is still calculating move... ")
 
         self.playNextTurn = False
         if self.change_in_map_view:
@@ -234,9 +238,35 @@ class GameLogic:
         player_population = player.get_population()
         player_population_limit = player.get_population_limit()
 
-        #print(known_resources)
-        # for s in buildable_tiles:
-        #    self.__add_aux_sprite(s, 1, "ou")
+        # build the map representation for the AI
+        # all tiles is the union of scoutable and known tiles
+        from src.ai.AI_MapRepresentation import Map
+        ai_map: Map = Map()
+        for s in scoutable_tiles:
+            ai_map.add_tile(s.offset_coordinates, s.ground.ground_type)
+        for s in player.discovered_tiles:
+            ai_map.add_tile(s.offset_coordinates, s.ground.ground_type)
+        ai_map.connect_graph()
+
+        # TODO speed up (iterate only once over the map) by doing the scoutables, one can get all others "for free"
+        for h in scoutable_tiles:
+            ai_map.set_scoutable_tile(h.offset_coordinates)
+        for h in walkable_tiles:
+            ai_map.set_walkable_tile(h.offset_coordinates)
+        for h in buildable_tiles:
+            ai_map.set_buildable_tile(h.offset_coordinates)
+
+        for r in known_resources:
+            ai_map.add_resource(r.tile.offset_coordinates, r)
+        for b in player.buildings:
+            ai_map.add_own_building(b.tile.offset_coordinates, b)
+        for b in enemy_buildings:
+            ai_map.add_opp_building(b.tile.offset_coordinates, b)
+        for a in player.armies:
+            ai_map.add_own_army(a.tile.offset_coordinates, a)
+        for a in enemy_armies:
+            ai_map.add_opp_army(a.tile.offset_coordinates, a)
+        # ai_map.print_map()
 
         costs = {'scout': int(1)}
         for b_info in Building.building_info:
@@ -255,12 +285,8 @@ class GameLogic:
 
         self.ai_interface.create_ai_status(ai_status, self.turn_nr, player.id, player.food,
                                            player.amount_of_resources, player.culture,
-                                           buildable_tiles, scoutable_tiles, costs,
-                                           known_resources, player.discovered_tiles,
-                                           player.buildings, len(self.player_list) - 1,
-                                           walkable_tiles, player.armies,
-                                           enemy_buildings, enemy_armies, player.attacked_set,
-                                           player_population, player_population_limit)
+                                           costs, len(self.player_list) - 1, player.attacked_set,
+                                           player_population, player_population_limit, ai_map)
         player.attacked_set.clear()
         timestamp_start = timeit.default_timer()
         self.ai_interface.do_a_move(ai_status, ai_move, player.id)
@@ -549,6 +575,7 @@ class GameLogic:
         flag.set_tex_scale(0.20)
         flag.update_interval = 0.1
         flag.sprite.set_texture(0)
+        self.animator.key_frame_animations.append(flag)
         self.z_levels[2].append(flag.sprite)
 
     def add_building(self, building: Building, player: Player):

@@ -201,6 +201,7 @@ class Game(arcade.Window):
 def main():
     window = Game(SCREEN_WIDTH, SCREEN_HEIGHT, SCREEN_TITLE)
     window.setup()
+    window.set_update_rate(1/60)
     arcade.finish_render()
     arcade.run()
 

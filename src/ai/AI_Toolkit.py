@@ -1,10 +1,10 @@
 import copy
 import queue
-from typing import List, Callable, Union, Tuple
+from typing import List, Union, Tuple
 
-from src.ai.AI_GameStatus import AI_Tile, AI_Element
+from src.ai.AI_MapRepresentation import Tile, AI_Element
 
-AI_OBJ = Union[AI_Element, AI_Tile]
+AI_OBJ = Union[AI_Element, Tile]
 
 def simple_heat_map(initial_set: List[AI_OBJ], working_set: List[AI_OBJ],
                     condition) -> List[Tuple[int, AI_OBJ]]:
@@ -20,7 +20,7 @@ def simple_heat_map(initial_set: List[AI_OBJ], working_set: List[AI_OBJ],
         discovered.add(s)
         if d >= 0:
             heat_map.append((d, s))
-        nei = getListDistanceOne(s, working_set)
+        nei = get_neibours_on_set(s, working_set)
         for n in nei:
             if n not in discovered and condition(n):
                 tmp.put((d + 1, n))
@@ -53,7 +53,7 @@ def dijkstra(start, target, domain, path):
         if u is None:
             print("ERROR: " + str(len(Q)))
         Q.remove(u)
-        nei = getListDistanceOne(u, Q)
+        nei = get_neibours_on_set(u, Q)
         for v in nei:
             a = u.dist + 1
             if a < v.dist:
@@ -78,28 +78,42 @@ def get_tile_by_xy(coords, discovered_tiles : []):
             return e
     return None
 
+def get_neibours_on_set(tile: AI_OBJ, working_set: List) -> List:
+    nei = get_neighbours(tile)
+    filtered = [x for x in nei if x in working_set]
+    return filtered
 
-def getListDistanceOne(t1, li):     # get neighbours
-    res = []
-    for t2 in li:
-        if getDistance(t1, t2) == int(1):
-            res.append(t2)
-    return list(filter(None, res))
+def get_neighbours(e: AI_OBJ) -> List[Tile]:
+    nei = []
+    if type(e) is Tile:
+        nei = [e.tile_ne, e.tile_e, e.tile_se, e.tile_sw, e.tile_w, e.tile_nw]
+    else:
+        nei = [e.base_tile.tile_ne, e.base_tile.tile_e, e.base_tile.tile_se,
+               e.base_tile.tile_sw, e.base_tile.tile_w, e.base_tile.tile_nw]
+    return list(filter(None, nei))
 
 
-def getDistance(t1, t2):
+# def getListDistanceOne(t1, li):     # get neighbours
+#     res = []
+#     for t2 in li:
+#         if getDistance(t1, t2) == int(1):
+#             res.append(t2)
+#     return list(filter(None, res))
+
+
+def getDistance(off1: Tuple[int, int], off2: Tuple[int, int]) -> int:
     # dy = float(abs(t1.y_grid - t2.y_grid))
     # dx = float(abs(t1.x_grid - t2.x_grid))
     # return int(dy + max(math.ceil(dx - dy / float(2)), float(0)))
-    cube_coords_t1 = offset_to_cube_coord(t1)
-    cube_coords_t2 = offset_to_cube_coord(t2)
+    cube_coords_t1 = offset_to_cube_xy(off1[0], off1[1])
+    cube_coords_t2 = offset_to_cube_xy(off2[0], off2[1])
     dist = cube_distance(cube_coords_t1, cube_coords_t2)
     return dist
 
-def getDistance_xy(a:(int, int), b:(int, int)):
-    cube_coords_1 = offset_to_cube_xy(a[0], a[1])
-    cube_coords_2 = offset_to_cube_xy(b[0], b[1])
-    return cube_distance(cube_coords_1, cube_coords_2)
+# def getDistance_xy(a:(int, int), b:(int, int)):
+#     cube_coords_1 = offset_to_cube_xy(a[0], a[1])
+#     cube_coords_2 = offset_to_cube_xy(b[0], b[1])
+#     return cube_distance(cube_coords_1, cube_coords_2)
 
 
 #def cube_to_offset_coord(cube):
@@ -107,17 +121,17 @@ def getDistance_xy(a:(int, int), b:(int, int)):
 #    row = cube.z
 #    return row, col
 
-def offset_to_cube_xy(x,y):
+def offset_to_cube_xy(x, y):
     c_x = x - (y - (y & 1)) / 2
     c_z = y
     c_y = -c_x - c_z
     return c_x, c_y, c_z
 
-def get_resource_on_tile_xy(offset_c: (int, int), res_list):
-    for r in res_list:
-        if r.offset_coordinates == offset_c:
-            return r
-    return None
+# def get_resource_on_tile_xy(offset_c: (int, int), res_list):
+#     for r in res_list:
+#         if r.offset_coordinates == offset_c:
+#             return r
+#     return None
 
 
 def offset_to_cube_coord(hex):

@@ -14,7 +14,7 @@ class Drawable:
         self.__active_tex = -1
         self.tex_code = ""
         self.offset = (0, 0)
-        self.update_interval = 0.05
+        self.update_interval = 0.2
         self.__time = .0
 
     def set_sprite_pos(self, pos_pixel: (int, int), camera_pos):

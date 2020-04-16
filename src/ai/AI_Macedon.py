@@ -6,7 +6,8 @@ from typing import Set, List, Callable, Tuple, Union, Optional
 from dataclasses import dataclass
 
 from src.ai import AI_Toolkit
-from src.ai.AI_GameStatus import AI_GameStatus, AI_Move, AI_Tile, AI_Building, AI_Army
+from src.ai.AI_GameStatus import AI_GameStatus, AI_Move
+from src.ai.AI_MapRepresentation import Tile, AI_Army, AI_Building
 from src.ai.ai_blueprint import AI
 from src.misc.game_constants import DiploEventType, hint, BuildingType, error, debug, UnitType, Priority
 
@@ -91,7 +92,7 @@ class AI_Mazedonian(AI):
         self.hostile_player: Set[int] = set()  # stores ID of hostile players
         self.priolist_targets: List[Tuple[int, Union[AI_Army, AI_Building], bool]] = []
         self.opponent_strength: Set[Tuple[int, int]] = set()  # stores the ID and the value
-        self.claimed_tiles: Set[AI_Tile] = set()
+        self.claimed_tiles: Set[Tile] = set()
         self.is_loosing_food: bool = False
 
         # state variables
@@ -170,33 +171,51 @@ class AI_Mazedonian(AI):
         if self.state == AI_Mazedonian.AI_State.PASSIVE:
             # for now, just move it out of the way.
             army_is_on_field = False
-            for b in ai_stat.own_buildings:
-                if b.type == BuildingType.FARM:
-                    if len(b.associated_tiles) > 0:
-                        for a in b.associated_tiles:
-                            if ai_stat.armies[0].offset_coordinates == a.offset_coordinates:
-                                army_is_on_field = True
-                                break
-                if army_is_on_field:
-                    break
+            if ai_stat.map.army_list[0].base_tile in ai_stat.map.farm_field_tiles:
+                army_is_on_field = True
+            # for b in ai_stat.map.building_list:
+            #     if b.type == BuildingType.FARM:
+            #         if len(b.associated_tiles) > 0:
+            #             for a in b.associated_tiles:
+            #                 if ai_stat.map.army_list[0].offset_coordinates == a.offset_coordinates:
+            #                     army_is_on_field = True
+            #                     break
+            #   if army_is_on_field:
+            #       break
             if not army_is_on_field:
-                for i in range(2):  # try for each field :/ semi safe
-                    field = None
-                    for b in ai_stat.own_buildings:
-                        if b.type == BuildingType.FARM:
-                            if len(b.associated_tiles) > 0 and len(b.associated_tiles) > i:  # found a farm with a field
-                                field = b.associated_tiles[i]
-                                break
-                    if field:  # is not None
-                        army_tile = AI_Toolkit.get_tile_by_xy(ai_stat.armies[0].offset_coordinates,
-                                                              ai_stat.tiles_walkable)
-                        target_tile = AI_Toolkit.get_tile_by_xy(field.offset_coordinates, ai_stat.tiles_walkable)
-                        path = []
-                        AI_Toolkit.dijkstra(army_tile, target_tile, ai_stat.tiles_walkable, path)
-                        if len(path) > 1:
-                            move.move_army_to = path[1].offset_coordinates
-                            move.doMoveArmy = True
-                            break
+                has_farm = False
+                for b in ai_stat.map.building_list:
+                    if b.type == BuildingType.FARM:
+                        has_farm = True
+                if has_farm:
+                    # walk to random field
+                    path = []
+                    idx = random.randint(0, len(ai_stat.map.farm_field_tiles) - 1)
+                    AI_Toolkit.dijkstra(ai_stat.map.army_list[0].base_tile,
+                                        ai_stat.map.farm_field_tiles[idx],
+                                        ai_stat.map.walkable_tiles, path)
+                    if len(path) > 1:
+                        move.move_army_to = path[1].offset_coordinates
+                        move.doMoveArmy = True
+
+
+                # for i in range(2):  # try for each field :/ semi safe
+                #     field = None
+                #     for b in ai_stat.own_buildings:
+                #         if b.type == BuildingType.FARM:
+                #             if len(b.associated_tiles) > 0 and len(b.associated_tiles) > i:  # found a farm with a field
+                #                 field = b.associated_tiles[i]
+                #                 break
+                #     if field:  # is not None
+                #         army_tile = AI_Toolkit.get_tile_by_xy(ai_stat.armies[0].offset_coordinates,
+                #                                               ai_stat.tiles_walkable)
+                #         target_tile = AI_Toolkit.get_tile_by_xy(field.offset_coordinates, ai_stat.tiles_walkable)
+                #
+                #         AI_Toolkit.dijkstra(army_tile, target_tile, ai_stat.tiles_walkable, path)
+                #         if len(path) > 1:
+                #             move.move_army_to = path[1].offset_coordinates
+                #             move.doMoveArmy = True
+                #             break
 
         else:
             error("army movement lacks implementation")
@@ -207,8 +226,8 @@ class AI_Mazedonian(AI):
             self.is_loosing_food = True
 
     def create_heat_maps(self, ai_stat: AI_GameStatus, move: AI_Move):
-        cond = lambda n: AI_Toolkit.is_obj_in_list(n, ai_stat.tiles_walkable)
-        heat_map = AI_Toolkit.simple_heat_map(ai_stat.own_buildings, ai_stat.tiles_walkable, cond)
+        cond = lambda n: AI_Toolkit.is_obj_in_list(n, ai_stat.map.walkable_tiles)
+        heat_map = AI_Toolkit.simple_heat_map(ai_stat.map.building_list, ai_stat.map.walkable_tiles, cond)
         for d, s in heat_map:
             if d <= self.claiming_distance:
                 self.claimed_tiles.add(s)
@@ -218,12 +237,12 @@ class AI_Mazedonian(AI):
     def update_diplo_events(self, ai_stat: AI_GameStatus):
         # for ai_stat.aggressions:
 
-        for e_b in ai_stat.enemy_buildings:
+        for e_b in ai_stat.map.opp_building_list:
             if AI_Toolkit.is_obj_in_list(e_b, self.claimed_tiles):
                 debug("New Event: ENEMY_BUILDING_IN_CLAIMED_ZONE")
                 self.diplomacy.add_event(e_b.owner, e_b.offset_coordinates,
                                          DiploEventType.ENEMY_BUILDING_IN_CLAIMED_ZONE, -2, 3, self.name)
-        for e_a in ai_stat.enemy_armies:
+        for e_a in ai_stat.map.opp_army_list:
             if AI_Toolkit.is_obj_in_list(e_a, self.claimed_tiles):
                 debug("New Event: ENEMY_ARMY_INVADING_CLAIMED_ZONE")
                 self.diplomacy.add_event(e_a.owner, e_a.offset_coordinates,
@@ -243,13 +262,13 @@ class AI_Mazedonian(AI):
     def estimate_opponent_strength(self, ai_stat: AI_GameStatus):
         """AI tries to estimate opponent's strength. Currently solely based on army population"""
         for other_p_id in self.other_players:
-            for e_a in ai_stat.enemy_armies:
+            for e_a in ai_stat.map.opp_army_list:
                 if e_a.owner == other_p_id:
-                    if abs(e_a.population - ai_stat.armies[0].population) < self.threshold_considered_equal:
+                    if abs(e_a.population - ai_stat.map.army_list[0].population) < self.threshold_considered_equal:
                         self.__update_estimated_strength(other_p_id, AI_Mazedonian.EQUAL)
-                    elif e_a.population > ai_stat.armies[0].population:
+                    elif e_a.population > ai_stat.map.army_list[0].population:
                         self.__update_estimated_strength(other_p_id, AI_Mazedonian.STRONGER)
-                    elif e_a.population < ai_stat.armies[0].population:
+                    elif e_a.population < ai_stat.map.army_list[0].population:
                         self.__update_estimated_strength(other_p_id, AI_Mazedonian.WEAKER)
 
     def evaluate_state(self, ai_stat: AI_GameStatus):
@@ -290,7 +309,7 @@ class AI_Mazedonian(AI):
                 self.state = AI_Mazedonian.AI_State.DEFENSIVE
 
         elif self.state == AI_Mazedonian.AI_State.DEFENSIVE:
-            if len(ai_stat.own_buildings) < self.previous_amount_of_buildings:  # we got attacked
+            if len(ai_stat.map.building_list) < self.previous_amount_of_buildings:  # we got attacked
                 if len(self.hostile_player) == 0:
                     hint("Problem with AI, we got attacked but no hostile players?!")
                 else:
@@ -432,16 +451,16 @@ class AI_Mazedonian(AI):
         p = Priority.P_NO
         is_next_to_res = False  # just for printing
         if ai_stat.player_resources >= ai_stat.costBuildFarm:
-            for ai_t in ai_stat.tiles_buildable:
+            for ai_t in ai_stat.map.buildable_tiles:
                 tmp = False  # just for printing
-                possible_fields = AI_Toolkit.getListDistanceOne(ai_t, ai_stat.tiles_buildable)
+                possible_fields = AI_Toolkit.get_neibours_on_set(ai_t, ai_stat.map.buildable_tiles)
                 bad_candidates = set()
                 for d in possible_fields:  # check if this field has a resource field next to it (which would be bad)
                     # this is also a very dramatic approach, should be replaced by values based
                     # (to enable placing a field next to a resource in an emergency) for now i'll do, though
-                    adjacent = AI_Toolkit.getListDistanceOne(d, ai_stat.tiles_discovered)
+                    adjacent = AI_Toolkit.get_neibours_on_set(d, ai_stat.map.buildable_tiles)
                     for a in adjacent:
-                        if AI_Toolkit.is_obj_in_list(a, ai_stat.resources):
+                        if a.has_resource():
                             bad_candidates.add(d)
                 # can_field = [x.offset_coordinates for x in possible_fields if x not in bad_candidates] # very pythonic :)
                 for bad_ca in bad_candidates:
@@ -450,9 +469,9 @@ class AI_Mazedonian(AI):
                 amount_of_fields = min(3, len(possible_fields))
                 sampled = random.sample(possible_fields, amount_of_fields)
                 # if build site is next to a resource --> reduce value by 1 for each resource field
-                all_sourroundings = AI_Toolkit.getListDistanceOne(ai_t, ai_stat.tiles_discovered)
+                all_sourroundings = AI_Toolkit.get_neighbours(ai_t)
                 for adjacent in all_sourroundings:
-                    if AI_Toolkit.is_obj_in_list(adjacent, ai_stat.resources):
+                    if adjacent.has_resource():
                         tmp = True
                         score = score - 1
                 if best_score < score:
@@ -481,13 +500,12 @@ class AI_Mazedonian(AI):
         best_score = -1
         best_site = (-1, -1)
         if ai_stat.player_resources >= ai_stat.costBuildS1:
-            for ai_t in ai_stat.tiles_buildable:
+            for ai_t in ai_stat.map.buildable_tiles:
                 score = 0
-                dist1 = AI_Toolkit.getListDistanceOne(ai_t, ai_stat.tiles_discovered)
+                dist1 = AI_Toolkit.get_neighbours(ai_t)
                 for t_at_dist_1 in dist1:
-                    for res in ai_stat.resources:
-                        if res.offset_coordinates == t_at_dist_1.offset_coordinates:
-                            score = score + 1
+                    if t_at_dist_1.has_resource():
+                        score = score + 1
                 if best_score < score:
                     best_score = score
                     best_site = ai_t.offset_coordinates
@@ -498,12 +516,12 @@ class AI_Mazedonian(AI):
         if ai_stat.player_resources >= ai_stat.costBuildRacks:
             candidates = []
             for c in self.claimed_tiles:
-                if not AI_Toolkit.is_obj_in_list(c, ai_stat.tiles_buildable):  # if tile is not buildable, forget it
+                if not c.is_buildable:  # if tile is not buildable, forget it
                     continue
                 res_next_to_can = 0
-                dist1 = AI_Toolkit.getListDistanceOne(c, ai_stat.tiles_discovered)
+                dist1 = AI_Toolkit.get_neighbours(c)
                 for d in dist1:
-                    if AI_Toolkit.is_obj_in_list(d, ai_stat.resources):
+                    if d.has_resource():
                         res_next_to_can = res_next_to_can + 1
 
                 if res_next_to_can == 0:  # very hard constraint (go by value would be better)
@@ -523,7 +541,7 @@ class AI_Mazedonian(AI):
         options = []
         if ai_stat.population >= ai_stat.population_limit:
             return options
-        if len(ai_stat.armies) == 0:
+        if len(ai_stat.map.army_list) == 0:
             options.append(AI_Mazedonian.RaiseArmyOption(Priority.P_HIGH))
             return options  # cannot recruit if no army available
         # calculate offset to desired population by build order
@@ -537,7 +555,7 @@ class AI_Mazedonian(AI):
             prio_merc = Priority.decrease(prio_merc)
             prio_knight = Priority.decrease(prio_knight)
         # compare to desired army composition:
-        army = ai_stat.armies[0]
+        army = ai_stat.map.army_list[0]
         percentage_merc_wanted = self.army_comp.ac[0] / (self.army_comp.ac[0] + self.army_comp.ac[0])
         percentage_merc_actual = army.mercenaries / (army.mercenaries + army.knights)
         percentage_knig_wanted = self.army_comp.ac[1] / (self.army_comp.ac[0] + self.army_comp.ac[0])
@@ -583,18 +601,17 @@ class AI_Mazedonian(AI):
         if ai_stat.player_resources < ai_stat.costScout:
             return options
 
-        for s in ai_stat.tiles_scoutable:
+        for s in ai_stat.map.scoutable_tiles:
             options.append(AI_Mazedonian.ScoutingOption(s.offset_coordinates, Priority.P_NO))
 
         for so in options:
             value = 0
-            tmp_tile = AI_Tile()
-            tmp_tile.offset_coordinates = so.site
-            dist1 = AI_Toolkit.getListDistanceOne(tmp_tile, ai_stat.tiles_discovered)
+            tmp_tile = ai_stat.map.get_tile(so.site)
+            dist1 = AI_Toolkit.get_neighbours(tmp_tile)
             # 1. increase value by resources nearby
             num_of_tiles_with_res = 0
             for t_at_dist_1 in dist1:
-                if AI_Toolkit.is_obj_in_list(t_at_dist_1, ai_stat.resources):
+                if t_at_dist_1.has_resource():
                     num_of_tiles_with_res = num_of_tiles_with_res + 1
             value = value + (num_of_tiles_with_res * self.w_scouting_resource)
             # 2. increase value by proximity to claimed tiles
@@ -624,8 +641,8 @@ class AI_Mazedonian(AI):
         return options
 
     def set_counters(self, ai_stat: AI_GameStatus):
-        self.previous_amount_of_buildings = len(ai_stat.own_buildings)
-        self.previous_army_population = ai_stat.armies[0].population
+        self.previous_amount_of_buildings = len(ai_stat.map.building_list)
+        self.previous_army_population = ai_stat.map.army_list[0].population
         self.previous_food = ai_stat.player_food
 
     def __get_protocol_and_bo(self, ai_stat: AI_GameStatus):
@@ -668,7 +685,7 @@ class AI_Mazedonian(AI):
         tmp = []
         for b_type, value in bo.bo:
             tmp.append([b_type, value])
-        for b in ai_stat.own_buildings:
+        for b in ai_stat.map.building_list:
             for t in tmp:
                 if t[0] == b.type:
                     t[1] = t[1] - 1
@@ -685,7 +702,7 @@ class AI_Mazedonian(AI):
 
     def __get_buildings_of_type(self, t: BuildingType, ai_stat: AI_GameStatus) -> int:
         value = 0
-        for b in ai_stat.own_buildings:
+        for b in ai_stat.map.building_list:
             if b.type == t:
                 value = value + 1
         return value
@@ -695,11 +712,11 @@ class AI_Mazedonian(AI):
         currently only buildings and armies of hostile players are considered to be attackable"""
         targets: Set[Tuple[Union[AI_Building, AI_Army], bool]] = set()
         # priority_list: List[Tuple[int, Union[AI_Building, AI_Army]]]= []
-        if len(ai_stat.armies) == 0:  # in case we don't have an army
+        if len(ai_stat.map.army_list) == 0:  # in case we don't have an army
             return
-        for e_a in ai_stat.enemy_armies:
+        for e_a in ai_stat.map.opp_army_list:
             targets.add((e_a, True))
-        for e_b in ai_stat.enemy_buildings:
+        for e_b in ai_stat.map.opp_building_list:
             targets.add((e_b, False))
 
         hint(f"Found {len(targets)} target(s) for our army")
@@ -715,7 +732,7 @@ class AI_Mazedonian(AI):
 
                 if AI_Toolkit.is_obj_in_list(target, self.claimed_tiles):
                     value = value + 3 if is_army else 2
-                if self.previous_amount_of_buildings > len(ai_stat.own_buildings):  # a building got destroyed
+                if self.previous_amount_of_buildings > len(ai_stat.map.building_list):  # a building got destroyed
                     value = value + 3 if is_army else 0
 
             hint(f"Target @ {str(target.offset_coordinates)} ({'army' if is_army else 'building'}) has value {value}")
@@ -779,7 +796,7 @@ class AI_Mazedonian(AI):
         def w3(elem: AI_Mazedonian.Option, ai_stat: AI_GameStatus) -> bool:
             """Idea: If AI has no army -> Recruiting an army is important"""
             if type(elem) is AI_Mazedonian.RaiseArmyOption:
-                if len(ai_stat.armies) == 0:
+                if len(ai_stat.map.army_list) == 0:
                     return True
             return False
 
@@ -855,7 +872,7 @@ class AI_Mazedonian(AI):
             """Idea: if AI doesn't have a farm -> highest prio (if it cannot build one -> wait)"""
             if type(elem) is AI_Mazedonian.BuildOption:
                 if elem.type == BuildingType.FARM:
-                    for b in ai_stat.own_buildings:
+                    for b in ai_stat.map.building_list:
                         if b.type == BuildingType.FARM:
                             return False
                     return True  # returns true if AI does not have a farm and building one is an option
@@ -866,7 +883,7 @@ class AI_Mazedonian(AI):
         def w12(elem: AI_Mazedonian.Option, ai_stat: AI_GameStatus) -> bool:
             """Idea: extension to w11 (if it cannot build one -> wait)"""
             if type(elem) is AI_Mazedonian.WaitOption:
-                for b in ai_stat.own_buildings:
+                for b in ai_stat.map.building_list:
                     if b.type == BuildingType.FARM:
                         return False
                 return True  # returns true if AI does not have a farm

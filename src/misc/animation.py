@@ -27,6 +27,7 @@ class Animator:
 
     def __init__(self):
         self.move_animations: List[Animator.MoveAnimation] = []
+        self.key_frame_animations: List = []
 
     def is_active(self):
         return len(self.move_animations) > 0
