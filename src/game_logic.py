@@ -1,8 +1,10 @@
 import arcade
+import timeit
+from threading import Thread
 
 from src.ai.AI_GameStatus import AI_GameStatus, AI_Move, AI_GameInterface
 from src.misc.animation import Animator
-from src.misc.game_constants import ResourceType, error, GroundType
+from src.misc.game_constants import ResourceType, error, GroundType, debug
 from src.game_accessoires import Scenario, Ground, Resource, Drawable, Flag, Unit
 from src.game_file_reader import GameFileReader
 from src.hex_map import HexMap, MapStyle, Hexagon
@@ -62,6 +64,7 @@ class GameLogic:
             self.texture_store.load_animated_texture("{}_flag".format(c), 10, idx_fun, 108, 100,
                                                      "../resources/objects/animated/flag_100_sprite_{}.png".format(c))
 
+        self.ai_running = False
         # game status
         self.playNextTurn: bool = False
         self.current_player: int = 0
@@ -69,6 +72,8 @@ class GameLogic:
         self.automatic: bool = False
 
         self.test = None
+        self.total_time = 0
+        self.animator_time = 0
 
     def setup(self):
         """ load the game """
@@ -155,29 +160,38 @@ class GameLogic:
     total_elapsed = float(0)
 
     def update(self, delta_time: float, commands :[]):
+        timestamp_start = timeit.default_timer()
         self.__exec_command(commands)
         GameLogic.elapsed = GameLogic.elapsed + delta_time
         GameLogic.total_elapsed = GameLogic.total_elapsed + delta_time
         #update animations
-        for p in self.player_list:
-            for b in p.buildings:
-                b.flag.next_frame(delta_time)
-        if GameLogic.elapsed > float(0.6) and self.automatic:
+        if self.animator.is_active():           # -> move this to own thread possibly
+            for p in self.player_list:
+                for b in p.buildings:
+                    b.flag.next_frame(delta_time)
+        self.animator_time = timestamp_start - timeit.default_timer()
+        if GameLogic.elapsed > float(1) and self.automatic:
             self.playNextTurn = True
             GameLogic.elapsed = float(0)
         if self.playNextTurn:
-            if self.current_player == 0:  # next time player 0 plays -> new turn
-                self.turn_nr = self.turn_nr + 1
-            if len(self.player_list) > 0:
-                self.play_players_turn()
-                self.current_player = (self.current_player + 1) % len(self.player_list)
+            if not self.ai_running:
+                if self.current_player == 0:  # next time player 0 plays -> new turn
+                    self.turn_nr = self.turn_nr + 1
+                if len(self.player_list) > 0:
+                    # self.play_players_turn()
+                    thread = Thread(target= self.run_ai())
+                    self.current_player = (self.current_player + 1) % len(self.player_list)
+            else:
+                debug("AI is still calculating move... ")
 
         self.playNextTurn = False
         if self.change_in_map_view:
             self.toggle_fog_of_war()
             self.change_in_map_view = False
 
+
         self.animator.update(GameLogic.total_elapsed)
+        self.total_time = timestamp_start - timeit.default_timer()
 
 
     def play_players_turn(self):
@@ -248,7 +262,9 @@ class GameLogic:
                                            enemy_buildings, enemy_armies, player.attacked_set,
                                            player_population, player_population_limit)
         player.attacked_set.clear()
+        timestamp_start = timeit.default_timer()
         self.ai_interface.do_a_move(ai_status, ai_move, player.id)
+        debug(f"AI took: {timeit.default_timer() - timestamp_start} s")
 
         self.exec_ai_move(ai_move, player, costs)
         ai_status.clear()
@@ -258,6 +274,11 @@ class GameLogic:
         #     self.__add_aux_sprite(player.armies[0].tile, 1, "ou")
 
         hint("                          SUCCESSFULLY PLAYED TURN")
+
+    def run_ai(self):
+        self.ai_running = True
+        self.play_players_turn()
+        self.ai_running = False
 
     def updata_map(self):
         """this function makes sure that the map remains well defined"""
@@ -281,7 +302,7 @@ class GameLogic:
                 if building.building_state == BuildingState.UNDER_CONSTRUCTION or \
                         building.building_state == BuildingState.ACTIVE:
                     building.tile.ground.walkable = False
-            self.update_fog_of_war(player)
+            # self.update_fog_of_war(player)
 
         for res in self.scenario.resource_list:
             if res.remaining_amount <= 0:

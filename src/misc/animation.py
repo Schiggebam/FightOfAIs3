@@ -28,6 +28,9 @@ class Animator:
     def __init__(self):
         self.move_animations: List[Animator.MoveAnimation] = []
 
+    def is_active(self):
+        return len(self.move_animations) > 0
+
     def add_move_animation(self, obj: Union[Army], destination: (int, int), time_ms):
         start = HexMap.offset_to_pixel_coords(obj.tile.offset_coordinates)
         dest = HexMap.offset_to_pixel_coords(destination)

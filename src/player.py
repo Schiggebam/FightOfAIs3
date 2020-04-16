@@ -2,7 +2,7 @@ from typing import Set
 from src.game_accessoires import Army
 from src.misc.building import Building
 from src.hex_map import Hexagon
-from src.misc.game_constants import BuildingType, PlayerColour, UnitType
+from src.misc.game_constants import BuildingType, PlayerColour, UnitType, BuildingState
 
 
 class Player:
@@ -48,7 +48,8 @@ class Player:
     def get_population_limit(self) -> int:
         value = 0
         for b in self.buildings:
-            value = value + b.grant_pop
+            if b.building_state == BuildingState.ACTIVE:
+                value = value + b.grant_pop
         return value
 
     def get_population(self) -> int:

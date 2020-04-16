@@ -40,13 +40,16 @@ def get_caller() -> str:
         return "(Class: {})".format(the_class)
 
 
-def debug(msg: str):
+def debug(msg: str, colour=0):
     if not DEBUG:
         return
     caller = ""
     if DETAILED_DEBUG_INFO != 0:
         caller = get_caller()
-    print("[DEBUG]{} : {}{}{}".format(caller, bcolors.OKBLUE, str(msg), bcolors.ENDC))
+    c = bcolors.OKBLUE
+    if colour == 1:
+        c = bcolors.OKGREEN
+    print("[DEBUG]{} : {}{}{}".format(caller, c, str(msg), bcolors.ENDC))
 
 
 def hint(msg: str):

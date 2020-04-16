@@ -46,7 +46,8 @@ class IncomeCalculator:
     def calculate_culture(self, player: Player) -> int:
         c = int(0)
         for building in player.buildings:
-            c = c + building.culture_per_turn
+            if building.building_state == BuildingState.ACTIVE:
+                c = c + building.culture_per_turn
         return c
 
 

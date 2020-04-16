@@ -1,6 +1,7 @@
+import os
 
 
-
+print(os.getcwd())
 
 def fun_1(amount, index_fun):
     for i in range(amount):
