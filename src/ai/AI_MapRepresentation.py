@@ -3,7 +3,7 @@ from typing import List, Tuple, Optional, Dict
 from src.game_accessoires import Resource, Army
 from src.hex_map import HexMap
 from src.misc.building import Building
-from src.misc.game_constants import GroundType, error, UnitType, ResourceType, BuildingType
+from src.misc.game_constants import GroundType, error, UnitType, ResourceType, BuildingType, BuildingState
 
 
 class Tile:
@@ -83,6 +83,7 @@ class AI_Building(AI_Element):
     def __init__(self, t: Tile):
         super().__init__(t)
         self.type: Optional[BuildingType] = None
+        self.state: Optional[BuildingState] = None
         self.owner: int = -1  # if this is -1, it means that this is not a enemy building. Otherwise the player_id is stored here
         self.associated_tiles: List[Tile] = []
 
@@ -184,6 +185,7 @@ class Map:
         ai_b = AI_Building(tile)
         ai_b.offset_coordinates = building.tile.offset_coordinates
         ai_b.type = building.building_type
+        ai_b.state = building.building_state
         for a in building.associated_tiles:
             t = self.__get_tile(a.offset_coordinates)
             ai_b.associated_tiles.append(t)
@@ -194,11 +196,19 @@ class Map:
         return self.__get_tile(offset_coordinates)
 
     def __get_tile(self, offset_coordinates) -> Optional[Tile]:
-        tile = self.map[offset_coordinates]
-        if not tile:
-            error("Tile not part of the map -> dict key error")
-            return None
-        return tile
+        try:
+            tile = self.map[offset_coordinates]
+            if not tile:
+                error("Tile not part of the map -> dict key error")
+                return None
+            return tile
+        except KeyError:
+            error(f"Caught Key error for key {offset_coordinates}, available keys are:")
+            for k, _ in self.map.items():
+                print(str(k), end="")
+            print("")
+
+
 
     def print_map(self):
         for k, v in self.map.items():

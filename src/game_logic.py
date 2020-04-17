@@ -178,7 +178,7 @@ class GameLogic:
             for k_f in self.animator.key_frame_animations:
                 k_f.next_frame(delta_time)
         self.animator_time = timestamp_start - timeit.default_timer()
-        if GameLogic.elapsed > float(1) and self.automatic:
+        if GameLogic.elapsed > float(0.8) and self.automatic:
             self.playNextTurn = True
             GameLogic.elapsed = float(0)
         if self.playNextTurn:
@@ -350,6 +350,13 @@ class GameLogic:
             hex = self.hex_map.get_hex_by_offset(d[0])
             hex.debug_msg = d[1]
 
+        print_move = False
+        if print_move:
+            s = f"Recruit Army: {ai_move.doRecruitArmy}, Rec Unit: {ai_move.doRecruitUnit}"
+            s = s + f"Build: {ai_move.doBuild}, scout: {ai_move.doScout}"
+            s = s + f"Loc: {ai_move.loc}, army_move: {ai_move.move_army_to}, move: {ai_move.doMoveArmy}"
+            s = s + ai_move.str_rep_of_action
+            debug(s)
 
         if ai_move.doMoveArmy:
             if len(player.armies) == 1:             #TODO support for only 1 army here
@@ -359,6 +366,7 @@ class GameLogic:
 
         if ai_move.doRecruitArmy:
             if len(player.armies) == 0:
+                hint(f"spawning army at {ai_move.loc}")
                 base_hex = self.hex_map.get_hex_by_offset(ai_move.loc)
                 army = Army(base_hex, player.id)
                 self.add_army(army, player)
@@ -407,6 +415,7 @@ class GameLogic:
             else:
                 b_type = ai_move.type
             if Building.get_construction_cost(b_type) <= player.amount_of_resources:
+                hint("building: @" + str(ai_move.loc))
                 base_hex = self.hex_map.get_hex_by_offset(ai_move.loc)
                 b = Building(base_hex, b_type, player.id)
                 if not player.is_barbaric:
@@ -429,6 +438,8 @@ class GameLogic:
             if player.amount_of_resources >= costs['scout']:
                 player.discovered_tiles.add(self.hex_map.get_hex_by_offset(ai_move.loc))
                 player.amount_of_resources = player.amount_of_resources - costs['scout']
+                self.toggle_fog_of_war_lw(player.discovered_tiles)
+
 
         elif ai_move.doUpgrade:
             b_old: Optional[Building] = None
@@ -511,7 +522,7 @@ class GameLogic:
     def get_enemy_buildings(self, player: Player) -> set:
         e_set = set()
         for other_player in self.player_list:
-            if other_player != player:
+            if other_player.id != player.id:
                 for o_b in other_player.buildings:
                     if o_b.tile in player.discovered_tiles:
                         e_set.add((o_b, other_player.id))

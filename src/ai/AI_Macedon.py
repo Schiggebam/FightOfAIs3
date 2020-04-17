@@ -179,6 +179,9 @@ class AI_Mazedonian(AI):
         t4 = timeit.default_timer()
         # debug(f"Timings: {t2 - t1}, {t3 - t2}, {t4 - t3}, total: {t4 - t1}")
         # debug(f"Timings {t2_1 - t2}, {t2_2 - t2_1}, {t3 - t2_2}")
+        # clear out some data:
+        self.priolist_targets.clear()
+        self.claimed_tiles.clear()
 
     def evaluate_army_movement(self, ai_stat: AI_GameStatus, move: AI_Move):
         if len(ai_stat.map.army_list) == 0:
@@ -346,15 +349,15 @@ class AI_Mazedonian(AI):
                             f"Weight condition fullfiled w: {w.weight} applied on score: {opt.weighted_score} of {type(opt)} ")
                     opt.weighted_score = opt.weighted_score + w.weight
 
-        # for move in self.priolist_targets:
-        #     if move.score == Priority.P_NO:
-        #         continue
-        #     for w in self.m_weights:
-        #         if w.condition(move, ai_stat):
-        #             move.weighted_score = move.weighted_score + w.weight
+        for m in self.priolist_targets:
+            if m.score == Priority.P_NO:
+                continue
+            for w in self.m_weights:
+                if w.condition(m, ai_stat):
+                    m.weighted_score = m.weighted_score + w.weight
 
         options.sort(key=lambda x: x.weighted_score, reverse=True)
-        # self.priolist_targets.sort(key=lambda x: x.weighted_score, reverse=True)
+        self.priolist_targets.sort(key=lambda x: x.weighted_score, reverse=True)
         hint("---")
         for opt in options:
             s = f"\tOption of type: {type(opt)}, score: {opt.weighted_score}"
@@ -364,6 +367,10 @@ class AI_Mazedonian(AI):
                 s = s + f", site: {opt.site}"
             s = s + f", former priority: {opt.score}"
             hint(s)
+        for m in self.priolist_targets:
+           s = f"\tAttack Target : {'army' if type(m.target) is AI_Army else 'building'}, score: {m.weighted_score}"
+           hint(s)
+
         # translate this into move
         best_option: AI_Mazedonian.Option = options[0]
         if type(best_option) == AI_Mazedonian.WaitOption:
@@ -888,20 +895,24 @@ class AI_Mazedonian(AI):
 
         def w13(elem: AI_Mazedonian.Option, ai_stat: AI_GameStatus) -> bool:
             """Idea: if pop >= pop_limit, make building barracks slightly more popular"""
-            if type(elem) is AI_Mazedonian.BuildOption:
-                if elem.type == BuildingType.BARRACKS:
-                    return True
-            if type(elem) is AI_Mazedonian.WaitOption:
-                return True
-            return False
+            if ai_stat.population_limit <= ai_stat.population:
+                if type(elem) is AI_Mazedonian.BuildOption:
+                    if elem.type == BuildingType.BARRACKS:
+                        if not AI_Toolkit.has_building_under_construction(BuildingType.BARRACKS, ai_stat):
+                            return True
+                if type(elem) is AI_Mazedonian.WaitOption:
+                    if not AI_Toolkit.has_building_under_construction(BuildingType.BARRACKS, ai_stat):
+                        return True
+                return False
 
-        w.append((w13, 2.5))
+        w.append((w13, 2.7))
 
         hint(f"AI has found {len(w)} weight functions.")
         return w
 
     def __setup_movement_weights(self) -> List[Tuple[Callable, float]]:
         aw: List[Tuple[Callable, float]] = []
+
         def aw1(elem: AI_Mazedonian.AttackTarget, ai_stat: AI_GameStatus) -> bool:
             if type(elem.target) == AI_Army:
                 if AI_Toolkit.is_obj_in_list(elem.target, self.claimed_tiles):
@@ -918,12 +929,12 @@ class AI_Mazedonian(AI):
 
         aw.append((aw2, 1))
 
-        def aw3(elem: AI_Mazedonian.AttackTarget, ai_stat: AI_GameStatus) -> bool:
-            if type(elem.target) == AI_Army:
-                return True
-            return False
-
-        aw.append((aw3, 100))
+        # def aw3(elem: AI_Mazedonian.AttackTarget, ai_stat: AI_GameStatus) -> bool:
+        #     if type(elem.target) == AI_Army:
+        #         return True
+        #     return False
+        #
+        # aw.append((aw3, 100))
 
         hint(f"AI has found {len(aw)} movement weight functions.")
         return aw

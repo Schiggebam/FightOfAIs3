@@ -2,10 +2,12 @@ import copy
 import queue
 from typing import List, Union, Tuple, Optional
 
+from src.ai.AI_GameStatus import AI_GameStatus
 from src.ai.AI_MapRepresentation import Tile, AI_Element
-from src.misc.game_constants import error
+from src.misc.game_constants import error, BuildingType, BuildingState
 
 AI_OBJ = Union[AI_Element, Tile]
+
 
 def simple_heat_map(initial_set: List[AI_OBJ], working_set: List[AI_OBJ],
                     condition) -> List[Tuple[int, AI_OBJ]]:
@@ -26,6 +28,7 @@ def simple_heat_map(initial_set: List[AI_OBJ], working_set: List[AI_OBJ],
             if n not in discovered and condition(n):
                 tmp.put((d + 1, n))
     return heat_map
+
 
 def estimate_income(list_buildings):
     pass
@@ -57,28 +60,30 @@ def dijkstra_pq(start, target, domain: List[Tile]) -> List[Tile]:
     path.reverse()
     return path
 
-    #print("path: ")
+    # print("path: ")
     x = target
     while x is not None:
-    #    print(" " + str(x.x_grid) + "|" + str(x.y_grid) + " ", end="")
+        #    print(" " + str(x.x_grid) + "|" + str(x.y_grid) + " ", end="")
         path.append(x)
         x = x.pre
-    #print(" ")
+    # print(" ")
     path.reverse()
-    #if path[0].x_grid == target.x_grid and path[0].y_grid == target.y_grid:
+    # if path[0].x_grid == target.x_grid and path[0].y_grid == target.y_grid:
     #    path = None
 
 
-def get_tile_by_xy(coords, discovered_tiles : []):
+def get_tile_by_xy(coords, discovered_tiles: []):
     for e in discovered_tiles:
         if coords == e.offset_coordinates:
             return e
     return None
 
+
 def get_neibours_on_set(tile: AI_OBJ, working_set: List) -> List:
     nei = get_neighbours(tile)
     filtered = [x for x in nei if x in working_set]
     return filtered
+
 
 def get_neighbours(e: AI_OBJ) -> List[Tile]:
     nei = []
@@ -89,10 +94,12 @@ def get_neighbours(e: AI_OBJ) -> List[Tile]:
                e.base_tile.tile_sw, e.base_tile.tile_w, e.base_tile.tile_nw]
     return list(filter(None, nei))
 
+
 def get_distance(a: AI_OBJ, b: AI_OBJ) -> int:
     cc1 = offset_to_cube_xy(a.offset_coordinates[0], a.offset_coordinates[1])
     cc2 = offset_to_cube_xy(b.offset_coordinates[0], b.offset_coordinates[1])
     return cube_distance(cc1, cc2)
+
 
 # def getListDistanceOne(t1, li):     # get neighbours
 #     res = []
@@ -111,13 +118,14 @@ def getDistance(off1: Tuple[int, int], off2: Tuple[int, int]) -> int:
     dist = cube_distance(cube_coords_t1, cube_coords_t2)
     return dist
 
+
 # def getDistance_xy(a:(int, int), b:(int, int)):
 #     cube_coords_1 = offset_to_cube_xy(a[0], a[1])
 #     cube_coords_2 = offset_to_cube_xy(b[0], b[1])
 #     return cube_distance(cube_coords_1, cube_coords_2)
 
 
-#def cube_to_offset_coord(cube):
+# def cube_to_offset_coord(cube):
 #    col = cube.x + (cube.z - (cube.z&1)) / 2
 #    row = cube.z
 #    return row, col
@@ -127,6 +135,7 @@ def offset_to_cube_xy(x, y):
     c_z = y
     c_y = -c_x - c_z
     return c_x, c_y, c_z
+
 
 # def get_resource_on_tile_xy(offset_c: (int, int), res_list):
 #     for r in res_list:
@@ -141,8 +150,10 @@ def offset_to_cube_coord(hex):
     y = -x - z
     return x, y, z
 
+
 def cube_distance(a, b):
     return (abs(a[0] - b[0]) + abs(a[1] - b[1]) + abs(a[2] - b[2])) / 2
+
 
 def is_obj_in_list(obj: AI_OBJ, list) -> bool:
     """check whether a the offset coordinates of an object match the ones of an element in the list"""
@@ -151,18 +162,20 @@ def is_obj_in_list(obj: AI_OBJ, list) -> bool:
             return True
     return False
 
+
 def deep_copy_list(src):
     return copy.deepcopy(src)
 
 
 ############## NEWER TOOLKIT FUNCTIONS: ########################################
 def num_resources_on_adjacent(obj: AI_OBJ) -> int:
-    tile: Tile = get_tile_from_ai_obj(obj)        # assuming this is not none
+    tile: Tile = get_tile_from_ai_obj(obj)  # assuming this is not none
     value = 0
     for n in get_neighbours(tile):
         if n.has_resource():
             value = value + 1
     return value
+
 
 def get_tile_from_ai_obj(obj: AI_OBJ) -> Optional[Tile]:
     tile: Optional[Tile] = None
@@ -170,6 +183,27 @@ def get_tile_from_ai_obj(obj: AI_OBJ) -> Optional[Tile]:
         tile = obj
     else:
         tile = obj.base_tile
-    if tile is None:        # is None
+    if tile is None:  # is None
         error("Unable to get Tile from AI_Obj")
     return tile
+
+
+def num_buidling(building_type: BuildingType, ai_stat: AI_GameStatus, count_under_construction=False):
+    value = 0
+    for b in ai_stat.map.building_list:
+        if b.type == building_type:
+            if count_under_construction:
+                if b.state == BuildingState.UNDER_CONSTRUCTION or b.state == BuildingState.ACTIVE:
+                    value = value + 1
+            else:
+                if b.state == BuildingState.ACTIVE:
+                    value = value + 1
+    return value
+
+
+def has_building_under_construction(building_type: BuildingType, ai_stat: AI_GameStatus):
+    for b in ai_stat.map.building_list:
+        if b.type == building_type:
+            if b.state == BuildingState.UNDER_CONSTRUCTION:
+                return True
+    return False
