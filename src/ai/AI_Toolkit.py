@@ -57,39 +57,6 @@ def dijkstra_pq(start, target, domain: List[Tile]) -> List[Tile]:
     path.reverse()
     return path
 
-# def dijkstra(start, target, domain, path):
-#     if not start or not target:
-#         path = []
-#         return
-#     #print("Start: " + str(start.x_grid)  + "|" + str(start.y_grid))
-#     #print("target: " + str(target.x_grid)  + "|" + str(target.y_grid))
-#     #print("domain: ")
-#     #for d in domain:
-#     #    print(str(d.x_grid) + "|" + str(d.y_grid) + " ", end="")
-#     # Q = domain.copy()
-#     Q = queue.PriorityQueue()
-#     for t in domain:
-#         t.dist = 100
-#         t.pre = None
-#     start.dist = 0
-#     while len(Q) > 0:
-#         smallest = 1000
-#         u = None
-#         for q in Q:
-#             if q.dist < smallest:
-#                 u = q
-#                 smallest = q.dist
-#         if u is None:
-#             print("ERROR: " + str(len(Q)))
-#         Q.remove(u)
-#         nei = get_neighbours(u)
-#         for v in nei:
-#             if v not in Q:
-#                 a = u.dist + 1
-#                 if a < v.dist:
-#                     v.dist = a
-#                     v.pre = u
-
     #print("path: ")
     x = target
     while x is not None:

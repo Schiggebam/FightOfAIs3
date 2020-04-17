@@ -111,7 +111,8 @@ class Game(arcade.Window):
         self.draw_time_colour = arcade.color.WHITE
 
     def setup(self):
-        arcade.set_background_color(arcade.color.DARK_BLUE)
+        # arcade.set_background_color(arcade.color.DARK_BLUE)
+        arcade.set_background_color(arcade.color.BLACK)
         self.commands.extend(self.console.initial_commands(SETUP_COMMANDS))
         self.game_logic.setup()
 

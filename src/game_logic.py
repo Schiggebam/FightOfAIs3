@@ -87,15 +87,15 @@ class GameLogic:
         self.income_calc.hex_map = self.hex_map         # TODO make sure to set the hex_map everywhere. Ugly!
 
         #TODO do this somewhere else
-        background: List[Drawable] = []
-        x_off = 213
-        y_off = 165
-        for x in range(6):
-            for y in range(5):
-                d = Drawable()
-                d.set_sprite_pos((x_off * x + 100, y_off * y), self.__camera_pos)
-                self.__set_sprite(d, "ocean")
-                self.z_levels[0].append(d.sprite)
+        # background: List[Drawable] = []
+        # x_off = 213
+        # y_off = 165
+        # for x in range(6):
+        #     for y in range(5):
+        #         d = Drawable()
+        #         d.set_sprite_pos((x_off * x + 100, y_off * y), self.__camera_pos)
+        #         self.__set_sprite(d, "ocean")
+        #         self.z_levels[0].append(d.sprite)
 
         #map
         for y in range(len(map_data)-1, -1, -1):
@@ -154,7 +154,7 @@ class GameLogic:
             self.add_army(army, player)
 
         self.__reorder_spritelist(self.z_levels[2])
-        self.toggle_fog_of_war()
+        self.toggle_fog_of_war_lw(self.hex_map.map)
         self.show_key_frame_animation = ENABLE_KEYFRAME_ANIMATIONS
         debug(f"Keyframes are {'enabled' if ENABLE_KEYFRAME_ANIMATIONS else 'disabled (enable by typing <switch_ka> in console)'}")
         # HexMap.hex_distance(self.hex_map.get_hex_by_offset((0,0)), self.hex_map.get_hex_by_offset((2,2)))
@@ -194,7 +194,7 @@ class GameLogic:
 
         self.playNextTurn = False
         if self.change_in_map_view:
-            self.toggle_fog_of_war()
+            self.toggle_fog_of_war_lw(self.hex_map.map)
             self.change_in_map_view = False
 
         self.animator.update(GameLogic.total_elapsed)
@@ -416,12 +416,13 @@ class GameLogic:
                             b.associated_tiles.append(self.hex_map.get_hex_by_offset(loc))
                         # b.associated_tiles.append(self.hex_map.get_hex_by_offset(ai_move.info[1]))
                         # b.associated_tiles.append(self.hex_map.get_hex_by_offset(ai_move.info[2]))
-                self.add_building(b, player)
-                player.amount_of_resources = player.amount_of_resources - Building.get_construction_cost(b_type)
-                # The sight range is only extended with the player is not barbaric
                 if not player.is_barbaric:
                     tmp = self.hex_map.get_neighbours_dist(base_hex, b.sight_range)
                     player.discovered_tiles.update(tmp)
+                self.add_building(b, player)
+                player.amount_of_resources = player.amount_of_resources - Building.get_construction_cost(b_type)
+                # The sight range is only extended with the player is not barbaric
+
             else:
                 error("Exec AI Move: Cannot build building! BuildingType:" + str(b_type))
         if ai_move.doScout:
@@ -529,9 +530,9 @@ class GameLogic:
         if self.map_hack:
             return
         if self.map_view[player.id]:
-            for hex in self.hex_map.map:
-                if hex in player.discovered_tiles:
-                    hex.ground.set_active_texture(1)
+            for hex in player.discovered_tiles:
+                hex.ground.set_active_texture(1)
+                # hex.ground.sprite.alpha = 255
             for res in self.scenario.resource_list:
                 if res.tile in player.discovered_tiles:
                     res.sprite.alpha = 255
@@ -543,24 +544,50 @@ class GameLogic:
                             a.sprite.alpha = 255
         self.__reorder_spritelist(self.z_levels[2])
 
-    def toggle_fog_of_war(self):
+    def toggle_fog_of_war_lw(self, tile_list: Set[Hexagon]):
+        t1 = timeit.default_timer()
         v = 255 if self.map_hack else 0
         for res in self.scenario.resource_list:
             res.sprite.alpha = v
-        if len(self.player_list) == 0:
-            for hex in self.hex_map.map:
-                 hex.ground.set_active_texture(1 if self.map_hack else 0)
-        else:
-            for player in self.player_list:
-                for hex in self.hex_map.map:
-                     hex.ground.set_active_texture(1 if self.map_hack else 0)
 
-            #for player in self.player_list:
-                for b in player.buildings:
-                    b.sprite.alpha = v
-                    for a in b.associated_drawables:
-                        a.sprite.alpha = v
-                self.update_fog_of_war(player)
+        for hex in tile_list:
+            hex.ground.set_active_texture(1 if self.map_hack else 0)
+            # hex.ground.sprite.alpha = 255 if self.map_hack else 0
+
+        for player in self.player_list:
+            for b in player.buildings:
+                b.sprite.alpha = v
+                for a in b.associated_drawables:
+                    a.sprite.alpha = v
+
+        for player in self.player_list:
+            self.update_fog_of_war(player)
+        print("Toggeling the map took: {} s".format(timeit.default_timer() - t1))
+
+    # def toggle_fog_of_war(self):
+    #     t1 = timeit.default_timer()
+    #     t2 = 0
+    #     v = 255 if self.map_hack else 0
+    #     for res in self.scenario.resource_list:
+    #         res.sprite.alpha = v
+    #     if len(self.player_list) == 0:
+    #         for hex in self.hex_map.map:
+    #              hex.ground.set_active_texture(1 if self.map_hack else 0)
+    #
+    #     else:
+    #         t3 = timeit.default_timer()
+    #         for hex in self.hex_map.map:
+    #              hex.ground.set_active_texture(1 if self.map_hack else 0)
+    #         t2 = t3 - timeit.default_timer()
+    #         for player in self.player_list:
+    #             for b in player.buildings:
+    #                 b.sprite.alpha = v
+    #                 for a in b.associated_drawables:
+    #                     a.sprite.alpha = v
+    #         # barrier, you cannot merge those for calls - dummy!!
+    #         for player in self.player_list:
+    #             self.update_fog_of_war(player)
+    #     print("Toggeling the map took: {} ({}) s".format(timeit.default_timer() - t1, t2))
 
     def add_resource(self, resource: Resource):
         self.scenario.resource_list.append(resource)
@@ -582,6 +609,9 @@ class GameLogic:
         flag.sprite.set_texture(0)
         self.animator.key_frame_animations.append(flag)
         self.z_levels[2].append(flag.sprite)
+
+    def del_flag(self, flag: Flag):
+        self.z_levels[2].remove(flag.sprite)
 
     def add_building(self, building: Building, player: Player):
         hint("adding a building")
@@ -620,7 +650,7 @@ class GameLogic:
         #     self.extend_building(building, mine_tile, "vm_nw")
         #     self.extend_building(building, church_tile, "vk_e")
         #     self.extend_building(building, storage_tile, "vs_sw")
-        self.toggle_fog_of_war()
+        self.toggle_fog_of_war_lw(player.discovered_tiles)
         self.__reorder_spritelist(self.z_levels[2])
 
 
@@ -633,6 +663,7 @@ class GameLogic:
         self.z_levels[2].append(drawable.sprite)
 
     def del_building(self, building: Building, player: Player):
+        self.del_flag(building.flag)
         for drawable in building.associated_drawables:
             self.z_levels[2].remove(drawable.sprite)
         player.buildings.remove(building)

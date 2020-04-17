@@ -203,11 +203,6 @@ class AI_Barbaric(AI):
                 longest_path: (int, (int, int)) = (-1, (0, 0))
                 target_tile = ai_stat.map.opp_army_list[0].base_tile
                 dist_to_army = AI_Toolkit.get_distance(target_tile, ai_stat.map.army_list[0].base_tile)
-                # target_tile = AI_Toolkit.get_tile_by_xy(ai_stat.map.opp_army_list[0].offset_coordinates,
-                #                                         ai_stat.tiles_walkable)                  # TODO more complex evasion routine
-                # dist_to_army = AI_Toolkit.getDistance(target_tile,
-                #                                       AI_Toolkit.get_tile_by_xy(ai_stat.armies[0].offset_coordinates,
-                #                                                                 ai_stat.tiles_walkable))
                 if dist_to_army >= self.safety_dist_to_enemy_army:
                     hint("AI Barbaric: Enemy army far enough away, no need to evade.")
                     return -1, -1

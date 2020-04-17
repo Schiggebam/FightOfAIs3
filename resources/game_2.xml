@@ -12,9 +12,9 @@
         <building_farm code="fa" offsetX="0" offsetY="5" scale="1">../resources/objects/simple_hut.png</building_farm>
         <building_villa code="s2" offsetX="0" offsetY="0" scale="1">../resources/objects/simple_villa.png</building_villa>
         <outline code="ou" offsetX="0" offsetY="0" scale="1">../resources/map/outline_selected.png</outline>
-        <flag_red code="f1_red" offsetX="5" offsetY="25" scale="0.75">../resources/objects/flag_red.png</flag_red>
-        <flag_yellow code="f1_yellow" offsetX="5" offsetY="25" scale="0.75">../resources/objects/flag_yellow.png</flag_yellow>
-        <flag_teal code="f1_teal" offsetX="5" offsetY="25" scale="0.75">../resources/objects/flag_teal.png</flag_teal>
+        <flag_red code="f1_red" offsetX="5" offsetY="30" scale="0.75">../resources/objects/flag_red.png</flag_red>
+        <flag_yellow code="f1_yellow" offsetX="5" offsetY="30" scale="0.75">../resources/objects/flag_yellow.png</flag_yellow>
+        <flag_teal code="f1_teal" offsetX="5" offsetY="30" scale="0.75">../resources/objects/flag_teal.png</flag_teal>
         <camp_1 code="c1" offsetX="5" offsetY="0" scale="1">../resources/objects/camp_1.png</camp_1>
         <camp_2 code="c2" offsetX="5" offsetY="0" scale="1">../resources/objects/camp_2.png</camp_2>
         <camp_3 code="c3" offsetX="5" offsetY="0" scale="1">../resources/objects/camp_3.png</camp_3>
@@ -203,7 +203,7 @@
                  army_rel_to_spawn_x="-1" army_rel_to_spawn_y="-1">peter pan</player1>
         <!--<player2 colour="yellow" spawn_x="4" spawn_y="2" ai="expansionist"
                  army_rel_to_spawn_x="0" army_rel_to_spawn_y="-1">peter pan</player2>-->
-        <barbar1 colour="yellow" spawn_x="5" spawn_y="7" ai="barbaric"
+        <barbar1 colour="yellow" spawn_x="5" spawn_y="9" ai="barbaric"
                  army_rel_to_spawn_x="+1" army_rel_to_spawn_y="+1">Barbaric 1</barbar1>
         <!--<village colour="teal" spawn_x="10" spawn_y="14" ai="villager"
                  army_rel_to_spawn_x="-1" army_rel_to_spawn_y="0">Barbaric 1</village>-->

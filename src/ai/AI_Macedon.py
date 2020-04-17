@@ -1,7 +1,7 @@
 import random
 import timeit
 from enum import Enum
-from typing import Set, List, Callable, Tuple, Union, Optional
+from typing import Set, List, Callable, Tuple, Union, Optional, Dict
 
 from dataclasses import dataclass
 
@@ -78,7 +78,7 @@ class AI_Mazedonian(AI):
         weight: float
 
     @dataclass()
-    class AttackTarget:
+    class AttackTarget: # TODO rename to army movement
         target: Union[AI_Building, AI_Army]
         score: int
         weighted_score: float = 0
@@ -98,8 +98,9 @@ class AI_Mazedonian(AI):
         self.other_players = other_players
         self.hostile_player: Set[int] = set()  # stores ID of hostile players
         #self.priolist_targets: List[Tuple[int, Union[AI_Army, AI_Building], bool]] = []
-        self.priolist_targets: List[AI_Mazedonian.AttackTarget] = []
-        self.opponent_strength: Set[Tuple[int, int]] = set()  # stores the ID and the value
+        self.priolist_targets: List[AI_Mazedonian.AttackTarget] = []    # TODO rename to army movement
+        # self.opponent_strength: Set[Tuple[int, int]] = set()  # stores the ID and the value
+        self.opponent_strength: Dict[int, int] = {}
         self.claimed_tiles: Set[Tile] = set()
         self.is_loosing_food: bool = False
 
@@ -137,31 +138,35 @@ class AI_Mazedonian(AI):
         self.w_scouting_claimed: float = 1
 
         self.weights: List[AI_Mazedonian.Weight] = []
-        for c, w in self.__setup_weights():
-            self.weights.append(AI_Mazedonian.Weight(c, w))
+        self.m_weights: List[AI_Mazedonian.Weight] = []
+        for c, v in self.__setup_weights():
+            self.weights.append(AI_Mazedonian.Weight(c, v))
+        for c, v in self.__setup_movement_weights():
+            self.m_weights.append(AI_Mazedonian.Weight(c, v))
 
     def do_move(self, ai_stat: AI_GameStatus, move: AI_Move):
         t1 = timeit.default_timer()
-        self.__print_situation(ai_stat)
+
         self.create_heat_maps(ai_stat, move)
         self.update_diplo_events(ai_stat)
         self.diplomacy.calc_round()
         self.evaluate_hostile_players()
+        self.estimate_opponent_strength(ai_stat)
         self.__get_attack_target(ai_stat)
         self.evaluate_state(ai_stat)
         self.__get_protocol_and_bo(ai_stat)
+        self.__print_situation(ai_stat)
         t2 = timeit.default_timer()
 
         build_options: List[AI_Mazedonian.BuildOption] = self.evaluate_move_building(ai_stat)
-        # TODO upgrade
+        # TODO handle building upgrads
         t2_1 = timeit.default_timer()
-        recruitment_options: List[
-            Union[AI_Mazedonian.RecruitmentOption, AI_Mazedonian.RaiseArmyOption]] = self.evaluate_move_recruitment(
-            ai_stat)
+        recruitment_options: List[Union[AI_Mazedonian.RecruitmentOption, AI_Mazedonian.RaiseArmyOption]] = \
+                                                    self.evaluate_move_recruitment(ai_stat)
         t2_2 = timeit.default_timer()
         scouting_options: List[AI_Mazedonian.ScoutingOption] = self.evaluate_move_scouting(ai_stat)
         t3 = timeit.default_timer()
-        self.evaluate_army_movement(ai_stat, move)
+
         all_options: List[AI_Mazedonian.Option] = []
         all_options.extend(build_options)
         all_options.extend(recruitment_options)
@@ -169,7 +174,7 @@ class AI_Mazedonian(AI):
         all_options.append(scouting_options[0])  # reducing complexity - just consider the best scouting option
         all_options.append(AI_Mazedonian.WaitOption(Priority.P_MEDIUM))  # do nothing is an option
         self.weight_options(all_options, ai_stat, move)
-
+        self.evaluate_army_movement(ai_stat, move)
         self.set_counters(ai_stat)
         t4 = timeit.default_timer()
         # debug(f"Timings: {t2 - t1}, {t3 - t2}, {t4 - t3}, total: {t4 - t1}")
@@ -179,7 +184,7 @@ class AI_Mazedonian(AI):
         if len(ai_stat.map.army_list) == 0:
             return
 
-        if self.state == AI_Mazedonian.AI_State.PASSIVE and False:
+        if self.state == AI_Mazedonian.AI_State.PASSIVE:
             # for now, just move it out of the way.
             army_is_on_field = False
             if ai_stat.map.army_list[0].base_tile in ai_stat.map.farm_field_tiles:
@@ -201,28 +206,21 @@ class AI_Mazedonian(AI):
                         move.doMoveArmy = True
 
         elif self.state == AI_Mazedonian.AI_State.DEFENSIVE:
-            pass
-        elif self.state == AI_Mazedonian.AI_State.AGGRESSIVE or True:
+            error("unfinished implementation")
+        elif self.state == AI_Mazedonian.AI_State.AGGRESSIVE:
             if len(self.priolist_targets) > 0:
-                if self.threshold_target_value <= self.priolist_targets[0].score or True:
+                if self.threshold_target_value <= self.priolist_targets[0].score:
                     # attack
                     start_tile = ai_stat.map.army_list[0].base_tile
                     target_tile = self.priolist_targets[0].target.base_tile
                     path = AI_Toolkit.dijkstra_pq(start_tile, target_tile, ai_stat.map.walkable_tiles)
-                    print(len(path))
-                    for p in path:
-                        hint(str(p.offset_coordinates))
                     if len(path) > 1:
                         move.move_army_to = path[1].offset_coordinates
                         move.doMoveArmy = True
-                        hint('moving to: {} from {} to {}'.format(str(move.move_army_to), start_tile.offset_coordinates, target_tile.offset_coordinates))
-
-                    else:
-                        hint("no path")
                         hint('moving to: {} from {} to {}'.format(str(move.move_army_to), start_tile.offset_coordinates,
                                                                   target_tile.offset_coordinates))
-
-
+                else:
+                    hint("targets value to low. Will not attack")
     def set_vars(self, ai_stat: AI_GameStatus):
         if self.previous_food > ai_stat.player_food:
             hint("AI detected that it is loosing food")
@@ -235,10 +233,10 @@ class AI_Mazedonian(AI):
         for d, s in heat_map:
             if d <= self.claiming_distance:
                 self.claimed_tiles.add(s)
-        for t in ai_stat.map.walkable_tiles:
-            x_val = AI_Toolkit.num_resources_on_adjacent(t)
-            # x_val = len(AI_Toolkit.get_neighbours(t))
-            move.info_at_tile.append((t.offset_coordinates, str(x_val)))
+        # for t in ai_stat.map.walkable_tiles:
+        #     x_val = AI_Toolkit.num_resources_on_adjacent(t)
+        #     # x_val = len(AI_Toolkit.get_neighbours(t))
+        #     move.info_at_tile.append((t.offset_coordinates, str(x_val)))
         # for d, s in heat_map:
         #     move.info_at_tile.append((s.offset_coordinates, str(d)))
 
@@ -269,15 +267,20 @@ class AI_Mazedonian(AI):
 
     def estimate_opponent_strength(self, ai_stat: AI_GameStatus):
         """AI tries to estimate opponent's strength. Currently solely based on army population"""
-        for other_p_id in self.other_players:
+        for other_p_id in self.hostile_player:          # only done for hostile players currently
+            strength: int = AI_Mazedonian.UNKNOWN  # TODO -> make this an enum
             for e_a in ai_stat.map.opp_army_list:
                 if e_a.owner == other_p_id:
                     if abs(e_a.population - ai_stat.map.army_list[0].population) < self.threshold_considered_equal:
-                        self.__update_estimated_strength(other_p_id, AI_Mazedonian.EQUAL)
+                        # self.__update_estimated_strength(other_p_id, AI_Mazedonian.EQUAL)
+                        strength = AI_Mazedonian.EQUAL
                     elif e_a.population > ai_stat.map.army_list[0].population:
-                        self.__update_estimated_strength(other_p_id, AI_Mazedonian.STRONGER)
+                        # self.__update_estimated_strength(other_p_id, AI_Mazedonian.STRONGER)
+                        strength = AI_Mazedonian.STRONGER
                     elif e_a.population < ai_stat.map.army_list[0].population:
-                        self.__update_estimated_strength(other_p_id, AI_Mazedonian.WEAKER)
+                        # self.__update_estimated_strength(other_p_id, AI_Mazedonian.WEAKER)
+                        strength = AI_Mazedonian.WEAKER
+            self.opponent_strength[other_p_id] = strength
 
     def evaluate_state(self, ai_stat: AI_GameStatus):
         old_state = self.state
@@ -286,7 +289,7 @@ class AI_Mazedonian(AI):
                 def_count = 0
                 agg_count = 0
                 for h_p in self.hostile_player:
-                    opp_s = self.__check_opp_strength(h_p)
+                    opp_s = self.opponent_strength[h_p]
                     if opp_s == AI_Mazedonian.EQUAL:
                         if self.equal_strength_defencive:
                             def_count = def_count + 1
@@ -342,7 +345,16 @@ class AI_Mazedonian(AI):
                         hint(
                             f"Weight condition fullfiled w: {w.weight} applied on score: {opt.weighted_score} of {type(opt)} ")
                     opt.weighted_score = opt.weighted_score + w.weight
+
+        # for move in self.priolist_targets:
+        #     if move.score == Priority.P_NO:
+        #         continue
+        #     for w in self.m_weights:
+        #         if w.condition(move, ai_stat):
+        #             move.weighted_score = move.weighted_score + w.weight
+
         options.sort(key=lambda x: x.weighted_score, reverse=True)
+        # self.priolist_targets.sort(key=lambda x: x.weighted_score, reverse=True)
         hint("---")
         for opt in options:
             s = f"\tOption of type: {type(opt)}, score: {opt.weighted_score}"
@@ -372,6 +384,9 @@ class AI_Mazedonian(AI):
             move.doScout = True
             move.loc = best_option.site
             move.str_rep_of_action = "scouting at" + str(move.loc)
+        elif type(best_option) == AI_Mazedonian.RecruitmentOption:
+            move.doRecruitArmy = True
+            move.str_rep_of_action = "raising new army at"
         else:
             error("unexpected type")
         hint(f"DECISION: {move.str_rep_of_action}")
@@ -704,17 +719,17 @@ class AI_Mazedonian(AI):
         for target, is_army in targets:
             value = 0
             if target.owner in self.hostile_player:
-                if self.__check_opp_strength(target.owner) == AI_Mazedonian.STRONGER:
+                if self.opponent_strength[target.owner] == AI_Mazedonian.STRONGER:
                     value = 1 if is_army else 0
-                elif self.__check_opp_strength(target.owner) == AI_Mazedonian.WEAKER:
+                elif self.opponent_strength[target.owner] == AI_Mazedonian.WEAKER:
                     value = 5 if is_army else 4
                 else:  # opp has unknown strength or equal
                     value = 3 if is_army else 2
 
-                if AI_Toolkit.is_obj_in_list(target, self.claimed_tiles):
-                    value = value + 3 if is_army else 2
-                if self.previous_amount_of_buildings > len(ai_stat.map.building_list):  # a building got destroyed
-                    value = value + 3 if is_army else 0
+                # if AI_Toolkit.is_obj_in_list(target, self.claimed_tiles):
+                #     value = value + 3 if is_army else 2
+                # if self.previous_amount_of_buildings > len(ai_stat.map.building_list):  # a building got destroyed
+                #     value = value + 3 if is_army else 0
 
             hint(f"Target @ {str(target.offset_coordinates)} ({'army' if is_army else 'building'}) has value {value}")
             # self.priolist_targets.append((value, target, is_army))
@@ -728,33 +743,31 @@ class AI_Mazedonian(AI):
             hint("No Targets found")
 
     def __print_situation(self, ai_stat: AI_GameStatus):
-        # count_farms = 0
-        # for b in ai_stat.own_buildings:
-        #     if b.type == BuildingType.FARM:
-        #         count_farms = count_farms + 1
-        # hint(f"AI INFO: {count_farms} farms")
         hint(f"Res: {ai_stat.player_resources}, Cul: {ai_stat.player_culture}, Food: {ai_stat.player_food}"
              f", Pop: {ai_stat.population} / {ai_stat.population_limit}")
+        for h in self.hostile_player:
+            hint("hostile player: [ID:] {} estimated strength: {}".format(h, self.opponent_strength[h]))
 
-    def __update_estimated_strength(self, opponent_id, value):
-        """checks if there is a guess, if not, adds it"""
-        # This is a bit ugly. But a set cannot contain list and tuples cannot be updated.
-        # Maybe use a sequence?
-        rm = None
-        for id, v in self.opponent_strength:
-            if id == opponent_id:
-                rm = (id, v)
-        self.opponent_strength.remove(rm)
-        self.opponent_strength.add((opponent_id, value))
 
-    def __check_opp_strength(self, opponent_id: int) -> int:
-        for id, v in self.opponent_strength:
-            if id == opponent_id:
-                return v
-        return AI_Mazedonian.UNKNOWN
+    # def __update_estimated_strength(self, opponent_id, value):
+    #     """checks if there is a guess, if not, adds it"""
+    #     # This is a bit ugly. But a set cannot contain list and tuples cannot be updated.
+    #     # Maybe use a sequence?
+    #     rm = None
+    #     for id, v in self.opponent_strength:
+    #         if id == opponent_id:
+    #             rm = (id, v)
+    #     self.opponent_strength.remove(rm)
+    #     self.opponent_strength.add((opponent_id, value))
 
-    def __setup_weights(self) -> List:
-        w: List[Tuple[Callable, int]] = []
+    # def __check_opp_strength(self, opponent_id: int) -> int:
+    #     for id, v in self.opponent_strength:
+    #         if id == opponent_id:
+    #             return v
+    #     return AI_Mazedonian.UNKNOWN
+
+    def __setup_weights(self) -> List[Tuple[Callable, float]]:
+        w: List[Tuple[Callable, float]] = []
 
         def w1(elem: AI_Mazedonian.Option, ai_stat: AI_GameStatus) -> bool:
             """Idea: If AI looses food -> Make building a farm more important!"""
@@ -873,5 +886,44 @@ class AI_Mazedonian(AI):
 
         w.append((w12, 5))
 
+        def w13(elem: AI_Mazedonian.Option, ai_stat: AI_GameStatus) -> bool:
+            """Idea: if pop >= pop_limit, make building barracks slightly more popular"""
+            if type(elem) is AI_Mazedonian.BuildOption:
+                if elem.type == BuildingType.BARRACKS:
+                    return True
+            if type(elem) is AI_Mazedonian.WaitOption:
+                return True
+            return False
+
+        w.append((w13, 2.5))
+
         hint(f"AI has found {len(w)} weight functions.")
         return w
+
+    def __setup_movement_weights(self) -> List[Tuple[Callable, float]]:
+        aw: List[Tuple[Callable, float]] = []
+        def aw1(elem: AI_Mazedonian.AttackTarget, ai_stat: AI_GameStatus) -> bool:
+            if type(elem.target) == AI_Army:
+                if AI_Toolkit.is_obj_in_list(elem.target, self.claimed_tiles):
+                    return True
+            return False
+
+        aw.append((aw1, 2))
+
+        def aw2(elem: AI_Mazedonian.AttackTarget, ai_stat: AI_GameStatus) -> bool:
+            if type(elem.target) == AI_Army:
+                if self.previous_amount_of_buildings > len(ai_stat.map.building_list):
+                    return True
+            return False
+
+        aw.append((aw2, 1))
+
+        def aw3(elem: AI_Mazedonian.AttackTarget, ai_stat: AI_GameStatus) -> bool:
+            if type(elem.target) == AI_Army:
+                return True
+            return False
+
+        aw.append((aw3, 100))
+
+        hint(f"AI has found {len(aw)} movement weight functions.")
+        return aw
