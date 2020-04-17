@@ -60,32 +60,32 @@ class AI_Barbaric(AI):
             move.doMoveArmy = True
 
         # keep values
-        if len(ai_stat.armies) > 0:
-            self.previous_army_strength = ai_stat.armies[0].population
+        if len(ai_stat.map.army_list) > 0:
+            self.previous_army_strength = ai_stat.map.army_list[0].population
         else:
             self.previous_army_strength = 0
-        self.previous_amount_of_buildings = len(ai_stat.own_buildings)
+        self.previous_amount_of_buildings = len(ai_stat.map.building_list)
 
     def evaluate_state(self, ai_stat: AI_GameStatus):
         if self.state == AI_Barbaric.AI_State.PASSIVE:
-            if len(self.hostile_player) > 0 and (len(ai_stat.enemy_armies) > 0 or len(ai_stat.enemy_buildings) > 0):
+            if len(self.hostile_player) > 0 and (len(ai_stat.map.opp_army_list) > 0 or len(ai_stat.map.opp_building_list) > 0):
                 hint("Barbaric AI: Passive -> Aggressive")
                 self.state = AI_Barbaric.AI_State.AGGRESSIVE
-            if len(ai_stat.enemy_armies) > 0:
+            if len(ai_stat.map.opp_army_list) > 0:
                 hint("Barbaric AI: Passive -> Defensive")
                 self.state = AI_Barbaric.AI_State.DEFENSIVE
         elif self.state == AI_Barbaric.AI_State.DEFENSIVE:
-            if len(ai_stat.enemy_armies) == 0:
+            if len(ai_stat.map.opp_army_list) == 0:
                 hint("Barbaric AI: Defensive -> Passive")
                 self.state = AI_Barbaric.AI_State.PASSIVE
             if self.has_been_attacked(ai_stat):
                 hint("Barbaric AI: Notices an attack! Defensive -> Aggressive")
                 self.state = AI_Barbaric.AI_State.AGGRESSIVE
         elif self.state == AI_Barbaric.AI_State.AGGRESSIVE:
-            if len(self.hostile_player) == 0 or len(ai_stat.armies) == 0:       # become defensive if army is lost or no more hostile players
+            if len(self.hostile_player) == 0 or len(ai_stat.map.army_list) == 0:       # become defensive if army is lost or no more hostile players
                 hint("Barbaric AI: Aggressive -> Defensive")
                 self.state = AI_Barbaric.AI_State.DEFENSIVE
-            if len(ai_stat.enemy_armies) == 0 and len(ai_stat.enemy_buildings) == 0:
+            if len(ai_stat.map.opp_army_list) == 0 and len(ai_stat.map.opp_building_list) == 0:
                 hint("Barbaric AI: Aggressive -> Passive")
                 self.state = AI_Barbaric.AI_State.PASSIVE
 
@@ -97,14 +97,14 @@ class AI_Barbaric(AI):
             army_building_ratio = 0.8
 
         wait: bool = False
-        if len(ai_stat.armies) == 0:
+        if len(ai_stat.map.army_list) == 0:
             if score_a > 0:
                 hint("AI Barbaric: Decision: Recruit new army")
                 move.doRecruitArmy = True
             else:
                 hint("AI Barbaric: Decision: Store more resources (not enough resources to recruit new army)")
                 wait = True
-        elif ai_stat.armies[0].population < army_building_ratio * ai_stat.population_limit:
+        elif ai_stat.map.army_list[0].population < army_building_ratio * ai_stat.population_limit:
             if ai_stat.population < ai_stat.population_limit:
                 if score_a > 0:
                     hint("AI Barbaric: Decision: Upgrade the army")
@@ -135,16 +135,16 @@ class AI_Barbaric(AI):
         pass
 
     def evaluate_move_building(self, ai_stat: AI_GameStatus) -> (int, (int, int)):
-        if len(ai_stat.own_buildings) < 3:
-            if ai_stat.player_resources >= ai_stat.costBuildC1 and len(ai_stat.tiles_buildable) > 0:
+        if len(ai_stat.map.building_list) < 3:
+            if ai_stat.player_resources >= ai_stat.costBuildC1 and len(ai_stat.map.buildable_tiles) > 0:
                 # find a random building location
-                idx = random.randint(0, len(ai_stat.tiles_buildable) - 1)
-                return 1, ai_stat.tiles_buildable[idx].offset_coordinates
+                idx = random.randint(0, len(ai_stat.map.buildable_tiles) - 1)
+                return 1, ai_stat.map.buildable_tiles[idx].offset_coordinates
         return -1, (0, 0)
 
     def evaluate_move_upgrade(self, ai_stat: AI_GameStatus) -> (int, (int, int)):
         list_of_upgradable_buildings = []
-        for b in ai_stat.own_buildings:
+        for b in ai_stat.map.building_list:
             if b.type == BuildingType.CAMP_1:
                 if ai_stat.player_resources >= ai_stat.costBuildC2:
                     list_of_upgradable_buildings.append(b)
@@ -162,30 +162,33 @@ class AI_Barbaric(AI):
         return -1
 
     def calculate_army_movement(self, ai_stat: AI_GameStatus, move: AI_Move) -> (int, int):
-        if len(ai_stat.armies) == 0:
+        if len(ai_stat.map.army_list) == 0:
             return -1, -1            # no army, cannot move
         if self.state == AI_Barbaric.AI_State.PASSIVE:
             return -1, -1            # not moving in passive state
         if self.state == AI_Barbaric.AI_State.AGGRESSIVE:
-            start_tile = AI_Toolkit.get_tile_by_xy(ai_stat.armies[0].offset_coordinates,
-                                                   ai_stat.tiles_walkable)
+            start_tile = ai_stat.map.army_list[0].base_tile
+            # start_tile = AI_Toolkit.get_tile_by_xy(ai_stat.map.army_list[0].offset_coordinates,
+            #                                        ai_stat.map.walkable_tiles)
             target_tile = None
             path = []
-            for e_a in ai_stat.enemy_armies:
+            for e_a in ai_stat.map.opp_army_list:
                 if e_a.owner in self.hostile_player:
                     hint("AI Barbaric: found hostile army to attack")
-                    target_tile = AI_Toolkit.get_tile_by_xy(e_a.offset_coordinates, ai_stat.tiles_walkable)
+                    # target_tile = AI_Toolkit.get_tile_by_xy(e_a.offset_coordinates, ai_stat.tiles_walkable)
+                    target_tile = e_a.base_tile
             if target_tile is None:
-                for e_b in ai_stat.enemy_buildings:
+                for e_b in ai_stat.map.opp_building_list:
                     if e_b.owner in self.hostile_player:
                         hint("AI Barbaric: found hostile building to attack")
-                        target_tile = AI_Toolkit.get_tile_by_xy(e_b.offset_coordinates, ai_stat.tiles_walkable)
+                        # target_tile = AI_Toolkit.get_tile_by_xy(e_b.offset_coordinates, ai_stat.tiles_walkable)
+                        target_tile = e_b.base_tile
 
             if start_tile and target_tile:
-                AI_Toolkit.dijkstra(start_tile, target_tile, ai_stat.tiles_walkable, path)
+                path = AI_Toolkit.dijkstra_pq(start_tile, target_tile, ai_stat.map.walkable_tiles)
             else:
                 error("AI Barbaric: start_tile or target_tile not valid! (1)")
-                for walk in ai_stat.tiles_walkable:
+                for walk in ai_stat.map.walkable_tiles:
                     move.info_at_tile.append((walk.offset_coordinates, "w"))
                 error(str(start_tile))
                 error(str(target_tile))
@@ -195,22 +198,25 @@ class AI_Barbaric(AI):
             else:
                 hint("AI Barbaric: NO path to hostile army found")
         if self.state == AI_Barbaric.AI_State.DEFENSIVE:
-            if len(ai_stat.enemy_armies) > 0:
+            if len(ai_stat.map.opp_army_list) > 0:
                 hint("AI Barbaric: evading enemy army")
                 longest_path: (int, (int, int)) = (-1, (0, 0))
-                target_tile = AI_Toolkit.get_tile_by_xy(ai_stat.enemy_armies[0].offset_coordinates,
-                                                        ai_stat.tiles_walkable)                  # TODO more complex evasion routine
-                dist_to_army = AI_Toolkit.getDistance(target_tile,
-                                                      AI_Toolkit.get_tile_by_xy(ai_stat.armies[0].offset_coordinates,
-                                                                                ai_stat.tiles_walkable))
+                target_tile = ai_stat.map.opp_army_list[0].base_tile
+                dist_to_army = AI_Toolkit.get_distance(target_tile, ai_stat.map.army_list[0].base_tile)
+                # target_tile = AI_Toolkit.get_tile_by_xy(ai_stat.map.opp_army_list[0].offset_coordinates,
+                #                                         ai_stat.tiles_walkable)                  # TODO more complex evasion routine
+                # dist_to_army = AI_Toolkit.getDistance(target_tile,
+                #                                       AI_Toolkit.get_tile_by_xy(ai_stat.armies[0].offset_coordinates,
+                #                                                                 ai_stat.tiles_walkable))
                 if dist_to_army >= self.safety_dist_to_enemy_army:
                     hint("AI Barbaric: Enemy army far enough away, no need to evade.")
                     return -1, -1
-                for nei in AI_Toolkit.getListDistanceOne(ai_stat.armies[0], ai_stat.tiles_walkable):
+                neighbours = AI_Toolkit.get_neibours_on_set(ai_stat.map.army_list[0], ai_stat.map.walkable_tiles)
+                for nei in neighbours:
                     path = []
-                    start_tile = AI_Toolkit.get_tile_by_xy(nei.offset_coordinates, ai_stat.tiles_walkable)
+                    start_tile = nei
                     if start_tile and target_tile:
-                        AI_Toolkit.dijkstra(start_tile, target_tile, ai_stat.tiles_walkable, path)
+                        path = AI_Toolkit.dijkstra_pq(start_tile, target_tile, ai_stat.map.walkable_tiles)
                     else:
                         error("AI Barbaric: start_tile or target_tile not valid!")
                     if len(path) > longest_path[0]:
@@ -219,13 +225,11 @@ class AI_Barbaric(AI):
                 return longest_path[1]
         return -1, -1
 
-    def update_diplo_events(self, ai_stat):
-        for tile in ai_stat.tiles_discovered:
-            for e_b in ai_stat.enemy_buildings:
-                if e_b.offset_coordinates == tile.offset_coordinates:
-                    self.diplomacy.add_event(e_b.owner, tile.offset_coordinates,
-                                             DiploEventType.TYPE_ENEMY_BUILDING_SCOUTED,
-                                             -1.0, 5, self.name)
+    def update_diplo_events(self, ai_stat: AI_GameStatus):
+        for e_b in ai_stat.map.opp_building_list:
+            self.diplomacy.add_event(e_b.owner, e_b.offset_coordinates,
+                                     DiploEventType.TYPE_ENEMY_BUILDING_SCOUTED,
+                                     -1.0, 5, self.name)
             #for e_a in ai_stat.enemy_armies:
             #    if e_a.offset_coordinates == tile.offset_coordinates:
             #        self.diplomacy.add_event(e_a.owner, tile.offset_coordinates,
@@ -248,18 +252,20 @@ class AI_Barbaric(AI):
                 self.hostile_player.add(a)
             hint("Barbaric AI: aggression found!")
             return True
-        if self.previous_amount_of_buildings > len(ai_stat.own_buildings):
+        if self.previous_amount_of_buildings > len(ai_stat.map.building_list):
             return True         # lost a building
-        if len(ai_stat.armies) == 0 and not self.issue_attack:
+        if len(ai_stat.map.army_list) == 0 and not self.issue_attack:
             return True         # lost army without commanding an attack
         # if self.previous_army_strength > ai_stat.armies[0].strength and not self.issue_attack:
         #     return True         # army got attacked without commanding it
         return False
 
     def get_army_spawn_loc(self, ai_stat: AI_GameStatus) -> (int, int):
-        building_tile = AI_Toolkit.get_tile_by_xy(ai_stat.own_buildings[0].offset_coordinates,
-                                                  ai_stat.tiles_discovered)
-        nei = AI_Toolkit.getListDistanceOne(building_tile, ai_stat.tiles_buildable)
+        building_tile = ai_stat.map.building_list[0]
+        # building_tile = AI_Toolkit.get_tile_by_xy(ai_stat.map.building_list[0].offset_coordinates,
+        #                                           ai_stat.tiles_discovered)
+        # nei = AI_Toolkit.getListDistanceOne(building_tile, ai_stat.tiles_buildable)
+        nei = AI_Toolkit.get_neibours_on_set(building_tile, ai_stat.map.buildable_tiles)
         idx = random.randint(0, len(nei) - 1)
         return nei[idx].offset_coordinates
 

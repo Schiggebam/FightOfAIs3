@@ -114,7 +114,7 @@ class HexMap:
     def get_cc_southeast(cc: (int, int, int)) -> Tuple[int, int, int]:
         x, y, z = cc
         x = x + 1
-        z = z + 1
+        z = z - 1
         return x, y, z
 
     def get_hex_southeast(self, h: Hexagon) -> Hexagon:

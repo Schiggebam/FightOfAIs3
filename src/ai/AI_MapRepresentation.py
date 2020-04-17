@@ -16,6 +16,7 @@ class Tile:
         self.is_scoutable = False
         self.is_walkable = False
         self.is_buildable = False
+        self.is_discovered = False
 
         self.tile_ne: Optional[Tile] = None
         self.tile_e: Optional[Tile] = None
@@ -26,8 +27,8 @@ class Tile:
 
         self.cube_coordinates = HexMap.offset_to_cube_coords(self.offset_coordinates)
         # for pathfinding:
-        self.pre = None
-        self.dist = 0
+        self.pre: Optional[Tile] = None
+        self.dist: int = 0
 
     def has_resource(self):
         return self.resource is not None
@@ -37,6 +38,24 @@ class Tile:
 
     def has_army(self):
         return self.army is not None
+
+    def has_n_ne(self):
+        return self.tile_ne is not None
+
+    def has_n_e(self):
+        return self.tile_e is not None
+
+    def has_n_se(self):
+        return self.tile_se is not None
+
+    def has_n_sw(self):
+        return self.tile_sw is not None
+
+    def has_n_w(self):
+        return self.tile_w is not None
+
+    def has_n_nw(self):
+        return self.tile_nw is not None
 
 class AI_Element:
     def __init__(self, t: Tile):
@@ -80,6 +99,7 @@ class Map:
         self.buildable_tiles: List[Tile] = []
         self.walkable_tiles: List[Tile] = []
         self.farm_field_tiles: List[Tile] = []
+        self.discovered_tiles: List[Tile] = []
 
     def add_tile(self, offset_coordinates: Tuple[int, int], gt: GroundType):
         """after instantiation, fill the map. No tile with the same coordinates should be added twice"""
@@ -91,18 +111,17 @@ class Map:
             for _, o_v in self.map.items():
                 other_cc = o_v.cube_coordinates
                 if HexMap.get_cc_northeast(other_cc) == v.cube_coordinates:
-                    v.tile_ne = o_v
-                if HexMap.get_cc_east(other_cc) == v.cube_coordinates:
-                    v.tile_e = o_v
-                if HexMap.get_cc_southeast(other_cc) == v.cube_coordinates:
-                    v.tile_se = o_v
-                if HexMap.get_cc_southwest(other_cc) == v.cube_coordinates:
                     v.tile_sw = o_v
-                if HexMap.get_cc_west(other_cc) == v.cube_coordinates:
+                if HexMap.get_cc_east(other_cc) == v.cube_coordinates:
                     v.tile_w = o_v
-                if HexMap.get_cc_northwest(other_cc) == v.cube_coordinates:
+                if HexMap.get_cc_southeast(other_cc) == v.cube_coordinates:
                     v.tile_nw = o_v
-
+                if HexMap.get_cc_southwest(other_cc) == v.cube_coordinates:
+                    v.tile_ne = o_v
+                if HexMap.get_cc_west(other_cc) == v.cube_coordinates:
+                    v.tile_e = o_v
+                if HexMap.get_cc_northwest(other_cc) == v.cube_coordinates:
+                    v.tile_se = o_v
 
     def add_resource(self, offset_coordinates: Tuple[int, int], res: Resource):
         tile = self.__get_tile(offset_coordinates)
@@ -116,16 +135,18 @@ class Map:
         army: AI_Army = self.__add_army(offset_coordinates, army)
         self.army_list.append(army)
 
-    def add_opp_army(self, offset_coordinates: Tuple[int, int], army: Army):
+    def add_opp_army(self, offset_coordinates: Tuple[int, int], army: Army, id: int):
         army: AI_Army = self.__add_army(offset_coordinates, army)
+        army.owner = id
         self.opp_army_list.append(army)
 
     def add_own_building(self, offset_coordinates: Tuple[int, int], building: Building):
         b: AI_Building = self.__add_building(offset_coordinates, building)
         self.building_list.append(b)
 
-    def add_opp_building(self, offset_coordinates: Tuple[int, int], building: Building):
+    def add_opp_building(self, offset_coordinates: Tuple[int, int], building: Building, id: int):
         b: AI_Building = self.__add_building(offset_coordinates, building)
+        b.owner = id
         self.opp_building_list.append(b)
 
     def set_scoutable_tile(self, offset_coordinates: Tuple[int, int]):
@@ -142,6 +163,11 @@ class Map:
         tile: Tile = self.__get_tile(offset_coordinates)
         self.walkable_tiles.append(tile)
         tile.is_walkable = True
+
+    def set_discovered_tile(self, offset_coordinates: Tuple[int, int]):
+        tile: Tile = self.__get_tile(offset_coordinates)
+        self.discovered_tiles.append(tile)
+        tile.is_discovered = True
 
     def __add_army(self, offset_coordinates: Tuple[int, int], army: Army) -> AI_Army:
         tile = self.__get_tile(offset_coordinates)
@@ -175,9 +201,15 @@ class Map:
         return tile
 
     def print_map(self):
-        for v in self.buildable_tiles:
-            print(f"{v.offset_coordinates} -> {v.tile_ne} {v.tile_e} {v.tile_se} {v.tile_sw} {v.tile_w} {v.tile_nw}")
-        print("more shit")
         for k, v in self.map.items():
-            if v.is_buildable:
-                print(f"{v.offset_coordinates} -> {v.tile_ne} {v.tile_e} {v.tile_se} {v.tile_sw} {v.tile_w} {v.tile_nw}")
+            print(f" {v.tile_ne}  {v.tile_e} {v.tile_se} {v.tile_sw} {v.tile_w} {v.tile_nw}")
+            print(v.tile_sw)
+            print(v.tile_sw)
+            print(v.tile_sw)
+        # for v in self.discovered_tiles:
+        #     if v.has_resource():
+        #         print(f"{v.offset_coordinates} -> {v.tile_ne} {v.tile_e} {v.tile_se} {v.tile_sw} {v.tile_w} {v.tile_nw}")
+        # print("more shit")
+        # for k, v in self.map.items():
+        #     if v.is_buildable:
+        #         print(f"{v.offset_coordinates} -> {v.tile_ne} {v.tile_e} {v.tile_se} {v.tile_sw} {v.tile_w} {v.tile_nw}")

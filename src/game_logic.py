@@ -140,6 +140,7 @@ class GameLogic:
             base_hex: Hexagon = self.hex_map.get_hex_by_offset(player.spaw_loc)
             player.discovered_tiles.add(base_hex)
             player.food = 35
+            player.amount_of_resources = 10
             b_type = player.get_initial_building_type()
             b: Building = Building(base_hex, b_type, player.id)
             self.add_building(b, player)
@@ -257,17 +258,19 @@ class GameLogic:
             ai_map.set_walkable_tile(h.offset_coordinates)
         for h in buildable_tiles:
             ai_map.set_buildable_tile(h.offset_coordinates)
+        for h in player.discovered_tiles:
+            ai_map.set_discovered_tile(h.offset_coordinates)
 
         for r in known_resources:
             ai_map.add_resource(r.tile.offset_coordinates, r)
         for b in player.buildings:
             ai_map.add_own_building(b.tile.offset_coordinates, b)
-        for b in enemy_buildings:
-            ai_map.add_opp_building(b.tile.offset_coordinates, b)
+        for b, id in enemy_buildings:
+            ai_map.add_opp_building(b.tile.offset_coordinates, b, id)
         for a in player.armies:
             ai_map.add_own_army(a.tile.offset_coordinates, a)
-        for a in enemy_armies:
-            ai_map.add_opp_army(a.tile.offset_coordinates, a)
+        for a, id in enemy_armies:
+            ai_map.add_opp_army(a.tile.offset_coordinates, a, id)
         # ai_map.print_map()
 
         costs = {'scout': int(1)}
@@ -672,6 +675,7 @@ class GameLogic:
             if self.hex_map.hex_distance(new_hex, army.tile) == 1:
                 self.animator.add_move_animation(army, new_hex.offset_coordinates, float(.4))
                 army.tile = new_hex
+                hint('army is moving to ' + str(army.tile.offset_coordinates))
                 #army.set_sprite_pos(HexMap.offset_to_pixel_coords(new_hex.offset_coordinates))
                 self.__reorder_spritelist(self.z_levels[2])
             else:
@@ -683,6 +687,7 @@ class GameLogic:
 
     def del_army(self, army: Army, player: Player):
         hint("Game Logic: deleting army of player " + str(player.name))
+        self.animator.stop_animation(army)
         self.z_levels[2].remove(army.sprite)
         player.armies.remove(army)
 

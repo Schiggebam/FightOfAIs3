@@ -1,8 +1,9 @@
 import copy
 import queue
-from typing import List, Union, Tuple
+from typing import List, Union, Tuple, Optional
 
 from src.ai.AI_MapRepresentation import Tile, AI_Element
+from src.misc.game_constants import error
 
 AI_OBJ = Union[AI_Element, Tile]
 
@@ -29,36 +30,65 @@ def simple_heat_map(initial_set: List[AI_OBJ], working_set: List[AI_OBJ],
 def estimate_income(list_buildings):
     pass
 
-def dijkstra(start, target, domain, path):
-    if not start or not target:
-        path = []
-        return
-    #print("Start: " + str(start.x_grid)  + "|" + str(start.y_grid))
-    #print("target: " + str(target.x_grid)  + "|" + str(target.y_grid))
-    #print("domain: ")
-    #for d in domain:
-    #    print(str(d.x_grid) + "|" + str(d.y_grid) + " ", end="")
-    Q = domain.copy()
-    for t in domain:
-        t.dist = 100
-        t.pre = None
+
+def dijkstra_pq(start, target, domain: List[Tile]) -> List[Tile]:
+    # print("DIJ: {} -> {}".format(start.offset_coordinates, target.offset_coordinates))
+    path: List[Tile] = []
+    Q = []
+    for d in domain:
+        d.dist = 1000
+        d.pre = None
+        Q.append(d)
     start.dist = 0
-    while len(Q)>0:
-        smallest = 1000
-        u = None
-        for q in Q:
-            if q.dist < smallest:
-                u = q
-                smallest = q.dist
-        if u is None:
-            print("ERROR: " + str(len(Q)))
-        Q.remove(u)
-        nei = get_neibours_on_set(u, Q)
-        for v in nei:
-            a = u.dist + 1
-            if a < v.dist:
-                v.dist = a
-                v.pre = u
+    while len(Q) > 0:
+        Q.sort(key=lambda x: x.dist, reverse=False)
+        u = Q.pop(0)
+        for v in get_neighbours(u):
+            if v in domain and v in Q:
+                alt = u.dist + 1
+                if alt < v.dist:
+                    v.dist = alt
+                    v.pre = u
+    x = target
+    while x.offset_coordinates != start.offset_coordinates:
+        path.append(x)
+        x = x.pre
+    path.append(start)
+    path.reverse()
+    return path
+
+# def dijkstra(start, target, domain, path):
+#     if not start or not target:
+#         path = []
+#         return
+#     #print("Start: " + str(start.x_grid)  + "|" + str(start.y_grid))
+#     #print("target: " + str(target.x_grid)  + "|" + str(target.y_grid))
+#     #print("domain: ")
+#     #for d in domain:
+#     #    print(str(d.x_grid) + "|" + str(d.y_grid) + " ", end="")
+#     # Q = domain.copy()
+#     Q = queue.PriorityQueue()
+#     for t in domain:
+#         t.dist = 100
+#         t.pre = None
+#     start.dist = 0
+#     while len(Q) > 0:
+#         smallest = 1000
+#         u = None
+#         for q in Q:
+#             if q.dist < smallest:
+#                 u = q
+#                 smallest = q.dist
+#         if u is None:
+#             print("ERROR: " + str(len(Q)))
+#         Q.remove(u)
+#         nei = get_neighbours(u)
+#         for v in nei:
+#             if v not in Q:
+#                 a = u.dist + 1
+#                 if a < v.dist:
+#                     v.dist = a
+#                     v.pre = u
 
     #print("path: ")
     x = target
@@ -92,6 +122,10 @@ def get_neighbours(e: AI_OBJ) -> List[Tile]:
                e.base_tile.tile_sw, e.base_tile.tile_w, e.base_tile.tile_nw]
     return list(filter(None, nei))
 
+def get_distance(a: AI_OBJ, b: AI_OBJ) -> int:
+    cc1 = offset_to_cube_xy(a.offset_coordinates[0], a.offset_coordinates[1])
+    cc2 = offset_to_cube_xy(b.offset_coordinates[0], b.offset_coordinates[1])
+    return cube_distance(cc1, cc2)
 
 # def getListDistanceOne(t1, li):     # get neighbours
 #     res = []
@@ -152,3 +186,23 @@ def is_obj_in_list(obj: AI_OBJ, list) -> bool:
 
 def deep_copy_list(src):
     return copy.deepcopy(src)
+
+
+############## NEWER TOOLKIT FUNCTIONS: ########################################
+def num_resources_on_adjacent(obj: AI_OBJ) -> int:
+    tile: Tile = get_tile_from_ai_obj(obj)        # assuming this is not none
+    value = 0
+    for n in get_neighbours(tile):
+        if n.has_resource():
+            value = value + 1
+    return value
+
+def get_tile_from_ai_obj(obj: AI_OBJ) -> Optional[Tile]:
+    tile: Optional[Tile] = None
+    if type(obj) is Tile:
+        tile = obj
+    else:
+        tile = obj.base_tile
+    if tile is None:        # is None
+        error("Unable to get Tile from AI_Obj")
+    return tile

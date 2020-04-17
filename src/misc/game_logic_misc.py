@@ -41,8 +41,9 @@ class IncomeCalculator:
                 food_inc = food_inc + len(building.associated_tiles)
             else:
                 food_inc = food_inc - building.food_consumption
-        for u in player.armies[0].get_units():
-            food_inc = food_inc - u.population
+        for a in player.armies:
+            for u in a.get_units():
+                food_inc = food_inc - u.population
         return food_inc
 
     def calculate_culture(self, player: Player) -> int:
