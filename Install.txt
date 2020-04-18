@@ -1,0 +1,16 @@
+IDE: I use PyCharm 2019.3
+
+Python 3.8
+
+Dependencies: arcade: https://arcade.academy/
+
+Check: https://arcade.academy/venv_install/index.html
+and https://arcade.academy/installation.html
+[For me, this did't work. I installed python separately from PyCharm and told python in settings (ctrl + alt + s) to
+use my own installation (project interpreter).
+Previously, I install arcade via "pip install arcade" or "pip3 install arcade"]
+
+You can checkout the git directly in PyCharm, if installed on windows.
+
+
+Schiggebam aka Oberscheiße aka PeterPan aka... :-)
