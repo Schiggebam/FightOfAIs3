@@ -694,6 +694,9 @@ class GameLogic:
     def move_army(self, army: Army, player: Player, pos: (int, int)):
         is_moving = True
         new_hex = self.hex_map.get_hex_by_offset(pos)
+        if self.hex_map.hex_distance(new_hex, army.tile) == 1:
+            error("Army cannot 'fly'. AI tries to move more than 1 tile. strange..!?!?!?!")
+            return          # try to recover from there.
         # make sure the new hex is empty
         if player.armies[0].get_population() == 0:
             hint("army has population 0 and cannot be moved")
