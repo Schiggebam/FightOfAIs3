@@ -1,14 +1,16 @@
+from typing import Optional
+
 import arcade
 
-from src.game_accessoires import Drawable
+from src.game_accessoires import Drawable, Flag
 from src.hex_map import Hexagon
-from src.misc.game_constants import BuildingType, BuildingState, error, hint
+from src.misc.game_constants import BuildingType, BuildingState, error
 
 
 class Building(Drawable):
 
     building_info: [(int, {})] = []
-    def __init__(self, tile: Hexagon, bui_type: int, owner_id):
+    def __init__(self, tile: Hexagon, bui_type: BuildingType, owner_id):
         super().__init__()
         self.tile: Hexagon = tile
         self.associated_tiles: [Hexagon] = []
@@ -18,6 +20,7 @@ class Building(Drawable):
         self.building_state: BuildingState = BuildingState.ACTIVE
         self.__idx_texture_construction: int = -1
         self.__idx_texture_destruction: int = -1
+        self.flag: Optional[Flag] = None
         for b_info in Building.building_info:
             if b_info[0] == bui_type:
                 self.tex_code = b_info[1]['tex_code']
@@ -30,6 +33,8 @@ class Building(Drawable):
                 self.food_consumption = b_info[1]['food_consumption']
                 self.construction_time = b_info[1]['construction_time']
                 self.defensive_value = b_info[1]['defensive_value']
+                self.flag_offset = (b_info[1]['flag_x'], b_info[1]['flag_y'])
+                self.grant_pop = b_info[1]['grant_pop']
 
     def has_texture_construction(self) -> bool:
         return not self.__idx_texture_construction == -1
@@ -49,7 +54,7 @@ class Building(Drawable):
         self.building_state = BuildingState.UNDER_CONSTRUCTION
         if self.has_texture_construction():
             super().set_active_texture(self.__idx_texture_construction)
-            hint("Construction texture at: " + str(self.__idx_texture_construction))
+            # hint("Construction texture at: " + str(self.__idx_texture_construction))
         else:
             error("Building does not have a construction texture!")
 
@@ -65,7 +70,7 @@ class Building(Drawable):
         super().set_active_texture(0)
 
     @staticmethod
-    def get_construction_cost(bui_type: int):
+    def get_construction_cost(bui_type: BuildingType):
         """in case we want to know the construction cost before the building is instance"""
         for b_info in Building.building_info:
             if b_info[0] == bui_type:

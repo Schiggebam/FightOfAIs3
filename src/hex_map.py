@@ -1,8 +1,9 @@
 from enum import Enum
+from typing import Optional, Tuple
 
 TILE_HIGHT = 52 * 1
 TILE_WIDTH = 66 * 1
-TILEMAP_ORIGIN_X = 100
+TILEMAP_ORIGIN_X = 40
 TILEMAP_ORIGIN_Y = 0
 LEFT_MARGIN = 0
 BOTTOM_MARGIN = 130
@@ -30,13 +31,13 @@ class HexMap:
             for x in range(map_dim[0]):
                 self.map.append(Hexagon((x, y)))
 
-    def get_hex_by_cube(self, cube_c: (int, int, int)) -> Hexagon:
+    def get_hex_by_cube(self, cube_c: (int, int, int)) -> Optional[Hexagon]:
         x, y = HexMap.cube_to_offset_coords(cube_c)
         if (0 <= x < self.map_dim[0]) and (0 <= y < self.map_dim[1]):
             return self.map[self.offset_to_linear_mapping(HexMap.cube_to_offset_coords(cube_c))]
         return None
 
-    def get_hex_by_offset(self, offset_c: (int, int)) -> Hexagon:
+    def get_hex_by_offset(self, offset_c: (int, int)) -> Optional[Hexagon]:
         if (0 <= offset_c[0] < self.map_dim[0]) and (0 <= offset_c[1] < self.map_dim[1]):
             return self.map[self.offset_to_linear_mapping(offset_c)]
         return None
@@ -44,11 +45,25 @@ class HexMap:
     def offset_to_linear_mapping(self, offset_c: (int, int)) -> int:
         return offset_c[0] + offset_c[1] * self.map_dim[0]
 
+    @staticmethod
+    def get_cc_east(cc: (int, int, int)) -> Tuple[int, int, int]:
+        x, y, z = cc
+        x = x + 1
+        y = y - 1
+        return x, y, z
+
     def get_hex_east(self, h: Hexagon) -> Hexagon:
         x, y, z = h.cube_coordinates
         x = x + 1
         y = y - 1
         return self.get_hex_by_cube((x, y, z))
+
+    @staticmethod
+    def get_cc_west(cc: (int, int, int)) -> Tuple[int, int, int]:
+        x, y, z = cc
+        x = x - 1
+        y = y + 1
+        return x, y, z
 
     def get_hex_west(self, h: Hexagon) -> Hexagon:
         x, y, z = h.cube_coordinates
@@ -56,11 +71,25 @@ class HexMap:
         y = y + 1
         return self.get_hex_by_cube((x, y, z))
 
+    @staticmethod
+    def get_cc_northwest(cc: (int, int, int)) -> Tuple[int, int, int]:
+        x, y, z = cc
+        x = x - 1
+        z = z + 1
+        return x, y, z
+
     def get_hex_northwest(self, h: Hexagon) -> Hexagon:
         x, y, z = h.cube_coordinates
         x = x - 1
         z = z + 1
         return self.get_hex_by_cube((x, y, z))
+
+    @staticmethod
+    def get_cc_northeast(cc: (int, int, int)) -> Tuple[int, int, int]:
+        x, y, z = cc
+        y = y - 1
+        z = z + 1
+        return x, y, z
 
     def get_hex_northeast(self, h: Hexagon) -> Hexagon:
         x, y, z = h.cube_coordinates
@@ -68,11 +97,25 @@ class HexMap:
         z = z + 1
         return self.get_hex_by_cube((x, y, z))
 
+    @staticmethod
+    def get_cc_southwest(cc: (int, int, int)) -> Tuple[int, int, int]:
+        x, y, z = cc
+        y = y + 1
+        z = z - 1
+        return x, y, z
+
     def get_hex_southwest(self, h: Hexagon) -> Hexagon:
         x, y, z = h.cube_coordinates
         y = y + 1
         z = z - 1
         return self.get_hex_by_cube((x, y, z))
+
+    @staticmethod
+    def get_cc_southeast(cc: (int, int, int)) -> Tuple[int, int, int]:
+        x, y, z = cc
+        x = x + 1
+        z = z - 1
+        return x, y, z
 
     def get_hex_southeast(self, h: Hexagon) -> Hexagon:
         x, y, z = h.cube_coordinates

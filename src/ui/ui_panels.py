@@ -1,24 +1,32 @@
-import arcade
-
+from src.game_accessoires import Army, Unit
+from src.misc.game_logic_misc import Logger
 from src.player import Player
 from src.ui.SimplePanel import SimplePanel
 from src.ui.lang_en import *
+from src.misc.game_constants import PlayerColour
 
+ls = "    "
+ts = "  "
 
 class PanelAI(SimplePanel):
-    def __init__(self, center_x, center_y, header: str, gl):
+    def __init__(self, center_x, center_y, header: str):
         super().__init__(center_x, center_y, header)
-        self.gl = gl
+        self.text = ""
+
+
+    def update(self, gl):
+        self.text = ""
+        for p in gl.player_list:
+            self.text = self.text + p.name + ": \n"
+            self.text = self.text + gl.ai_interface.query_ai('state', None, p.id) + "\n"
 
     def draw(self):
         super().draw()
-        y_offset = 0
-        for player in self.gl.player_list:
-            arcade.draw_text(str(player.name), self.text_box_x, self.text_box_y + y_offset,
+        if len(self.text) > 0:
+            arcade.draw_text(self.text, self.text_box_x, self.text_box_y - 135,
                              arcade.color.WHITE, font_size=15, font_name='verdana')
-            arcade.draw_text(self.gl.ai_interface.query_ai("state", None, player.id), self.text_box_x + 150, self.text_box_y + y_offset,
-                             arcade.color.WHITE, font_size=15, font_name='verdana')
-            y_offset = y_offset - 25
+
+
 
 
 class PanelDiplo(SimplePanel):
@@ -48,18 +56,21 @@ class PanelDiplo(SimplePanel):
 
 
 class PanelArmy(SimplePanel):
-    def __init__(self, center_x, center_y, army_strength, army_owner):
-        super().__init__(center_x, center_y, "Army", scale=1)
-        self.army_owner =  "Owner   : " + str(army_owner)
-        self.army_strength = "Strength: " + str(army_strength)
+    def __init__(self, center_x, center_y, army: Army):
+        super().__init__(center_x, center_y, "", panel_tex="../resources/other/panel_army.png", no_header=True)
+        u = army.get_units_as_tuple()
+        a = (Unit.get_unit_stats(UnitType.KNIGHT))
+        b = (Unit.get_unit_stats(UnitType.MERCENARY))
+        c = (Unit.get_unit_stats(UnitType.BABARIC_SOLDIER))
+        self.units = f"{u[1]} {ls} {ls}{ts}{u[0]} {ls}{ls}{ts}{u[2]}"
+        self.m_value = f"{a[0]}{ls}{ls}{ls}{b[0]}{ls}{ls}{ls}{c[0]}\n{a[1]}{ls}{ls}{ls}{b[1]}{ls}{ls}{ls}{c[1]}\n{a[2]}{ls}{ls}{ls}{b[2]}{ls}{ls}{ls}{c[2]}"
 
     def draw(self):
         super().draw()
-        arcade.draw_text(self.army_owner, self.text_box_x, self.text_box_y,
+        arcade.draw_text(self.units, self.text_box_x + 125, self.text_box_y - 75,
                          arcade.color.WHITE, font_size=15, font_name='verdana')
-        arcade.draw_text(self.army_strength, self.text_box_x, self.text_box_y-20,
-                         arcade.color.WHITE, font_size=15, font_name='verdana')
-
+        arcade.draw_text(self.m_value, self.text_box_x + 125, self.text_box_y - 152,
+                         arcade.color.GRAY, font_size=14, font_name='verdana')
 
 class PanelBuilding(SimplePanel):
     def __init__(self, center_x, center_y, building_type, building_owner, building_state):
@@ -92,26 +103,37 @@ class PanelResource(SimplePanel):
                          arcade.color.WHITE, font_size=15, font_name='verdana')
 
 class PanelLogBattle(SimplePanel):
-    def __init__(self, center_x, center_y, log):
-        super().__init__(center_x, center_y, "Battle", scale=1)
+    def __init__(self, center_x, center_y, log: Logger.BattleLog):
         if log.log_type == LogType.BATTLE_ARMY_VS_ARMY:
-            self.attacker = "Attacker (army): " + str(log.init_strength_attacker) + \
-                            " > " + str(log.after_attacker_strength)
-            self.defender = "Defender (army): " + str(log.init_strength_defender) + \
-                            " > " + str(log.after_defender_strength)
+            super().__init__(center_x, center_y, "", panel_tex="../resources/other/attack_vs_army.png", no_header=True)
+            att_kia = (log.pre_att_units[0] - log.post_att_units[0],
+                       log.pre_att_units[1] - log.post_att_units[1],
+                       log.pre_att_units[2] - log.post_att_units[2])
+            def_kia = (log.pre_def_units[0] - log.post_def_units[0],
+                       log.pre_def_units[1] - log.post_def_units[1],
+                       log.pre_def_units[2] - log.post_def_units[2])
+
+            self.in_action = f"{log.pre_att_units[1]} {ls} {log.pre_att_units[0]} {ls}{log.pre_att_units[2]}                     {log.pre_def_units[1]} {ls} {log.pre_def_units[0]} {ls} {log.pre_def_units[2]}"
+            self.kia = f"{att_kia[1]} {ls} {att_kia[0]} {ls}{att_kia[2]}                     {def_kia[1]} {ls} {def_kia[0]} {ls} {def_kia[2]}"
+            self.remaining = f"{log.post_att_units[1]} {ls} {log.post_att_units[0]} {ls}{log.post_att_units[2]}                     {log.post_def_units[1]} {ls} {log.post_def_units[0]} {ls} {log.post_def_units[2]}"
         elif log.log_type == LogType.BATTLE_ARMY_VS_BUILDING:
-            self.attacker = "Attacker (army): " + str(log.init_strength_attacker) + \
-                            " > " + str(log.after_attacker_strength)
-            self.defender = "Defender (building): " + str(log.init_strength_defender) + \
-                            " > " + str(log.after_defender_strength)
+            super().__init__(center_x, center_y, "", panel_tex="../resources/other/attack_vs_building.png", no_header=True)
+            att_kia = (log.pre_att_units[0] - log.post_att_units[0],
+                       log.pre_att_units[1] - log.post_att_units[1],
+                       log.pre_att_units[2] - log.post_att_units[2])
+            def_kia = log.pre_def_units[0] - log.post_def_units[0]
+
+            self.in_action = f"{log.pre_att_units[1]} {ls} {log.pre_att_units[0]} {ls}{log.pre_att_units[2]}   {ls}{ls}                 {log.pre_def_units[0]}"
+            self.kia = f"{att_kia[1]} {ls} {att_kia[0]} {ls}{att_kia[2]}{ls}{ls}                    {def_kia}"
+            self.remaining = f"{log.post_att_units[1]} {ls} {log.post_att_units[0]} {ls}{log.post_att_units[2]} {ls}{ls}                   {log.post_def_units[0]}"
 
     def draw(self):
         super().draw()
-        arcade.draw_text("A battle took place:", self.text_box_x, self.text_box_y,
-                         arcade.color.WHITE, font_size=15, font_name='verdana')
-        arcade.draw_text(self.attacker, self.text_box_x+10, self.text_box_y-20,
+        arcade.draw_text(self.in_action, self.text_box_x + 15, self.text_box_y - 48,
                          arcade.color.WHITE, font_size=13, font_name='verdana')
-        arcade.draw_text(self.defender, self.text_box_x+10, self.text_box_y-35,
+        arcade.draw_text(self.kia, self.text_box_x + 15, self.text_box_y - 90,
+                         arcade.color.RED, font_size=13, font_name='verdana')
+        arcade.draw_text(self.remaining, self.text_box_x + 15, self.text_box_y - 137,
                          arcade.color.WHITE, font_size=13, font_name='verdana')
 
 
@@ -143,7 +165,7 @@ class PanelGameWon(SimplePanel):
         super().__init__(center_x, center_y, "END", scale=2)
         self.text1 = "CONGRATULATIONS: " + winner.name + " won!"
         self.text2 = "However, you can continue playing.. "
-        self.colour: arcade.color = Player.Player_Colour.player_colour_to_arcade_colour(winner.colour)
+        self.colour: arcade.color = PlayerColour.player_colour_to_arcade_colour(winner.colour)
 
     def draw(self):
         super().draw()

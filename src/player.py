@@ -1,52 +1,18 @@
-import arcade
 from typing import Set
 from src.game_accessoires import Army
 from src.misc.building import Building
 from src.hex_map import Hexagon
-from src.misc.game_constants import BuildingType
+from src.misc.game_constants import BuildingType, PlayerColour, UnitType, BuildingState
 
 
 class Player:
-    class Player_Colour:
-        YELLOW = 0
-        TEAL = 1
-        RED = 2
-
-        @staticmethod
-        def get_type_from_strcode(str_code: str):
-            if str_code == "yellow":
-                return Player.Player_Colour.YELLOW
-            elif str_code == "red":
-                return Player.Player_Colour.RED
-            elif str_code == "teal":
-                return Player.Player_Colour.TEAL
-            return -1
-
-        @staticmethod
-        def player_colour_to_arcade_colour(colour: int) -> arcade.Color:
-            if colour == Player.Player_Colour.YELLOW:
-                return arcade.color.YELLOW
-            elif colour == Player.Player_Colour.TEAL:
-                return arcade.color.PALE_BLUE
-            elif colour == Player.Player_Colour.RED:
-                return arcade.color.RED
-
-        @staticmethod
-        def get_colour_code(colour: int) -> str:
-            if colour == Player.Player_Colour.YELLOW:
-                return 'y'
-            elif colour == Player.Player_Colour.TEAL:
-                return 't'
-            elif colour == Player.Player_Colour.RED:
-                return 'r'
-            return 'no_colour'
 
     tot_player = 0                  # keeps track of the total amount of players (redundant to the length of the player list)
     def __init__(self, name: str, id: int, colour_str: str, spawn_loc: (int, int), ai_str: str):
         self.name = name
         self.id: int = id
-        self.colour = Player.Player_Colour.get_type_from_strcode(colour_str)
-        self.colour_code = Player.Player_Colour.get_colour_code(self.colour)
+        self.colour: PlayerColour = PlayerColour.get_type_from_strcode(colour_str)
+        self.colour_code: str = PlayerColour.get_colour_code(self.colour)
         self.spaw_loc: (int, int) = spawn_loc
         self.init_army_loc: (int, int) = (0,0)
         self.ai_str = ai_str
@@ -58,7 +24,6 @@ class Player:
         self.has_lost = False
         self.buildings: [Building] = []
         self.discovered_tiles: Set[Hexagon] = set()
-        # self.army = None
         self.armies: [Army] = []
         self.is_barbaric = False
         self.is_villager = False
@@ -71,3 +36,24 @@ class Player:
         elif self.is_villager:
             return BuildingType.VILLAGE
         return BuildingType.HUT
+
+    def get_initial_unit_type(self):
+        """returns the type of initial unit"""
+        if self.is_barbaric:
+            return UnitType.BABARIC_SOLDIER
+        elif self.is_villager:
+            return UnitType.KNIGHT
+        return UnitType.MERCENARY
+
+    def get_population_limit(self) -> int:
+        value = 0
+        for b in self.buildings:
+            if b.building_state == BuildingState.ACTIVE:
+                value = value + b.grant_pop
+        return value
+
+    def get_population(self) -> int:
+        value = 0
+        for a in self.armies:
+            value = value + a.get_population()
+        return value

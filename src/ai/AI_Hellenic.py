@@ -56,7 +56,7 @@ class AI_Hellenic(AI):
                     sour = AI_Toolkit.getListDistanceOne(best_building_pos, ai_stat.tiles_buildable)
                     amount_of_fields = max(3, len(sour))
                     sampled = random.sample(sour, amount_of_fields)
-                    for sample in sampled:              # 2 fields
+                    for sample in sampled:              # 3 fields
                         move.info.append(sample.offset_coordinates)
                 if len(self.build_order) > 0:
                     self.build_order.pop(0)
@@ -177,7 +177,7 @@ class AI_Hellenic(AI):
 
     def generate_test_heapmap(self, ai_stat: AI_GameStatus, move: AI_Move):
         print("heat_map:")
-        heat_map: [AI_Tile] = []
+        heat_map: [(int, AI_Tile)] = []
         tmp = queue.Queue()
         discovered = set()
         #dis_plus_scout = []
@@ -206,7 +206,7 @@ class AI_Hellenic(AI):
                     tmp.put((d+1,n))
 
         #for (d, s) in heat_map:
-        #    move.info_at_tile.append((s.offset_coordinates, str(d)))
+        #    move.info_at_tile.append()
 
     def get_state_as_str(self):
         return "no state"

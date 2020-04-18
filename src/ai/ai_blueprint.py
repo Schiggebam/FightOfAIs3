@@ -1,21 +1,23 @@
-from src.misc.game_constants import DiploEventType, hint
+from src.misc.game_constants import DiploEventType, error
 from src.misc.game_logic_misc import Logger
 
 
 class AI_Diplo:
 
     DIPLO_BASE_VALUE = float(5)
+    LOGGED_EVENTS = (DiploEventType.ENEMY_BUILDING_IN_CLAIMED_ZONE,
+                     DiploEventType.ENEMY_ARMY_INVADING_CLAIMED_ZONE)
 
     class AI_DiploEvent:
 
 
-        def __init__(self, target_id: int, rel_change: float, lifetime: int, event: int, description: str):
+        def __init__(self, target_id: int, rel_change: float, lifetime: int, event: DiploEventType, description: str):
             self.rel_change = rel_change
             self.lifetime = lifetime
             self.lifetime_max = lifetime
             self.description = description
             self.loc = (-1, -1)
-            self.event: int = event
+            self.event: DiploEventType = event
             self.target_id: int = target_id
 
         def add_loc(self, loc: (int, int)):
@@ -27,7 +29,7 @@ class AI_Diplo:
         for o_p in other_players:
             self.diplomacy.append([o_p, float(AI_Diplo.DIPLO_BASE_VALUE)])
 
-    def add_event(self, target_id: int, loc: (int, int), event: int, rel_change: float, lifetime: int,
+    def add_event(self, target_id: int, loc: (int, int), event: DiploEventType, rel_change: float, lifetime: int,
                   player_name:str):
         # check if this exists already:
         for e in self.events:
@@ -40,10 +42,17 @@ class AI_Diplo:
             event_str = "Enemy building scouted at: " + str(loc)
         elif event == DiploEventType.TYPE_ENEMY_ARMY_INVADING:
             event_str = "Enemy army scouted at: " + str(loc)
+        elif event == DiploEventType.ENEMY_BUILDING_IN_CLAIMED_ZONE:
+            event_str = "Enemy building is located in claimed zone"
+        elif event == DiploEventType.ENEMY_ARMY_INVADING_CLAIMED_ZONE:
+            event_str = "Enemy army is invading claimed zone"
+        else:
+            error("Unknown event!")
         ai_event = AI_Diplo.AI_DiploEvent(target_id, rel_change, lifetime, event, event_str)
         ai_event.add_loc(loc)
         self.events.append(ai_event)
-        #Logger.log_diplomatic_event(event, rel_change, loc, lifetime, player_name)
+        if event in AI_Diplo.LOGGED_EVENTS:
+            Logger.log_diplomatic_event(event, rel_change, loc, lifetime, player_name)
 
     def calc_round(self):
         for diplo in self.diplomacy:
@@ -67,7 +76,6 @@ class AI_Diplo:
 
 
 class AI:
-
     def __init__(self, name, other_players_ids: [int]):
         self.name = name
         self.diplomacy: AI_Diplo = AI_Diplo(other_players_ids)
@@ -76,3 +84,10 @@ class AI:
     def do_move(self, ai_state, move):
         raise NotImplementedError("Please Implement this method")
 
+
+
+
+#class NonPlayerAI(AI):
+#    def __init__(self, name: str, other_players_ids: [int]):
+#        super().__init__(name, other_players_ids)
+#

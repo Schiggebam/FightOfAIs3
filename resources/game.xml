@@ -20,13 +20,14 @@
         <corn_field code="cf" offsetX="0" offsetY="0" scale="1">../resources/objects/corn_field.png</corn_field>
         <construction_site code="cs" offsetX="0" offsetY="5" scale="1">../resources/objects/construction_site.png</construction_site>
         <destruction_site code="ds" offsetX="0" offsetY="5" scale="1">../resources/objects/destruction_site.png</destruction_site>
-        <village_center code="v1" offsetX="10" offsetY="5" scale="1">../resources/objects/village/village_center_3.png</village_center>
+        <village_center code="v1" offsetX="10" offsetY="5" scale="1">../resources/objects/village/small_3.png</village_center>
         <village_church_e code="vk_e" offsetX="5" offsetY="10" scale="1">../resources/objects/village/village_church_e.png</village_church_e>
         <village_church_sw code="vk_sw" offsetX="0" offsetY="0" scale="1">../resources/objects/village/village_church_sw.png</village_church_sw>
         <village_mine code="vm_nw" offsetX="-5" offsetY="0" scale="1">../resources/objects/village/village_mine_nw_2.png</village_mine>
         <village_mountain code="vmountain" offsetX="-25" offsetY="20" scale="1">../resources/objects/village/village_mountain.png</village_mountain>
         <village_storage_e code="vs_e" offsetX="0" offsetY="0" scale="1">../resources/objects/village/village_storage_e.png</village_storage_e>
         <village_storage_sw code="vs_sw" offsetX="0" offsetY="0" scale="1">../resources/objects/village/village_storage_sw.png</village_storage_sw>
+        <barracks code="br" offsetX="10" offsetY="5" scale="1">../resources/objects/barracks.png</barracks>
     </textures>
     <map>
         wd  wd  wd  wd  wd  wd  wd  wd  wd  wd  wd  wd  wd  wd  wd  wd  wd
@@ -101,6 +102,9 @@
         <V1 code="v1" construction_cost="10" culture_per_turn="0" resource_per_field="0"
             resource_per_turn="1" sight_range="3" food_consumption="0" construction_time="0"
             defensive_value="10">description</V1>
+        <Racks code="br" construction_cost="10" culture_per_turn="0" resource_per_field="0"
+               resource_per_turn="1" sight_range="3" food_consumption="0" construction_time="0"
+               defensive_value="10">description</Racks>
     </buildings>
     <players>
         <!--<player1 colour="red" spawn_x="2" spawn_y="2" ai="expansionist"
@@ -109,7 +113,7 @@
                  army_rel_to_spawn_x="0" army_rel_to_spawn_y="-1">peter pan</player2>
         <barbar1 colour="red" spawn_x="5" spawn_y="7" ai="barbaric"
                  army_rel_to_spawn_x="-1" army_rel_to_spawn_y="-1">Barbaric 1</barbar1><!-- former 5 7-->
-        <!--<village colour="teal" spawn_x="11" spawn_y="12" ai="villager"
+        <!--<village colour="teal" spawn_x="11" spawn_y="9" ai="villager"
                  army_rel_to_spawn_x="-1" army_rel_to_spawn_y="0">Barbaric 1</village>-->
     </players>
 </game>

@@ -1,14 +1,16 @@
 import arcade
 
 class SimplePanel:
-    def __init__(self, center_x, center_y, header: str, scale=1.25):
+    def __init__(self, center_x, center_y, header: str, scale=1.25, panel_tex="../resources/other/game_panel.png",
+                 no_header=False):
         self.sprite = arcade.Sprite()
-        self.sprite.append_texture(arcade.load_texture("../resources/other/game_panel.png"))
+        self.sprite.append_texture(arcade.load_texture(panel_tex))
         self.sprite.center_x = center_x
         self.sprite.center_y = center_y
         self.sprite.scale = scale
         self.sprite.set_texture(0)
         self.header = header
+        self.no_header = no_header
         if scale == 1.25:                       # TODO so hacky:)
             self.header_x = center_x
             self.header_y = (center_y + 95)
@@ -29,6 +31,7 @@ class SimplePanel:
         self.show = False
 
     def draw(self):
-        arcade.draw_text(self.header, self.header_x, self.header_y,
-                         arcade.color.WHITE, font_size=17, align="center",
-                         anchor_x="center", anchor_y="center", font_name='verdana')
+        if not self.no_header:
+            arcade.draw_text(self.header, self.header_x, self.header_y,
+                             arcade.color.WHITE, font_size=17, align="center",
+                             anchor_x="center", anchor_y="center", font_name='verdana')
