@@ -267,11 +267,7 @@ class UI:
                                         a.resource_type, a.remaining_amount)
                 self.show_volatile_panel(r_panel)
             elif a_class == Army:
-                units: {} = {}
-                for ut in UnitType:
-                    units[ut] = a.get_amount_by_unit(ut)
-                a_panel = PanelArmy(x, y + 150 if y < self.screen_height / 2 else y - 150,
-                                    a.get_population(), a.owner_id, units, a.is_barbaric)
+                a_panel = PanelArmy(x, y + 150 if y < self.screen_height / 2 else y - 150, a)
                 self.show_volatile_panel(a_panel)
             return True
         return False

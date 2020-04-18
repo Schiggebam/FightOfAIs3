@@ -1,9 +1,10 @@
 import queue
 from math import ceil
+from typing import Tuple
 
 from src.game_accessoires import Army
 from src.misc.building import Building
-from src.misc.game_constants import BuildingType, BuildingState, LogType, DiploEventType, UnitType, hint
+from src.misc.game_constants import BuildingType, BuildingState, LogType, DiploEventType, UnitType, hint, error
 from src.player import Player
 
 
@@ -62,6 +63,13 @@ class FightCalculator:
     def army_vs_army(attacker: Army, defender: Army):
         attack_value = attacker.get_attack_strength()
         defencive_value = defender.get_defence_strength()
+        if attack_value == 0:
+            error("Attack value is 0 -> will adjust it to 0.5")
+            attack_value = 0.5
+        if defencive_value == 0:
+            error("Defence value is 0 -> will adjust it to 0.5")
+            defencive_value = 0.5
+
         attacker_won = attack_value >= defencive_value          # they can both win if their values are equal
         defender_won = defencive_value >= attack_value
         attacker_losses = defencive_value if attacker_won else attack_value
@@ -116,13 +124,13 @@ class Logger:
             self.log_type = log_tpye
 
     class BattleLog(Log):
-        def __init__(self, log_type: LogType, attacker_strength: int, defender_strength: int,
-                     init_s_attacker: int, init_s_defender):
+        def __init__(self, log_type: LogType, pre_att_u: Tuple[int, int, int], pre_def_u: Tuple[int, int, int],
+                     post_att_u: Tuple[int, int, int], post_def_u: Tuple[int, int, int]):
             super().__init__(log_type)
-            self.after_attacker_strength: int = attacker_strength
-            self.after_defender_strength: int = defender_strength
-            self.init_strength_attacker: int = init_s_attacker
-            self.init_strength_defender: int = init_s_defender
+            self.pre_att_units: Tuple[int, int, int] = pre_att_u
+            self.pre_def_units: Tuple[int, int, int] = pre_def_u
+            self.post_att_units: Tuple[int, int, int] = post_att_u
+            self.post_def_units: Tuple[int, int, int] = post_def_u
 
     class EventLog(Log, ):
         def __init__(self, log_type, event: DiploEventType, relative_change: float, loc: (int, int), lifetime: int, player_name: str):
@@ -136,19 +144,17 @@ class Logger:
     logs: queue.Queue = queue.Queue()
 
     @staticmethod
-    def log_battle_army_vs_army_log(attacker: Army, defender: Army, attacker_initial_population: int,
-                                    defender_initial_population: int):
-        log = Logger.BattleLog(LogType.BATTLE_ARMY_VS_ARMY, attacker.get_population(),
-                               defender.get_population(),
-                               attacker_initial_population, defender_initial_population)
+    def log_battle_army_vs_army_log(pre_att_u: Tuple[int, int, int], pre_def_u: Tuple[int, int, int],
+                                    post_att_u: Tuple[int, int, int], post_def_u: Tuple[int, int, int]):
+
+        log = Logger.BattleLog(LogType.BATTLE_ARMY_VS_ARMY, pre_att_u, pre_def_u,
+                               post_att_u, post_def_u)
         Logger.logs.put(log)
 
     @staticmethod
-    def log_battle_army_vs_building(attacker: Army, defender: Building, attacker_initial_population: int,
-                                    defender_initial_population: int):
-        log = Logger.BattleLog(LogType.BATTLE_ARMY_VS_BUILDING, attacker.get_population(),
-                               defender.defensive_value,
-                               attacker_initial_population, defender_initial_population)
+    def log_battle_army_vs_building(pre_att_u: Tuple[int, int, int],  post_att_u: Tuple[int, int, int],
+                                    pre_building_value, post_building_value):
+        log = Logger.BattleLog(pre_att_u, (pre_building_value, 0, 0), post_att_u, (post_building_value, 0, 0))
         Logger.logs.put(log)
 
     @staticmethod

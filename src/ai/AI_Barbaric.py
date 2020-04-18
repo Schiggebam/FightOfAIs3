@@ -98,12 +98,12 @@ class AI_Barbaric(AI):
 
         wait: bool = False
         if len(ai_stat.map.army_list) == 0:
-            if score_a > 0:
-                hint("AI Barbaric: Decision: Recruit new army")
-                move.doRecruitArmy = True
-            else:
-                hint("AI Barbaric: Decision: Store more resources (not enough resources to recruit new army)")
-                wait = True
+            # if score_a > 0:
+            hint("AI Barbaric: Decision: Recruit new army")
+            move.doRecruitArmy = True
+            # else:
+            #     hint("AI Barbaric: Decision: Store more resources (not enough resources to recruit new army)")
+            #     wait = True
         elif ai_stat.map.army_list[0].population < army_building_ratio * ai_stat.population_limit:
             if ai_stat.population < ai_stat.population_limit:
                 if score_a > 0:
@@ -162,7 +162,7 @@ class AI_Barbaric(AI):
         return -1
 
     def calculate_army_movement(self, ai_stat: AI_GameStatus, move: AI_Move) -> (int, int):
-        if len(ai_stat.map.army_list) == 0:
+        if len(ai_stat.map.army_list) == 0 or True:
             return -1, -1            # no army, cannot move
         if self.state == AI_Barbaric.AI_State.PASSIVE:
             return -1, -1            # not moving in passive state
@@ -257,9 +257,6 @@ class AI_Barbaric(AI):
 
     def get_army_spawn_loc(self, ai_stat: AI_GameStatus) -> (int, int):
         building_tile = ai_stat.map.building_list[0]
-        # building_tile = AI_Toolkit.get_tile_by_xy(ai_stat.map.building_list[0].offset_coordinates,
-        #                                           ai_stat.tiles_discovered)
-        # nei = AI_Toolkit.getListDistanceOne(building_tile, ai_stat.tiles_buildable)
         nei = AI_Toolkit.get_neibours_on_set(building_tile, ai_stat.map.buildable_tiles)
         idx = random.randint(0, len(nei) - 1)
         return nei[idx].offset_coordinates

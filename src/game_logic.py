@@ -524,8 +524,10 @@ class GameLogic:
         for other_player in self.player_list:
             if other_player.id != player.id:
                 for o_b in other_player.buildings:
-                    if o_b.tile in player.discovered_tiles:
-                        e_set.add((o_b, other_player.id))
+                    for my_dis in player.discovered_tiles:
+                        if o_b.tile.offset_coordinates == my_dis.offset_coordinates:
+                            e_set.add((o_b, other_player.id))
+        print(e_set)
         return e_set
 
     def get_enemy_armies(self, player:  Player) -> set:
@@ -695,10 +697,12 @@ class GameLogic:
             if p != player:
                 for hostile_army in p.armies:
                     if hostile_army.tile.offset_coordinates == new_hex.offset_coordinates:
-                        army_population = army.get_population()
-                        h_army_population = army.get_population()
+                        pre_att_u = army.get_units_as_tuple()
+                        pre_def_u = hostile_army.get_units_as_tuple()
                         FightCalculator.army_vs_army(army, hostile_army)
-                        Logger.log_battle_army_vs_army_log(army, hostile_army, army_population, h_army_population)
+                        post_att_u = army.get_units_as_tuple()
+                        post_def_u = hostile_army.get_units_as_tuple()
+                        Logger.log_battle_army_vs_army_log(pre_att_u, pre_def_u, post_att_u, post_def_u)
                         p.attacked_set.add(player.id)
                         if hostile_army.get_population() == 0:
                             self.del_army(hostile_army, p)
@@ -706,10 +710,12 @@ class GameLogic:
                         is_moving = False
                 for b in p.buildings:
                     if b.tile.offset_coordinates == new_hex.offset_coordinates:
-                        b_strength = b.defensive_value
-                        army_population = army.get_population()
+                        pre_att_u = army.get_units_as_tuple()
+                        pre_b = b.defensive_value
                         FightCalculator.army_vs_building(army, b)
-                        Logger.log_battle_army_vs_building(army, b, army_population, b_strength)
+                        post_att_u = army.get_units_as_tuple()
+                        post_b = b.defensive_value
+                        Logger.log_battle_army_vs_building(pre_att_u, post_att_u, pre_b, post_b)
                         p.attacked_set.add(player.id)
                         if b.defensive_value == -1:
                             b.set_state_destruction()

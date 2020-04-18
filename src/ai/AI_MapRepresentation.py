@@ -1,3 +1,4 @@
+import traceback
 from typing import List, Tuple, Optional, Dict
 
 from src.game_accessoires import Resource, Army
@@ -207,6 +208,8 @@ class Map:
             for k, _ in self.map.items():
                 print(str(k), end="")
             print("")
+            traceback.print_exc()
+            raise KeyError
 
 
 

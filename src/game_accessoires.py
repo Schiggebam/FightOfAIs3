@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import List
+from typing import List, Tuple
 
 import arcade
 
@@ -10,7 +10,7 @@ from src.misc.game_constants import ResourceType, error, GroundType, PlayerColou
 class Drawable:
     def __init__(self):
         self.sprite: arcade.Sprite = arcade.Sprite()
-        self.tex_counter = -1                       # this variable is supposed to count the number of textures
+        self.tex_counter = -1  # this variable is supposed to count the number of textures
         self.__active_tex = -1
         self.tex_code = ""
         self.offset = (0, 0)
@@ -26,7 +26,7 @@ class Drawable:
             self.__active_tex = 0
         self.sprite.append_texture(tex)
         self.tex_counter = self.tex_counter + 1
-        self.sprite.set_texture(self.__active_tex)            # preserve the idx
+        self.sprite.set_texture(self.__active_tex)  # preserve the idx
 
     def set_tex_offset(self, offset: (int, int)):
         self.offset = offset
@@ -46,7 +46,7 @@ class Drawable:
     def next_frame(self, d_t):
         self.__time = self.__time + d_t
         if self.__time >= self.update_interval:
-            self.__active_tex = (self.__active_tex + 1) % (self.tex_counter+1)
+            self.__active_tex = (self.__active_tex + 1) % (self.tex_counter + 1)
             self.sprite.set_texture(self.__active_tex)
             self.__time = .0
 
@@ -59,9 +59,10 @@ class Ground(Drawable):
         self.buildable: bool = False
         self.ground_type: GroundType = GroundType.get_type_from_strcode(str_code)
 
+
 class Resource(Drawable):
     # e.g. ('Resource.ResourceType.GOLD', {amount: 150, ...}
-    resource_info: [(int, {})] = [] # a dict containing all information about the resources
+    resource_info: [(int, {})] = []  # a dict containing all information about the resources
 
     def __init__(self, tile: Hexagon, res_type: ResourceType):
         super().__init__()
@@ -84,6 +85,7 @@ class Resource(Drawable):
 
 class Unit:
     unit_info: [(int, {})] = []
+
     def __init__(self, type: UnitType):
         self.unit_type: UnitType = type
         for u_info in Unit.unit_info:
@@ -105,10 +107,10 @@ class Unit:
 
     @staticmethod
     def get_unit_stats(ut: UnitType) -> (int, int, int):
-        """returns a tuple of the attack and defence value of the unit"""
+        """returns a tuple of the attack and defence value and population of the unit"""
         for u_info in Unit.unit_info:
             if u_info[0] == ut:
-                return u_info[1]['attack'], u_info[1]['defence']
+                return u_info[1]['attack'], u_info[1]['defence'], u_info[1]['population']
         return -1, -1, -1
 
 
@@ -139,7 +141,8 @@ class Army(Drawable):
         for r in tbr:
             self.__units.remove(r)
         if count != amount:
-            error("Army: unexpected amount of removed units. requested to remove: {}, removed: {}".format(amount, count))
+            error(
+                "Army: unexpected amount of removed units. requested to remove: {}, removed: {}".format(amount, count))
 
     def remove_all_units(self):
         self.__units.clear()
@@ -176,6 +179,12 @@ class Army(Drawable):
                 value = value + u.population
         return value
 
+    def get_units_as_tuple(self) -> Tuple[int, int, int]:
+        return (self.get_amount_by_unit(UnitType.MERCENARY),
+                self.get_amount_by_unit(UnitType.KNIGHT),
+                self.get_amount_by_unit(UnitType.BABARIC_SOLDIER))
+
+
 class Flag(Drawable):
     def __init__(self, position: (int, int), colour: PlayerColour):
         super().__init__()
@@ -187,4 +196,3 @@ class Scenario():
     def __init__(self):
         self.resource_list: [Resource] = []
         self.aux_sprites: [(Hexagon, Drawable)] = []
-
