@@ -86,6 +86,7 @@ class AI:
 
 
 
+
 #class NonPlayerAI(AI):
 #    def __init__(self, name: str, other_players_ids: [int]):
 #        super().__init__(name, other_players_ids)

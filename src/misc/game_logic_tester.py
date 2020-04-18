@@ -4,9 +4,9 @@ from src.misc.game_logic_misc import FightCalculator
 
 
 def print_army(army: Army):
-    print("({}|{}|{})".format(army.get_population_by_unit(UnitType.MERCENARY),
-                                        army.get_population_by_unit(UnitType.KNIGHT),
-                                        army.get_population_by_unit(UnitType.BABARIC_SOLDIER)))
+    print("({}|{}|{})".format(army.get_population_by_unit(UnitType.KNIGHT),
+                              army.get_population_by_unit(UnitType.MERCENARY),
+                              army.get_population_by_unit(UnitType.BABARIC_SOLDIER)))
 
 
 def sim_fight(attacker_constellation, defender_constellation):
@@ -33,7 +33,7 @@ def sim_fight(attacker_constellation, defender_constellation):
 # setup
 Unit.unit_info = [(UnitType.MERCENARY, {'name': "", 'attack': int(3), 'defence': int(1), 'population': int(1),
                                         'cost_resource': 1, 'cost_culture': 1}),
-                  (UnitType.KNIGHT, {'name': "", 'attack': int(2), 'defence': int(6), 'population': int(1),
+                  (UnitType.KNIGHT, {'name': "", 'attack': int(2), 'defence': int(5), 'population': int(1),
                                      'cost_resource': 1, 'cost_culture': 1}),
                   (UnitType.BABARIC_SOLDIER, {'name': "", 'attack': int(1), 'defence': int(2), 'population': int(1),
                                               'cost_resource': 1, 'cost_culture': 1})]
@@ -46,6 +46,6 @@ Unit.unit_info = [(UnitType.MERCENARY, {'name': "", 'attack': int(3), 'defence':
 # defender_constellation = (0, 9, 0)
 # sim_fight(attacker_constellation, defender_constellation)
 
-attacker_constellation = (0, 0, 13)
-defender_constellation = (3, 12, 0)
+attacker_constellation = (0, 0, 10)
+defender_constellation = (3, 5, 0)
 sim_fight(attacker_constellation, defender_constellation)

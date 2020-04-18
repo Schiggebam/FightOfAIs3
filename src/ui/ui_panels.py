@@ -9,19 +9,24 @@ ls = "    "
 ts = "  "
 
 class PanelAI(SimplePanel):
-    def __init__(self, center_x, center_y, header: str, gl):
+    def __init__(self, center_x, center_y, header: str):
         super().__init__(center_x, center_y, header)
-        self.gl = gl
+        self.text = ""
+
+
+    def update(self, gl):
+        self.text = ""
+        for p in gl.player_list:
+            self.text = self.text + p.name + ": \n"
+            self.text = self.text + gl.ai_interface.query_ai('state', None, p.id) + "\n"
 
     def draw(self):
         super().draw()
-        y_offset = 0
-        for player in self.gl.player_list:
-            arcade.draw_text(str(player.name), self.text_box_x, self.text_box_y + y_offset,
+        if len(self.text) > 0:
+            arcade.draw_text(self.text, self.text_box_x, self.text_box_y - 135,
                              arcade.color.WHITE, font_size=15, font_name='verdana')
-            arcade.draw_text(self.gl.ai_interface.query_ai("state", None, player.id), self.text_box_x + 150, self.text_box_y + y_offset,
-                             arcade.color.WHITE, font_size=15, font_name='verdana')
-            y_offset = y_offset - 25
+
+
 
 
 class PanelDiplo(SimplePanel):

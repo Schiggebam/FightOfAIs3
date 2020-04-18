@@ -75,21 +75,21 @@ def error(msg: str):
 
 def start_progress(title):
     global progress_x
-    sys.stdout.write(title + ": [" + "-" * 40 + "]" + chr(8) * 41)
+    sys.stdout.write(title + ": [" + "-" * 10 + "]" + chr(8) * 11)
     sys.stdout.flush()
     progress_x = 0
 
 
 def progress(x):
     global progress_x
-    x = int(x * 40 // 100)
+    x = int(x * 10 // 100)
     sys.stdout.write("#" * (x - progress_x))
     sys.stdout.flush()
     progress_x = x
 
 
 def end_progress():
-    sys.stdout.write("#" * (40 - progress_x) + "]\n")
+    sys.stdout.write("#" * (10 - progress_x) + "]\n")
     sys.stdout.flush()
 
 
@@ -210,8 +210,8 @@ class DiploEventType(Enum):
 
 
 class UnitType(Enum):
-    MERCENARY = 0
-    KNIGHT = 1
+    KNIGHT = 0
+    MERCENARY = 1
     BABARIC_SOLDIER = 2
 
     @staticmethod

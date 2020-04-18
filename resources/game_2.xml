@@ -12,7 +12,7 @@
         <building_farm code="fa" offsetX="0" offsetY="5" scale="1">../resources/objects/simple_hut.png</building_farm>
         <building_villa code="s2" offsetX="0" offsetY="0" scale="1">../resources/objects/simple_villa.png</building_villa>
         <outline code="ou" offsetX="0" offsetY="0" scale="1">../resources/map/outline_selected.png</outline>
-        <flag_red code="f1_red" offsetX="5" offsetY="30" scale="0.75">../resources/objects/flag_red.png</flag_red>
+        <flag_red code="f1_red" offsetX="5" offsetY="-5" scale="0.75">../resources/objects/flag_red_1.png</flag_red>
         <flag_yellow code="f1_yellow" offsetX="5" offsetY="30" scale="0.75">../resources/objects/flag_yellow.png</flag_yellow>
         <flag_teal code="f1_teal" offsetX="5" offsetY="30" scale="0.75">../resources/objects/flag_teal.png</flag_teal>
         <camp_1 code="c1" offsetX="5" offsetY="0" scale="1">../resources/objects/camp_1.png</camp_1>
@@ -179,7 +179,7 @@
             defensive_value="2" flag_x="0" flag_y="20" grant_pop="5">description</C1>
         <C2 code="c2" construction_cost="10" culture_per_turn="0" resource_per_field="0"
             resource_per_turn="1" sight_range="3" food_consumption="0" construction_time="0"
-            defensive_value="5" flag_x="0" flag_y="20" grant_pop="7">description</C2>
+            defensive_value="6" flag_x="0" flag_y="20" grant_pop="7">description</C2>
         <C3 code="c3" construction_cost="10" culture_per_turn="0" resource_per_field="0"
             resource_per_turn="1" sight_range="3" food_consumption="0" construction_time="0"
             defensive_value="10" flag_x="0" flag_y="20" grant_pop="10">description</C3>
@@ -193,7 +193,7 @@
     <units>
         <Mercenary code="unit_a" name="mercenary" attack="3" defence="1" population="1"
                    cost_resource="10" cost_culture="0">description</Mercenary>
-        <Knight code="unit_b" name="knight" attack="2" defence="6" population="1"
+        <Knight code="unit_b" name="knight" attack="2" defence="5" population="1"
                 cost_resource="10" cost_culture="10">description</Knight>
         <Barbaric_Soldier code="unit_c" name="barbaric soldier" attack="1" defence="2" population="1"
                           cost_resource="5" cost_culture="0">description</Barbaric_Soldier>

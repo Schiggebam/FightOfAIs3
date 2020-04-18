@@ -4,7 +4,8 @@ import timeit
 
 from src.ai.AI_GameStatus import AI_GameStatus, AI_Move, AI_GameInterface
 from src.misc.animation import Animator
-from src.misc.game_constants import ResourceType, error, GroundType, debug, ENABLE_KEYFRAME_ANIMATIONS
+from src.misc.game_constants import ResourceType, error, GroundType, debug, ENABLE_KEYFRAME_ANIMATIONS, start_progress, \
+    end_progress, progress
 from src.game_accessoires import Scenario, Ground, Resource, Drawable, Flag, Unit
 from src.game_file_reader import GameFileReader
 from src.hex_map import HexMap, MapStyle, Hexagon
@@ -195,7 +196,7 @@ class GameLogic:
 
         self.playNextTurn = False
         if self.change_in_map_view:
-            self.toggle_fog_of_war_lw(self.hex_map.map)
+            self.toggle_fog_of_war_lw(self.hex_map.map, show_update_bar=True)
             self.change_in_map_view = False
 
         self.animator.update(GameLogic.total_elapsed)
@@ -531,7 +532,7 @@ class GameLogic:
         for other_player in self.player_list:
             if other_player.id != player.id:
                 for o_b in other_player.buildings:
-                    for my_dis in player.discovered_tiles or my_dis in scoutable_tiles:
+                    for my_dis in set().union(player.discovered_tiles, scoutable_tiles):
                         if o_b.tile.offset_coordinates == my_dis.offset_coordinates:
                             e_set.add((o_b, other_player.id))
         print(e_set)
@@ -564,16 +565,25 @@ class GameLogic:
                             a.sprite.alpha = 255
         self.__reorder_spritelist(self.z_levels[2])
 
-    def toggle_fog_of_war_lw(self, tile_list: Set[Hexagon]):
+    def toggle_fog_of_war_lw(self, tile_list: Set[Hexagon], show_update_bar=False):
         t1 = timeit.default_timer()
         v = 255 if self.map_hack else 0
         for res in self.scenario.resource_list:
             res.sprite.alpha = v
 
+
+        tot = len(tile_list)
+        counter = 0
+        if show_update_bar:
+            start_progress("Updating map view")
         for hex in tile_list:
+            if counter % 5 == 0 and show_update_bar:
+                progress(counter)
+            counter = counter + 1
             hex.ground.set_active_texture(1 if self.map_hack else 0)
             # hex.ground.sprite.alpha = 255 if self.map_hack else 0
-
+        if show_update_bar:
+            end_progress()
         for player in self.player_list:
             for b in player.buildings:
                 b.sprite.alpha = v
@@ -653,23 +663,7 @@ class GameLogic:
         if building.building_type == BuildingType.FARM:
             for a in building.associated_tiles:
                 self.extend_building(building, a, "cf")
-                #d = Drawable()
-                #d.set_sprite_pos(HexMap.offset_to_pixel_coords(a.offset_coordinates))
-                #building.associated_drawables.append(d)
-                #self.__set_sprite(d, "cf")
-                #self.z_levels[2].append(d.sprite)
-        # if building.building_type == BuildingType.VILLAGE:
-        #     mountain_tile = self.hex_map.get_hex_northeast(building.tile)
-        #     mine_tile = self.hex_map.get_hex_northwest(building.tile)
-        #     storage_tile = self.hex_map.get_hex_southwest(building.tile)
-        #     church_tile = self.hex_map.get_hex_east(building.tile)
-        #
-            #TODO append tile as associated tiles
 
-        #     self.extend_building(building, mountain_tile, "vmountain")
-        #     self.extend_building(building, mine_tile, "vm_nw")
-        #     self.extend_building(building, church_tile, "vk_e")
-        #     self.extend_building(building, storage_tile, "vs_sw")
         self.toggle_fog_of_war_lw(player.discovered_tiles)
         self.__reorder_spritelist(self.z_levels[2])
 
@@ -679,6 +673,7 @@ class GameLogic:
         drawable = Drawable()
         drawable.set_sprite_pos(HexMap.offset_to_pixel_coords(tile.offset_coordinates), self.__camera_pos)
         building.associated_drawables.append(drawable)
+        drawable.sprite.alpha = 100
         self.__set_sprite(drawable, tex_code)
         self.z_levels[2].append(drawable.sprite)
 
@@ -700,6 +695,9 @@ class GameLogic:
         is_moving = True
         new_hex = self.hex_map.get_hex_by_offset(pos)
         # make sure the new hex is empty
+        if player.armies[0].get_population() == 0:
+            hint("army has population 0 and cannot be moved")
+            return
         for p in self.player_list:
             if p != player:
                 for hostile_army in p.armies:
@@ -720,6 +718,7 @@ class GameLogic:
                             is_moving = False
                         else:
                             self.del_army(hostile_army, p)
+                            is_moving = False
                 for b in p.buildings:
                     if b.tile.offset_coordinates == new_hex.offset_coordinates:
                         pre_att_u = army.get_units_as_tuple()
@@ -733,6 +732,7 @@ class GameLogic:
                             b.set_state_destruction()
                         if army.get_population() == 0:
                             self.del_army(army, player)
+                            is_moving = False
         if is_moving:
             if self.hex_map.hex_distance(new_hex, army.tile) == 1:
                 self.animator.add_move_animation(army, new_hex.offset_coordinates, float(.4))
@@ -741,7 +741,7 @@ class GameLogic:
                 #army.set_sprite_pos(HexMap.offset_to_pixel_coords(new_hex.offset_coordinates))
                 self.__reorder_spritelist(self.z_levels[2])
             else:
-                print("Army cannot move that far")
+                error(f"Army cannot move that far: {self.hex_map.hex_distance(new_hex, army.tile)}")
 
 
 
@@ -763,6 +763,8 @@ class GameLogic:
             li.append(s)
         for s in li:
             sl.remove(s)
+        # TODO: BAD:to make the army appear on top of fields I substract by height. That must be a better solution
+        # li.sort(key=lambda x: x.center_y - (x._height - 30), reverse=True)
         li.sort(key=lambda x: x.center_y, reverse=True)
         for s in li:
             sl.append(s)

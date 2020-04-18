@@ -1,5 +1,5 @@
 from math import sqrt
-from typing import List
+from typing import List, Optional
 
 import arcade
 
@@ -72,11 +72,10 @@ class UI:
         ai_button = AutomaticIconButton(screen_width - 50, 225, self.callBack_ai,
                                         "../resources/other/ai_button_pressed.png",
                                         "../resources/other/ai_button_unpressed.png")
-        self.ai_panel = PanelAI(screen_width - 280, 500, "AI panel", self.gl)
-        self.diplo_panel = PanelDiplo(screen_width - 280, 250, "Diplo panel", self.gl)
+        self.ai_panel: Optional[PanelAI] = None
+        self.diplo_panel = None
 
-        self.panel_list.append(self.ai_panel)
-        self.panel_list.append(self.diplo_panel)
+
         self.buttonlist.append(self.ba)
         self.buttonlist.append(sb)
         self.buttonlist.append(diplo_button)
@@ -104,6 +103,12 @@ class UI:
             self.sprite_list.append(b.sprite)
         #for p in self.panel_list:
         #    self.sprite_list.append(p.sprite)
+
+    def setup(self):
+        self.ai_panel = PanelAI(self.screen_width - 280, 500, "AI panel")
+        self.diplo_panel = PanelDiplo(self.screen_width - 280, 250, "Diplo panel", self.gl)
+        self.panel_list.append(self.ai_panel)
+        self.panel_list.append(self.diplo_panel)
 
     def draw(self):
         for hex in self.gl.hex_map.map:
@@ -152,6 +157,8 @@ class UI:
             x_offset = x_offset + 250
 
     def update(self):
+        if self.ai_panel.show:
+            self.ai_panel.update(self.gl)
         for player in self.gl.player_list:
             s = f"Resources: {player.amount_of_resources} \n"
             s = s + f"Buildings: {len(player.buildings)} \n"

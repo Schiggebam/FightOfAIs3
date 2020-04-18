@@ -4,7 +4,7 @@ from typing import List, Union, Tuple, Optional
 
 from src.ai.AI_GameStatus import AI_GameStatus
 from src.ai.AI_MapRepresentation import Tile, AI_Element
-from src.misc.game_constants import error, BuildingType, BuildingState
+from src.misc.game_constants import error, BuildingType, BuildingState, hint
 
 AI_OBJ = Union[AI_Element, Tile]
 
@@ -56,20 +56,17 @@ def dijkstra_pq(start, target, domain: List[Tile]) -> List[Tile]:
     while x.offset_coordinates != start.offset_coordinates:
         path.append(x)
         x = x.pre
+        if x is None:                   # this is a bit weird in conjunction with the while condition.
+            break
     path.append(start)
     path.reverse()
-    return path
+    if start == path[0] and target == path[len(path) - 1]:
+        return path
+    else:
+        hint("Found path is incomplete")
+        return [start]
 
-    # print("path: ")
-    x = target
-    while x is not None:
-        #    print(" " + str(x.x_grid) + "|" + str(x.y_grid) + " ", end="")
-        path.append(x)
-        x = x.pre
-    # print(" ")
-    path.reverse()
-    # if path[0].x_grid == target.x_grid and path[0].y_grid == target.y_grid:
-    #    path = None
+
 
 
 def get_tile_by_xy(coords, discovered_tiles: []):

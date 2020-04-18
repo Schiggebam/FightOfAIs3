@@ -115,6 +115,7 @@ class Game(arcade.Window):
         arcade.set_background_color(arcade.color.BLACK)
         self.commands.extend(self.console.initial_commands(SETUP_COMMANDS))
         self.game_logic.setup()
+        self.ui.setup()
 
     def on_update(self, delta_time):
         # pr.enable()

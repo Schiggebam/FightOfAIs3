@@ -1,10 +1,7 @@
-from typing import Set, List, Tuple, Optional, Union
+from typing import Set, Tuple, Optional, Union
 
-from src.ai.AI_MapRepresentation import Map, Tile
-from src.game_accessoires import Resource, Army
-from src.misc.building import Building
-from src.hex_map import Hexagon
-from src.misc.game_constants import error, UnitType, BuildingType, ResourceType
+from src.ai.AI_MapRepresentation import Map
+from src.misc.game_constants import error, UnitType, BuildingType
 
 
 class AI_Move:

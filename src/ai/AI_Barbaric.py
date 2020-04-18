@@ -30,6 +30,8 @@ class AI_Barbaric(AI):
         self.safety_dist_to_enemy_army = 3
 
     def do_move(self, ai_stat: AI_GameStatus, move: AI_Move):
+        if len(ai_stat.map.army_list) > 0:
+            print(ai_stat.map.army_list[0].offset_coordinates)
         self.update_diplo_events(ai_stat)
         self.diplomacy.calc_round()
         self.evaluate_state(ai_stat)
@@ -52,10 +54,12 @@ class AI_Barbaric(AI):
             move.loc = loc_u
             move.str_rep_of_action = "Upgrading @ " + str(move.loc)
         elif move.doRecruitArmy:
-            move.loc = self.get_army_spawn_loc(ai_stat)
+            pos = self.get_army_spawn_loc(ai_stat)
+            move.loc = pos
             move.str_rep_of_action = "Recruiting @ " + str(move.loc)
 
         if loc_a != (-1, -1):
+            hint(f"Moving army to {loc_a}")
             move.move_army_to = loc_a
             move.doMoveArmy = True
 
@@ -99,8 +103,11 @@ class AI_Barbaric(AI):
         wait: bool = False
         if len(ai_stat.map.army_list) == 0:
             # if score_a > 0:
-            hint("AI Barbaric: Decision: Recruit new army")
-            move.doRecruitArmy = True
+            if self.get_army_spawn_loc(ai_stat) != (-1, -1):
+                hint("AI Barbaric: Decision: Recruit new army")
+                move.doRecruitArmy = True
+            else:
+                hint("No suitable tile to spawn the army")
             # else:
             #     hint("AI Barbaric: Decision: Store more resources (not enough resources to recruit new army)")
             #     wait = True
@@ -164,7 +171,9 @@ class AI_Barbaric(AI):
 
     def calculate_army_movement(self, ai_stat: AI_GameStatus, move: AI_Move) -> (int, int):
         if len(ai_stat.map.army_list) == 0:
-            return -1, -1            # no army, cannot move
+            return -1, -1           # no army, cannot move
+        if ai_stat.map.army_list[0].population == 0:
+            return -1, -1           # no population
         if self.state == AI_Barbaric.AI_State.PASSIVE:
             return -1, -1            # not moving in passive state
         if self.state == AI_Barbaric.AI_State.AGGRESSIVE:
@@ -181,9 +190,10 @@ class AI_Barbaric(AI):
             if target_tile is None:
                 for e_b in ai_stat.map.opp_building_list:
                     if e_b.owner in self.hostile_player:
-                        hint("AI Barbaric: found hostile building to attack")
-                        # target_tile = AI_Toolkit.get_tile_by_xy(e_b.offset_coordinates, ai_stat.tiles_walkable)
-                        target_tile = e_b.base_tile
+                        if e_b.type != BuildingType.BARRACKS:
+                            hint("AI Barbaric: found hostile building to attack")
+                            # target_tile = AI_Toolkit.get_tile_by_xy(e_b.offset_coordinates, ai_stat.tiles_walkable)
+                            target_tile = e_b.base_tile
 
             if start_tile and target_tile:
                 path = AI_Toolkit.dijkstra_pq(start_tile, target_tile, ai_stat.map.walkable_tiles)
@@ -259,14 +269,17 @@ class AI_Barbaric(AI):
     def get_army_spawn_loc(self, ai_stat: AI_GameStatus) -> (int, int):
         building_tile = ai_stat.map.building_list[0]
         nei = AI_Toolkit.get_neibours_on_set(building_tile, ai_stat.map.buildable_tiles)
+        if len(nei) == 0:           # this seems to be unlikely but avoids crashing just in case
+            hint("No suitable tile to spawn the army!")
+            return -1, -1
         idx = random.randint(0, len(nei) - 1)
         return nei[idx].offset_coordinates
 
     def get_state_as_str(self):
         if self.state == AI_Barbaric.AI_State.PASSIVE:
-            return "passive"
+            return "    passive"
         elif self.state == AI_Barbaric.AI_State.DEFENSIVE:
-            return "defensive"
+            return "    defensive"
         elif self.state == AI_Barbaric.AI_State.AGGRESSIVE:
-            return "aggressive"
-        return "no state"
+            return "    aggressive"
+        return "    no state"
