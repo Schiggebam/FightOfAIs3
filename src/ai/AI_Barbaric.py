@@ -117,15 +117,16 @@ class AI_Barbaric(AI):
                 move.doNothing = True   # but wait is false because we check the building options in this case
 
         if not wait:              # so far no valid option found
-            if score_u > 0:
-                hint("AI Barbaric: Decision: Upgrade")
-                move.doUpgrade = True
-            elif score_b > 0:
-                hint("AI Barbaric: Decision: Build")
-                move.doBuild = True
-            else:
-                hint("AI Barbaric: Decision: Store more resources")
-                wait = True
+            if not (move.doRecruitArmy or move.doUpArmy or move.doNothing):
+                if score_u > 0:
+                    hint("AI Barbaric: Decision: Upgrade")
+                    move.doUpgrade = True
+                elif score_b > 0:
+                    hint("AI Barbaric: Decision: Build")
+                    move.doBuild = True
+                else:
+                    hint("AI Barbaric: Decision: Store more resources")
+                    wait = True
         # ...
         if wait:
             move.doNothing = True       # Ai decides to wait
@@ -162,7 +163,7 @@ class AI_Barbaric(AI):
         return -1
 
     def calculate_army_movement(self, ai_stat: AI_GameStatus, move: AI_Move) -> (int, int):
-        if len(ai_stat.map.army_list) == 0 or True:
+        if len(ai_stat.map.army_list) == 0:
             return -1, -1            # no army, cannot move
         if self.state == AI_Barbaric.AI_State.PASSIVE:
             return -1, -1            # not moving in passive state

@@ -33,19 +33,19 @@ def sim_fight(attacker_constellation, defender_constellation):
 # setup
 Unit.unit_info = [(UnitType.MERCENARY, {'name': "", 'attack': int(3), 'defence': int(1), 'population': int(1),
                                         'cost_resource': 1, 'cost_culture': 1}),
-                  (UnitType.KNIGHT, {'name': "", 'attack': int(2), 'defence': int(4), 'population': int(1),
+                  (UnitType.KNIGHT, {'name': "", 'attack': int(2), 'defence': int(6), 'population': int(1),
                                      'cost_resource': 1, 'cost_culture': 1}),
                   (UnitType.BABARIC_SOLDIER, {'name': "", 'attack': int(1), 'defence': int(2), 'population': int(1),
                                               'cost_resource': 1, 'cost_culture': 1})]
 
-attacker_constellation = (5, 1, 0)
-defender_constellation = (1, 3, 0)
-sim_fight(attacker_constellation, defender_constellation)
+# attacker_constellation = (5, 1, 0)
+# defender_constellation = (1, 3, 0)
+# sim_fight(attacker_constellation, defender_constellation)
+#
+# attacker_constellation = (10, 0, 0)
+# defender_constellation = (0, 9, 0)
+# sim_fight(attacker_constellation, defender_constellation)
 
-attacker_constellation = (10, 0, 0)
-defender_constellation = (0, 9, 0)
-sim_fight(attacker_constellation, defender_constellation)
-
-attacker_constellation = (41, 0, 0)
-defender_constellation = (0, 30, 0)
+attacker_constellation = (0, 0, 13)
+defender_constellation = (3, 12, 0)
 sim_fight(attacker_constellation, defender_constellation)

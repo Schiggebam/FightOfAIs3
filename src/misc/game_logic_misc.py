@@ -70,10 +70,10 @@ class FightCalculator:
             error("Defence value is 0 -> will adjust it to 0.5")
             defencive_value = 0.5
 
-        attacker_won = attack_value >= defencive_value          # they can both win if their values are equal
+        attacker_won = attack_value >= defencive_value
         defender_won = defencive_value >= attack_value
         attacker_losses = defencive_value if attacker_won else attack_value
-        defender_losses = 0 if defender_won else defencive_value
+        defender_losses = attack_value if defender_won else defencive_value
         attacker_alive_pop_ratio = (attack_value - attacker_losses) / attack_value
         defender_alive_pop_ratio = (defencive_value - defender_losses) / defencive_value
         if attacker_won:
@@ -154,7 +154,8 @@ class Logger:
     @staticmethod
     def log_battle_army_vs_building(pre_att_u: Tuple[int, int, int],  post_att_u: Tuple[int, int, int],
                                     pre_building_value, post_building_value):
-        log = Logger.BattleLog(pre_att_u, (pre_building_value, 0, 0), post_att_u, (post_building_value, 0, 0))
+        log = Logger.BattleLog(LogType.BATTLE_ARMY_VS_BUILDING, pre_att_u, (pre_building_value, 0, 0),
+                               post_att_u, (post_building_value, 0, 0))
         Logger.logs.put(log)
 
     @staticmethod

@@ -181,6 +181,10 @@ class Map:
         tile.army = ai_a
         return ai_a
 
+
+    #def__add_opp_building(self, building: Building) -> AI_Building:
+    #
+
     def __add_building(self, offset_coordinates: Tuple[int, int], building: Building) -> AI_Building:
         tile = self.__get_tile(offset_coordinates)
         ai_b = AI_Building(tile)
@@ -188,9 +192,10 @@ class Map:
         ai_b.type = building.building_type
         ai_b.state = building.building_state
         for a in building.associated_tiles:
-            t = self.__get_tile(a.offset_coordinates)
-            ai_b.associated_tiles.append(t)
-            self.farm_field_tiles.append(t)
+            if a.offset_coordinates in self.map:         # one may see the building but not all of its adjacent tiles
+                t = self.__get_tile(a.offset_coordinates)
+                ai_b.associated_tiles.append(t)
+                self.farm_field_tiles.append(t)
         return ai_b
 
     def get_tile(self, offset_coordinates: Tuple[int, int]) -> Tile:

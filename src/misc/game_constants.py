@@ -62,7 +62,10 @@ def hint(msg: str):
 def error(msg: str):
     caller = ""
     if DETAILED_DEBUG_INFO:
-        caller = get_caller()
+        try:
+            caller = get_caller()
+        except KeyError:
+            print("unable to get caller object - possible if it is called from 'self'")
     if ERRORS_ARE_FATAL:
         print("[FATAL]{} : {}{}{}".format(caller, bcolors.FAIL, str(msg), bcolors.ENDC))
         sys.exit(-1)

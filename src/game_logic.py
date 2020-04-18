@@ -148,10 +148,11 @@ class GameLogic:
             b.set_state_active()
             tmp = self.hex_map.get_neighbours_dist(base_hex, b.sight_range)
             player.discovered_tiles.update(tmp)
-            unit = Unit(player.get_initial_unit_type())
-            army = Army(self.hex_map.get_hex_by_offset(player.init_army_loc), player.id)
-            army.add_unit(unit)
-            self.add_army(army, player)
+            if not player.is_barbaric:
+                unit = Unit(player.get_initial_unit_type())
+                army = Army(self.hex_map.get_hex_by_offset(player.init_army_loc), player.id)
+                army.add_unit(unit)
+                self.add_army(army, player)
 
         self.__reorder_spritelist(self.z_levels[2])
         self.toggle_fog_of_war_lw(self.hex_map.map)
@@ -236,7 +237,7 @@ class GameLogic:
         buildable_tiles = self.get_buildable_tiles(player)
         known_resources = self.get_known_resources(player)
         walkable_tiles = self.get_walkable_tiles(player)
-        enemy_buildings = self.get_enemy_buildings(player)  # tuple set((bld, owner_id))
+        enemy_buildings = self.get_enemy_buildings(player, scoutable_tiles)  # tuple set((bld, owner_id))
         enemy_armies = self.get_enemy_armies(player)        # tuple set((army, owner_id))
         player_population = player.get_population()
         player_population_limit = player.get_population_limit()
@@ -314,6 +315,8 @@ class GameLogic:
     def updata_map(self):
         """this function makes sure that the map remains well defined"""
         for hex in self.hex_map.map:
+            if hex.ground.ground_type == GroundType.OTHER:
+                error("Unknown ground type is a problem! {}".format(hex.offset_coordinates))
             if hex.ground.ground_type == GroundType.GRASS or\
                     hex.ground.ground_type == GroundType.STONE or\
                     hex.ground.ground_type == GroundType.MIXED:
@@ -341,6 +344,10 @@ class GameLogic:
                 continue
             res.tile.ground.walkable = False
             res.tile.ground.buildable = False
+
+        # This is a bit of brute force approach and not really necessary. However, animations made it hard
+        # to track when updates are necessary. # TODO handle this with more care
+        self.__reorder_spritelist(self.z_levels[2])
 
 
     def exec_ai_move(self, ai_move: AI_Move, player: Player, costs):
@@ -459,7 +466,7 @@ class GameLogic:
             self.del_building(b_old, player)
             base_hex = self.hex_map.get_hex_by_offset(ai_move.loc)
             b_new = Building(base_hex, b_type, player.id)
-            print(b_new.tex_code)
+            # print(b_new.tex_code)
             self.add_building(b_new, player)
 
     def check_win_condition(self, player: Player):
@@ -519,12 +526,12 @@ class GameLogic:
                 r_set.add(res)
         return r_set
 
-    def get_enemy_buildings(self, player: Player) -> set:
+    def get_enemy_buildings(self, player: Player, scoutable_tiles: Set[Hexagon]) -> set:
         e_set = set()
         for other_player in self.player_list:
             if other_player.id != player.id:
                 for o_b in other_player.buildings:
-                    for my_dis in player.discovered_tiles:
+                    for my_dis in player.discovered_tiles or my_dis in scoutable_tiles:
                         if o_b.tile.offset_coordinates == my_dis.offset_coordinates:
                             e_set.add((o_b, other_player.id))
         print(e_set)
@@ -697,17 +704,22 @@ class GameLogic:
             if p != player:
                 for hostile_army in p.armies:
                     if hostile_army.tile.offset_coordinates == new_hex.offset_coordinates:
-                        pre_att_u = army.get_units_as_tuple()
-                        pre_def_u = hostile_army.get_units_as_tuple()
-                        FightCalculator.army_vs_army(army, hostile_army)
-                        post_att_u = army.get_units_as_tuple()
-                        post_def_u = hostile_army.get_units_as_tuple()
-                        Logger.log_battle_army_vs_army_log(pre_att_u, pre_def_u, post_att_u, post_def_u)
-                        p.attacked_set.add(player.id)
-                        if hostile_army.get_population() == 0:
+                        if hostile_army.get_population() > 0:
+                            pre_att_u = army.get_units_as_tuple()
+                            pre_def_u = hostile_army.get_units_as_tuple()
+                            FightCalculator.army_vs_army(army, hostile_army)
+                            post_att_u = army.get_units_as_tuple()
+                            post_def_u = hostile_army.get_units_as_tuple()
+                            Logger.log_battle_army_vs_army_log(pre_att_u, pre_def_u, post_att_u, post_def_u)
+                            p.attacked_set.add(player.id)
+                            if hostile_army.get_population() == 0:
+                                self.del_army(hostile_army, p)
+                            if army.get_population() == 0:
+                                self.del_army(army, player)
+                            # does not execute moving the army
+                            is_moving = False
+                        else:
                             self.del_army(hostile_army, p)
-                        # does not execute moving the army
-                        is_moving = False
                 for b in p.buildings:
                     if b.tile.offset_coordinates == new_hex.offset_coordinates:
                         pre_att_u = army.get_units_as_tuple()
@@ -719,6 +731,8 @@ class GameLogic:
                         p.attacked_set.add(player.id)
                         if b.defensive_value == -1:
                             b.set_state_destruction()
+                        if army.get_population() == 0:
+                            self.del_army(army, player)
         if is_moving:
             if self.hex_map.hex_distance(new_hex, army.tile) == 1:
                 self.animator.add_move_animation(army, new_hex.offset_coordinates, float(.4))
@@ -729,8 +743,7 @@ class GameLogic:
             else:
                 print("Army cannot move that far")
 
-        if army.get_population() == 0:
-            self.del_army(army, player)
+
 
 
     def del_army(self, army: Army, player: Player):

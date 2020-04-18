@@ -15,10 +15,12 @@ DETAILED_DEBUG = False
 
 
 class AI_Mazedonian(AI):
-    STRONGER = 10
-    WEAKER = 11
-    EQUAL = 12
-    UNKNOWN = 13
+
+    class Strength(Enum):
+        STRONGER = 10
+        WEAKER = 11
+        EQUAL = 12
+        UNKNOWN = 13
 
     class Protocol(Enum):
         EARLY_GAME = 20
@@ -100,7 +102,7 @@ class AI_Mazedonian(AI):
         #self.priolist_targets: List[Tuple[int, Union[AI_Army, AI_Building], bool]] = []
         self.priolist_targets: List[AI_Mazedonian.AttackTarget] = []    # TODO rename to army movement
         # self.opponent_strength: Set[Tuple[int, int]] = set()  # stores the ID and the value
-        self.opponent_strength: Dict[int, int] = {}
+        self.opponent_strength: Dict[int, AI_Mazedonian.Strength] = {}
         self.claimed_tiles: Set[Tile] = set()
         self.is_loosing_food: bool = False
 
@@ -213,6 +215,7 @@ class AI_Mazedonian(AI):
         elif self.state == AI_Mazedonian.AI_State.AGGRESSIVE:
             if len(self.priolist_targets) > 0:
                 if self.threshold_target_value <= self.priolist_targets[0].score:
+                    hint("on warpath: {} {}".format(self.threshold_target_value, self.priolist_targets[0].score))
                     # attack
                     start_tile = ai_stat.map.army_list[0].base_tile
                     target_tile = self.priolist_targets[0].target.base_tile
@@ -220,8 +223,10 @@ class AI_Mazedonian(AI):
                     if len(path) > 1:
                         move.move_army_to = path[1].offset_coordinates
                         move.doMoveArmy = True
-                        hint('moving to: {} from {} to {}'.format(str(move.move_army_to), start_tile.offset_coordinates,
-                                                                  target_tile.offset_coordinates))
+                        if DETAILED_DEBUG:
+                            hint('moving to: {} from {} to {}'.format(str(move.move_army_to),
+                                                                      start_tile.offset_coordinates,
+                                                                      target_tile.offset_coordinates))
                 else:
                     hint("targets value to low. Will not attack")
     def set_vars(self, ai_stat: AI_GameStatus):
@@ -271,18 +276,21 @@ class AI_Mazedonian(AI):
     def estimate_opponent_strength(self, ai_stat: AI_GameStatus):
         """AI tries to estimate opponent's strength. Currently solely based on army population"""
         for other_p_id in self.hostile_player:          # only done for hostile players currently
-            strength: int = AI_Mazedonian.UNKNOWN  # TODO -> make this an enum
+            if len(ai_stat.map.army_list) == 0:
+                self.opponent_strength[other_p_id] = AI_Mazedonian.Strength.STRONGER
+                continue
+            strength: AI_Mazedonian.Strength = AI_Mazedonian.Strength.UNKNOWN
             for e_a in ai_stat.map.opp_army_list:
                 if e_a.owner == other_p_id:
                     if abs(e_a.population - ai_stat.map.army_list[0].population) < self.threshold_considered_equal:
                         # self.__update_estimated_strength(other_p_id, AI_Mazedonian.EQUAL)
-                        strength = AI_Mazedonian.EQUAL
+                        strength = AI_Mazedonian.Strength.EQUAL
                     elif e_a.population > ai_stat.map.army_list[0].population:
                         # self.__update_estimated_strength(other_p_id, AI_Mazedonian.STRONGER)
-                        strength = AI_Mazedonian.STRONGER
+                        strength = AI_Mazedonian.Strength.STRONGER
                     elif e_a.population < ai_stat.map.army_list[0].population:
                         # self.__update_estimated_strength(other_p_id, AI_Mazedonian.WEAKER)
-                        strength = AI_Mazedonian.WEAKER
+                        strength = AI_Mazedonian.Strength.WEAKER
             self.opponent_strength[other_p_id] = strength
 
     def evaluate_state(self, ai_stat: AI_GameStatus):
@@ -293,16 +301,16 @@ class AI_Mazedonian(AI):
                 agg_count = 0
                 for h_p in self.hostile_player:
                     opp_s = self.opponent_strength[h_p]
-                    if opp_s == AI_Mazedonian.EQUAL:
+                    if opp_s == AI_Mazedonian.Strength.EQUAL:
                         if self.equal_strength_defencive:
                             def_count = def_count + 1
                         else:
                             agg_count = agg_count + 1
-                    elif opp_s == AI_Mazedonian.WEAKER:
+                    elif opp_s == AI_Mazedonian.Strength.WEAKER:
                         agg_count = agg_count + 1
-                    elif opp_s == AI_Mazedonian.STRONGER:
+                    elif opp_s == AI_Mazedonian.Strength.STRONGER:
                         def_count = def_count + 1
-                    elif opp_s == AI_Mazedonian.UNKNOWN:
+                    elif opp_s == AI_Mazedonian.Strength.UNKNOWN:
                         if self.unknown_strength_defencive:
                             def_count = def_count + 1
                         else:
@@ -726,9 +734,9 @@ class AI_Mazedonian(AI):
         for target, is_army in targets:
             value = 0
             if target.owner in self.hostile_player:
-                if self.opponent_strength[target.owner] == AI_Mazedonian.STRONGER:
+                if self.opponent_strength[target.owner] == AI_Mazedonian.Strength.STRONGER:
                     value = 1 if is_army else 0
-                elif self.opponent_strength[target.owner] == AI_Mazedonian.WEAKER:
+                elif self.opponent_strength[target.owner] == AI_Mazedonian.Strength.WEAKER:
                     value = 5 if is_army else 4
                 else:  # opp has unknown strength or equal
                     value = 3 if is_army else 2
@@ -929,12 +937,25 @@ class AI_Mazedonian(AI):
 
         aw.append((aw2, 1))
 
-        # def aw3(elem: AI_Mazedonian.AttackTarget, ai_stat: AI_GameStatus) -> bool:
-        #     if type(elem.target) == AI_Army:
-        #         return True
-        #     return False
-        #
-        # aw.append((aw3, 100))
+        def aw3(elem: AI_Mazedonian.AttackTarget, ai_stat: AI_GameStatus) -> bool:
+            """Idea: reduce aggressifness in opponant is equal or stronger"""
+            if type(elem.target) == AI_Army:
+                if elem.target.owner in self.hostile_player:
+                    if self.opponent_strength[elem.target.owner] == AI_Mazedonian.Strength.STRONGER or \
+                            self.opponent_strength[elem.target.owner] == AI_Mazedonian.Strength.EQUAL:
+                        return True
+            return False
+
+        aw.append((aw3, -1))
+
+        def aw4(elem: AI_Mazedonian.AttackTarget, ai_stat: AI_GameStatus) -> bool:
+            """Idea: Reduce will to attack in early game"""
+            if type(elem.target) == AI_Army:
+                if self.protocol == AI_Mazedonian.Protocol.EARLY_GAME:
+                    return True
+            return False
+
+        aw.append((aw4, -2))
 
         hint(f"AI has found {len(aw)} movement weight functions.")
         return aw

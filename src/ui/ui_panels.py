@@ -65,7 +65,7 @@ class PanelArmy(SimplePanel):
         arcade.draw_text(self.units, self.text_box_x + 125, self.text_box_y - 75,
                          arcade.color.WHITE, font_size=15, font_name='verdana')
         arcade.draw_text(self.m_value, self.text_box_x + 125, self.text_box_y - 152,
-                         arcade.color.WHITE, font_size=14, font_name='verdana')
+                         arcade.color.GRAY, font_size=14, font_name='verdana')
 
 class PanelBuilding(SimplePanel):
     def __init__(self, center_x, center_y, building_type, building_owner, building_state):
@@ -116,11 +116,11 @@ class PanelLogBattle(SimplePanel):
             att_kia = (log.pre_att_units[0] - log.post_att_units[0],
                        log.pre_att_units[1] - log.post_att_units[1],
                        log.pre_att_units[2] - log.post_att_units[2])
-            def_kia = (log.pre_def_units[0] - log.post_def_units[0])
+            def_kia = log.pre_def_units[0] - log.post_def_units[0]
 
-            self.in_action = f"{log.pre_att_units[1]} {ls} {log.pre_att_units[0]} {ls}{log.pre_att_units[2]}                     {log.pre_def_units[0]}"
-            self.kia = f"{att_kia[1]} {ls} {att_kia[0]} {ls}{att_kia[2]}                     {def_kia[0]}"
-            self.remaining = f"{log.post_att_units[1]} {ls} {log.post_att_units[0]} {ls}{log.post_att_units[2]}                     {log.post_def_units[0]}"
+            self.in_action = f"{log.pre_att_units[1]} {ls} {log.pre_att_units[0]} {ls}{log.pre_att_units[2]}   {ls}{ls}                 {log.pre_def_units[0]}"
+            self.kia = f"{att_kia[1]} {ls} {att_kia[0]} {ls}{att_kia[2]}{ls}{ls}                    {def_kia}"
+            self.remaining = f"{log.post_att_units[1]} {ls} {log.post_att_units[0]} {ls}{log.post_att_units[2]} {ls}{ls}                   {log.post_def_units[0]}"
 
     def draw(self):
         super().draw()
