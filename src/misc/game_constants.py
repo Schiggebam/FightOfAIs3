@@ -129,6 +129,18 @@ class PlayerType(Enum):
     AI = 0
     BARBARIC = 1
     VILLAGER = 2
+    HUMAN = 3
+
+    @staticmethod
+    def get_type_from_strcode(str_code: str) -> PlayerType:
+        if str_code == "barbaric":
+            return PlayerType.BARBARIC
+        elif str_code == "villager":
+            return PlayerType.VILLAGER
+        elif str_code == "human":
+            return PlayerType.HUMAN
+        else:
+            return PlayerType.AI
 
 # logs
 class LogType(Enum):

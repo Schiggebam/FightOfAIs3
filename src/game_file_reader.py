@@ -4,7 +4,7 @@ from src.misc.game_constants import UnitType, BuildingType, ResourceType
 import untangle
 
 
-class GameFileReader():
+class GameFileReader:
     def __init__(self, xml_game_data: str):
         self.xml_parser = untangle.parse(xml_game_data)
 

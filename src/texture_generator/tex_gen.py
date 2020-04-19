@@ -80,11 +80,11 @@ def generate_texture_info():
 
     os.chdir(cur_dir)
 
-# generate_merged_textures("lg_var0.png", "dg_var0.png", "dg_lg")
-# generate_merged_textures("dg_var0.png", "lg_var0.png", "lg_dg")
-# generate_merged_textures("stone_var0.bmp", "lg_var0.png", "st_lg")
-# generate_merged_textures("lg_var0.png", "stone_var0.bmp", "lg_st")
-# generate_merged_textures("stone_var0.bmp", "dg_var0.png", "st_dg")
-# generate_merged_textures("dg_var0.png", "stone_var0.bmp", "dg_st")
+generate_merged_textures("lg_var0.png", "dg_var0.png", "dg_lg")
+generate_merged_textures("dg_var0.png", "lg_var0.png", "lg_dg")
+generate_merged_textures("stone_var0.bmp", "lg_var0.png", "st_lg")
+generate_merged_textures("lg_var0.png", "stone_var0.bmp", "lg_st")
+generate_merged_textures("stone_var0.bmp", "dg_var0.png", "st_dg")
+generate_merged_textures("dg_var0.png", "stone_var0.bmp", "dg_st")
 
 generate_texture_info()
