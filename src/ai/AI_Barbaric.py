@@ -264,8 +264,8 @@ class AI_Barbaric(AI):
             #        self.hostile_player.remove(other_p_id)
 
     def has_been_attacked(self, ai_stat: AI_GameStatus):
-        for pid, loc in ai_stat.opponents:
-            self.hostile_player.add(pid)
+        for opp in ai_stat.opponents:
+            self.hostile_player.add(opp.id)
             hint("Barbaric AI: aggression found!")
             return True
         if self.previous_amount_of_buildings > len(ai_stat.map.building_list):
