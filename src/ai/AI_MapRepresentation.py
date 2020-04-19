@@ -78,7 +78,7 @@ class AI_Opponent:
     name: str
     type: PlayerType
     has_attacked: bool = False
-    attack_loc: List[Tuple[int, Tuple[int, int]]] = -1, (-1, -1)        # aggressor's id and location of attack
+    # attack_loc: List[Tuple[int, Tuple[int, int]]]    # aggressor's id and location of attack
 
 
 class AI_Element:
