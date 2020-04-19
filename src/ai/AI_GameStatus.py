@@ -1,6 +1,6 @@
-from typing import Set, Tuple, Optional, Union
+from typing import Set, Tuple, Optional, Union, List
 
-from src.ai.AI_MapRepresentation import Map
+from src.ai.AI_MapRepresentation import Map, AI_Player, AI_Opponent
 from src.misc.game_constants import error, UnitType, BuildingType
 
 
@@ -30,14 +30,6 @@ class AI_Move:
 class AI_GameStatus:
     def __init__(self):
         self.turn_nr: int = -1
-        self.player_id: int = -1
-        self.player_food: int = 0
-        self.player_resources = 0
-        self.player_culture = 0
-        # self.tiles_buildable: List[AI_Tile] = []
-        # self.tiles_scoutable: List[AI_Tile] = []
-        # self.tiles_discovered: List[AI_Tile] = []
-        # self.tiles_walkable: List[AI_Tile] = []
         self.costScout: int = -1
         self.costBuildS1: int = -1
         self.costBuildS2: int = -1
@@ -49,17 +41,10 @@ class AI_GameStatus:
         self.costUnitBS: Tuple[int, int, int] = (-1, -1, -1)  # cost in resources, culture and population
         self.costUnitKn: Tuple[int, int, int] = (-1, -1, -1)  # TODO: transform this to a dataclass
         self.costUnitMe: Tuple[int, int, int] = (-1, -1, -1)
-        # self.resources: List[AI_Resource] = []
-        # self.own_buildings: List[AI_Building] = []
-        # self.other_players: List[int] = []
-        # self.enemy_buildings: List[AI_Building] = []
-        # self.enemy_armies: List[AI_Army] = []
-        self.num_of_enemies: int = -1
-        # self.armies: List[AI_Army] = []
         self.aggressions: Set[int] = set()
-        self.population = 0
-        self.population_limit = 0
         self.map: Optional[Map] = None
+        self.me: Optional[AI_Player] = None
+        self.opponents: Optional[List[AI_Opponent]] = None
 
     def clear(self):
         pass
@@ -80,43 +65,13 @@ class AI_GameInterface:
         elif ai_str == "barbaric":
             self.dict_of_ais[id] = AI_Barbaric(id, other_players)
 
-    # def copy_tile_to_ai_tile(self, t: Hexagon, ai_t: AI_Tile):
-    #     ai_t.offset_coordinates = t.offset_coordinates
-    #     ai_t.str_code = t.ground.tex_code
-    #
-    # def copy_res_to_ai_res(self, r: Resource, ai_r: AI_Resource):
-    #     ai_r.offset_coordinates = r.tile.offset_coordinates
-    #     ai_r.resource_type = r.resource_type
-    #     ai_r.amount = r.remaining_amount
-    #
-    # def copy_building_to_ai_building(self, b: Building, ai_b: AI_Building):
-    #     ai_b.offset_coordinates = b.tile.offset_coordinates
-    #     ai_b.type = b.building_type
-    #     for a in b.associated_tiles:
-    #         t = AI_Tile()
-    #         self.copy_tile_to_ai_tile(a, t)
-    #         ai_b.associated_tiles.append(t)
-    #
-    # def copy_army_to_ai_army(self, a: Army, ai_a: AI_Army):
-    #     ai_a.offset_coordinates = a.tile.offset_coordinates
-    #     ai_a.population = a.get_population()
-    #     ai_a.knights = a.get_population_by_unit(UnitType.KNIGHT)
-    #     ai_a.mercenaries = a.get_population_by_unit(UnitType.MERCENARY)
-    #     ai_a.barbaric_soldiers = a.get_population_by_unit(UnitType.BABARIC_SOLDIER)
 
     def create_ai_status(self, ai_stat: AI_GameStatus, turn_nr,
-                         p_id, p_food, p_res, p_cult,
-                         costs, num_of_enemies, aggressions: Set[int],
-                         pop, pop_limit, ai_map: Map):
+                         costs, ai_map: Map, me: AI_Player, opponents: List[AI_Opponent]):
         ai_stat.turn_nr = turn_nr
-        ai_stat.player_id = p_id
-        ai_stat.player_food = p_food
-        ai_stat.player_resources = p_res
-        ai_stat.player_culture = p_cult
-        ai_stat.num_of_enemies = num_of_enemies
-        ai_stat.population = pop
-        ai_stat.population_limit = pop_limit
         ai_stat.map = ai_map
+        ai_stat.me = me
+        ai_stat.opponents = opponents
 
         ai_stat.costScout = costs['scout']
         ai_stat.costBuildS1 = costs['s1']
@@ -129,9 +84,6 @@ class AI_GameInterface:
         ai_stat.costUnitBS = costs['bs']
         ai_stat.costUnitKn = costs['knight']
         ai_stat.costUnitMe = costs['mercenary']
-
-        for a in aggressions:
-            ai_stat.aggressions.add(a)
 
     def do_a_move(self, ai_stat: AI_GameStatus, move: AI_Move, player_id):
         self.dict_of_ais[player_id].do_move(ai_stat, move)

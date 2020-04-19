@@ -53,7 +53,7 @@ def setup_weights(self) -> List[Tuple[Callable, float]]:
         """Idea, once we have enough resources (and is in passive/def state),
          make scouting slightly more important"""
         if type(elem) is AI_Mazedonian.ScoutingOption:
-            if ai_stat.player_resources > 10:
+            if ai_stat.me.resources > 10:
                 if self.state == AI_Mazedonian.AI_State.PASSIVE or self.state == AI_Mazedonian.AI_State.DEFENSIVE:
                     return True
         return False
@@ -63,7 +63,7 @@ def setup_weights(self) -> List[Tuple[Callable, float]]:
     def w5(elem: AI_Mazedonian.Option, ai_stat: AI_GameStatus) -> bool:
         """Idea: reduce significance of scouting in a low eco game"""
         if type(elem) is AI_Mazedonian.ScoutingOption:
-            if ai_stat.player_resources < 10:
+            if ai_stat.me.resources < 10:
                 return True
         return False
 
@@ -73,7 +73,7 @@ def setup_weights(self) -> List[Tuple[Callable, float]]:
         """Idea: If AI has more than 70 food, cut down on additional farms"""
         if type(elem) is AI_Mazedonian.BuildOption:
             if elem.type == BuildingType.FARM:
-                if ai_stat.player_food > 70:
+                if ai_stat.me.food > 70:
                     return True
         return False
 
@@ -82,7 +82,7 @@ def setup_weights(self) -> List[Tuple[Callable, float]]:
     def w7(elem: AI_Mazedonian.Option, ai_stat: AI_GameStatus) -> bool:
         """Idea: slightly decrease scouting and waiting if a lot of resources are available"""
         if type(elem) is AI_Mazedonian.ScoutingOption or type(elem) is AI_Mazedonian.WaitOption:
-            if ai_stat.player_resources > 70:
+            if ai_stat.me.resources > 70:
                 return True
         return False
 
@@ -109,7 +109,7 @@ def setup_weights(self) -> List[Tuple[Callable, float]]:
     def w10(elem: AI_Mazedonian.Option, ai_stat: AI_GameStatus) -> bool:
         """Idea: if AI lacks population by twice the desired value -> double down"""
         if type(elem) is AI_Mazedonian.RecruitmentOption:
-            if self.build_order.population / 2 > ai_stat.population:
+            if self.build_order.population / 2 > ai_stat.me.population:
                 return True
         return False
 
@@ -140,7 +140,7 @@ def setup_weights(self) -> List[Tuple[Callable, float]]:
 
     def w13(elem: AI_Mazedonian.Option, ai_stat: AI_GameStatus) -> bool:
         """Idea: if pop >= pop_limit, make building barracks slightly more popular"""
-        if ai_stat.population_limit <= ai_stat.population:
+        if ai_stat.me.population_limit <= ai_stat.me.population:
             if type(elem) is AI_Mazedonian.BuildOption:
                 if elem.type == BuildingType.BARRACKS:
                     if not AI_Toolkit.has_building_under_construction(BuildingType.BARRACKS, ai_stat):

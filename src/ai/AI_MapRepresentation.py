@@ -1,10 +1,12 @@
 import traceback
 from typing import List, Tuple, Optional, Dict
 
+from dataclasses import dataclass
+
 from src.game_accessoires import Resource, Army
 from src.hex_map import HexMap
 from src.misc.building import Building
-from src.misc.game_constants import GroundType, error, UnitType, ResourceType, BuildingType, BuildingState
+from src.misc.game_constants import GroundType, error, UnitType, ResourceType, BuildingType, BuildingState, PlayerType
 
 
 class Tile:
@@ -57,6 +59,32 @@ class Tile:
 
     def has_n_nw(self):
         return self.tile_nw is not None
+
+@dataclass
+class AI_Player:
+    id: int
+    name: str
+    type: PlayerType
+    resources: int
+    culture: int
+    food: int
+    population: int
+    population_limit: int
+
+
+@dataclass
+class AI_Opponent:
+    id: int
+    name: str
+    type: PlayerType
+    has_attacked: bool = False
+    attack_loc: List[Tuple[int, Tuple[int, int]]] = -1, (-1, -1)        # aggressor's id and location of attack
+
+@dataclass
+class UnitCost:
+    resources: int
+    culture: int
+    population: int
 
 class AI_Element:
     def __init__(self, t: Tile):

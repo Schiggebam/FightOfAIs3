@@ -124,6 +124,11 @@ class Priority(Enum):
             return Priority.P_LOW
         return Priority.P_NO
 
+class PlayerType(Enum):
+    AI = 0
+    BARBARIC = 1
+    VILLAGER = 2
+
 # logs
 class LogType(Enum):
     BATTLE_ARMY_VS_ARMY = 900

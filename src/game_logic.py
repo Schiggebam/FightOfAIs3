@@ -5,7 +5,7 @@ import timeit
 from src.ai.AI_GameStatus import AI_GameStatus, AI_Move, AI_GameInterface
 from src.misc.animation import Animator
 from src.misc.game_constants import ResourceType, error, GroundType, debug, ENABLE_KEYFRAME_ANIMATIONS, start_progress, \
-    end_progress, progress
+    end_progress, progress, PlayerType
 from src.game_accessoires import Scenario, Ground, Resource, Drawable, Flag, Unit
 from src.game_file_reader import GameFileReader
 from src.hex_map import HexMap, MapStyle, Hexagon
@@ -52,6 +52,12 @@ class GameLogic:
                        p_info[1]['ai'])
             p.is_barbaric = p_info[1]['ai'] == "barbaric"
             p.is_villager = p_info[1]['ai'] == "villager"
+            if not (p.is_barbaric or p.is_villager):
+                p.player_type = PlayerType.AI
+            elif p.is_barbaric:
+                p.player_type = PlayerType.BARBARIC
+            elif p.is_villager:
+                p.player_type = PlayerType.VILLAGER
             p.init_army_loc = (p.spaw_loc[0] + p_info[1]['army_rel_to_spawn_x'],
                                p.spaw_loc[1] + p_info[1]['army_rel_to_spawn_y'])
             self.player_list.append(p)
@@ -274,6 +280,18 @@ class GameLogic:
         for a, id in enemy_armies:
             ai_map.add_opp_army(a.tile.offset_coordinates, a, id)
         # ai_map.print_map()
+        from src.ai.AI_MapRepresentation import AI_Player, AI_Opponent
+        me = AI_Player(player.id, player.name, player.player_type, player.amount_of_resources,
+                       player.culture, player.food, player.get_population(), player.get_population_limit())
+        opponents = []
+        for p in self.player_list:
+            if p.id != player.id:
+                tmp = AI_Opponent(p.id, p.name, p.player_type)
+                opponents.append(tmp)
+                for pid, loc in player.attacked_set:
+                    if pid == p.id:
+                        tmp.has_attacked = True
+                        tmp.attack_loc.append((pid, loc))
 
         costs = {'scout': int(1)}
         for b_type in BuildingType:
@@ -291,10 +309,8 @@ class GameLogic:
         ai_status = AI_GameStatus()
         ai_move = AI_Move()
 
-        self.ai_interface.create_ai_status(ai_status, self.turn_nr, player.id, player.food,
-                                           player.amount_of_resources, player.culture,
-                                           costs, len(self.player_list) - 1, player.attacked_set,
-                                           player_population, player_population_limit, ai_map)
+        self.ai_interface.create_ai_status(ai_status, self.turn_nr, costs,
+                                           ai_map, me, opponents)
         player.attacked_set.clear()
         timestamp_start = timeit.default_timer()
         self.ai_interface.do_a_move(ai_status, ai_move, player.id)
@@ -690,7 +706,7 @@ class GameLogic:
                             post_att_u = army.get_units_as_tuple()
                             post_def_u = hostile_army.get_units_as_tuple()
                             Logger.log_battle_army_vs_army_log(pre_att_u, pre_def_u, post_att_u, post_def_u)
-                            p.attacked_set.add(player.id)
+                            p.attacked_set.add((player.id, hostile_army.tile.offset_coordinates))
                             if hostile_army.get_population() == 0:
                                 self.del_army(hostile_army, p)
                             if army.get_population() == 0:
@@ -708,7 +724,7 @@ class GameLogic:
                         post_att_u = army.get_units_as_tuple()
                         post_b = b.defensive_value
                         Logger.log_battle_army_vs_building(pre_att_u, post_att_u, pre_b, post_b)
-                        p.attacked_set.add(player.id)
+                        p.attacked_set.add((player.id, b.tile.offset_coordinates))
                         if b.defensive_value == -1:
                             b.set_state_destruction()
                         if army.get_population() == 0:

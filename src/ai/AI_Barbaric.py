@@ -22,7 +22,7 @@ class AI_Barbaric(AI):
         self.own_id = own_id
         self.state = AI_Barbaric.AI_State.PASSIVE
         self.other_players = other_players
-        self.hostile_player: Set[int] = set()
+        self.hostile_player: Set[int] = set()       # TODO clear that list?
         self.previous_army_strength = -1
         self.previous_amount_of_buildings = -1
         self.issue_attack = False                   # make sure this is set to true if the AI commands an attack
@@ -111,8 +111,8 @@ class AI_Barbaric(AI):
             # else:
             #     hint("AI Barbaric: Decision: Store more resources (not enough resources to recruit new army)")
             #     wait = True
-        elif ai_stat.map.army_list[0].population < army_building_ratio * ai_stat.population_limit:
-            if ai_stat.population < ai_stat.population_limit:
+        elif ai_stat.map.army_list[0].population < army_building_ratio * ai_stat.me.population_limit:
+            if ai_stat.me.population < ai_stat.me.population_limit:
                 if score_a > 0:
                     hint("AI Barbaric: Decision: Upgrade the army")
                     move.doUpArmy = True
@@ -144,7 +144,7 @@ class AI_Barbaric(AI):
 
     def evaluate_move_building(self, ai_stat: AI_GameStatus) -> (int, (int, int)):
         if len(ai_stat.map.building_list) < 3:
-            if ai_stat.player_resources >= ai_stat.costBuildC1 and len(ai_stat.map.buildable_tiles) > 0:
+            if ai_stat.me.resources >= ai_stat.costBuildC1 and len(ai_stat.map.buildable_tiles) > 0:
                 # find a random building location
                 idx = random.randint(0, len(ai_stat.map.buildable_tiles) - 1)
                 return 1, ai_stat.map.buildable_tiles[idx].offset_coordinates
@@ -154,10 +154,10 @@ class AI_Barbaric(AI):
         list_of_upgradable_buildings = []
         for b in ai_stat.map.building_list:
             if b.type == BuildingType.CAMP_1:
-                if ai_stat.player_resources >= ai_stat.costBuildC2:
+                if ai_stat.me.resources >= ai_stat.costBuildC2:
                     list_of_upgradable_buildings.append(b)
             if b.type == BuildingType.CAMP_2:
-                if ai_stat.player_resources >= ai_stat.costBuildC3:
+                if ai_stat.me.resources >= ai_stat.costBuildC3:
                     list_of_upgradable_buildings.append(b)
         if len(list_of_upgradable_buildings) == 0:
             return -1, (0, 0)           # no building available that the AI can upgrade
@@ -165,7 +165,7 @@ class AI_Barbaric(AI):
         return 1, list_of_upgradable_buildings[idx].offset_coordinates
 
     def evaluate_move_up_army(self, ai_stat: AI_GameStatus) -> int:
-        if ai_stat.player_resources >= ai_stat.costUnitBS[0]:
+        if ai_stat.me.resources >= ai_stat.costUnitBS[0]:
             return 1
         return -1
 
@@ -259,9 +259,8 @@ class AI_Barbaric(AI):
             #        self.hostile_player.remove(other_p_id)
 
     def has_been_attacked(self, ai_stat: AI_GameStatus):
-        if len(ai_stat.aggressions) > 0:
-            for a in ai_stat.aggressions:
-                self.hostile_player.add(a)
+        for pid, loc in ai_stat.opponents:
+            self.hostile_player.add(pid)
             hint("Barbaric AI: aggression found!")
             return True
         if self.previous_amount_of_buildings > len(ai_stat.map.building_list):
