@@ -3,6 +3,8 @@ import os
 from os import sys, path
 import timeit
 
+from src.ai import human
+
 sys.path.append(path.dirname(path.dirname(path.abspath(__file__))))
 # print(os.getcwd())
 
@@ -187,8 +189,7 @@ class Game(arcade.Window):
             self.z_level_renderer.left_key = True
         if key == arcade.key.RIGHT:
             self.z_level_renderer.right_key = True
-        from src.ai import human
-        human.set_flag()
+
 
     def on_key_release(self, key: int, modifiers: int):
         if key == arcade.key.UP:
@@ -200,7 +201,8 @@ class Game(arcade.Window):
         if key == arcade.key.RIGHT:
             self.z_level_renderer.right_key = False
 
-
+    # def on_mouse_motion(self, x: float, y: float, dx: float, dy: float):
+    #     human.set_flag()
 
 def main():
     window = Game(SCREEN_WIDTH, SCREEN_HEIGHT, SCREEN_TITLE)
