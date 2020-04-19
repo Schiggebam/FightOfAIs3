@@ -4,6 +4,7 @@ from os import sys, path
 import timeit
 
 from src.ai import human
+#from src.ai.human import HumanInteraction
 
 sys.path.append(path.dirname(path.dirname(path.abspath(__file__))))
 # print(os.getcwd())
@@ -95,6 +96,7 @@ class Game(arcade.Window):
 
         self.z_level_renderer: ZlvlRenderer = ZlvlRenderer(NUM_Z_LEVELS)
         self.game_logic: GameLogic = GameLogic(GAME_XML_FILE, self.z_level_renderer.z_levels)
+#        self.hi = HumanInteraction(self.z_level_renderer.z_levels[2])
         self.console: Console = Console()
         self.ui = UI(self.game_logic, SCREEN_WIDTH, SCREEN_HEIGHT)
         self.z_level_renderer.ui = self.ui
@@ -202,7 +204,7 @@ class Game(arcade.Window):
             self.z_level_renderer.right_key = False
 
     # def on_mouse_motion(self, x: float, y: float, dx: float, dy: float):
-    #     human.set_flag()
+    #     self.hi.show_selection_tool(x, y)
 
 def main():
     window = Game(SCREEN_WIDTH, SCREEN_HEIGHT, SCREEN_TITLE)

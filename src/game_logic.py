@@ -647,7 +647,7 @@ class GameLogic:
     #     self.z_levels[2].append(flag.sprite)
 
     def del_flag(self, flag: Flag):
-        self.z_levels[2].remove(flag.sprite)
+        self.z_levels[3].remove(flag)
 
     def add_building(self, building: Building, player: Player):
         # hint("adding a building")
