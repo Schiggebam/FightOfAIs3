@@ -2,9 +2,10 @@ from __future__ import annotations
 from typing import List, Tuple, Dict, Any
 
 import arcade
+from arcade import AnimationKeyframe
 
 from src.hex_map import Hexagon
-from src.misc.game_constants import ResourceType, error, GroundType, PlayerColour, UnitType
+from src.misc.game_constants import ResourceType, error, GroundType, PlayerColour, UnitType, UnitCost
 
 
 class Drawable:
@@ -94,9 +95,11 @@ class Unit:
         self.cost_culture = Unit.unit_info[u_type]['cost_culture']
 
     @staticmethod
-    def get_unit_cost(ut: UnitType) -> (int, int, int):
-        """returns a tuple of the cost in resources, culture and population"""
-        return Unit.unit_info[ut]['cost_resource'], Unit.unit_info[ut]['cost_culture'], Unit.unit_info[ut]['population']
+    def get_unit_cost(ut: UnitType) -> UnitCost:
+        """returns a UnitCost of the cost in resources, culture and population"""
+        return UnitCost(Unit.unit_info[ut]['cost_resource'],
+                        Unit.unit_info[ut]['cost_culture'],
+                        Unit.unit_info[ut]['population'])
 
     @staticmethod
     def get_unit_stats(ut: UnitType) -> (int, int, int):
@@ -175,14 +178,18 @@ class Army(Drawable):
                 self.get_amount_by_unit(UnitType.BABARIC_SOLDIER))
 
 
-class Flag(Drawable):
-    def __init__(self, position: (int, int), colour: PlayerColour):
-        super().__init__()
-        self.position: (int, int) = position
-        self.colour: PlayerColour = colour
+class Flag(arcade.AnimatedTimeBasedSprite):
+    def __init__(self, pos: Tuple[int, int], animated_tex: List[arcade.Texture], scale=1):
+        super().__init__(scale=scale, center_x=pos[0], center_y=pos[1])
+        i = 0
+        for tex in animated_tex:
+            self.append_texture(tex)
+            self.frames.append(AnimationKeyframe(i, 80, tex))
+            i += 1
+        self.set_texture(0)
 
 
-class Scenario():
+class Scenario:
     def __init__(self):
         self.resource_list: [Resource] = []
         self.aux_sprites: [(Hexagon, Drawable)] = []

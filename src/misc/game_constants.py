@@ -6,6 +6,7 @@ import sys
 ######################
 ### Game Constants ###
 ######################
+from dataclasses import dataclass
 from enum import Enum
 
 import arcade
@@ -285,6 +286,31 @@ class PlayerColour(Enum):
         elif colour == PlayerColour.GREEN:
             return 'green'
         return 'no_colour'
+
+
+class MoveType(Enum):
+    """ does not required any additional fields to be set"""
+    DO_NOTHING = 230
+    """requires the 'loc' field to be set, indicating the location of the hexagon to be scouted"""
+    DO_SCOUT = 231
+    """requires the 'loc' field to be set, indicating the location of the building to be upgraded"""
+    DO_UPGRADE_BUILDING = 232
+    """requires the 'loc' field to be set, indicating the location of the building site
+    also, requires the 'type' field to specify the Type of the building"""
+    DO_BUILD = 233
+    """requires the 'type' field to be set, indicating the UnitType"""
+    DO_RECRUIT_UNIT = 234
+    """requires the 'loc' field to be set, indicating the hexagon were the new army should appear"""
+    DO_RAISE_ARMY = 235
+
+###################
+### Dataclasses ###
+###################
+@dataclass
+class UnitCost:
+    resources: int
+    culture: int
+    population: int
 
 
 ###############

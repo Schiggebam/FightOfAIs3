@@ -1,29 +1,19 @@
 from typing import Set, Tuple, Optional, Union, List
 
 from src.ai.AI_MapRepresentation import Map, AI_Player, AI_Opponent
-from src.misc.game_constants import error, UnitType, BuildingType
+from src.misc.game_constants import error, UnitType, BuildingType, MoveType, UnitCost
 
 
 class AI_Move:
     def __init__(self):
-        self.doNothing = False
-        self.doBuild = False
-        self.doScout = False
-        self.doUpgrade = False
-        self.doUpArmy = False  # TODO get rid of this field -> doRecruitUnit
-        # TODO (also: should be same field as recruitArmy)
+        self.move_type: Optional[MoveType] = None
         self.doMoveArmy = False
-        self.doRecruitArmy = False
-        self.doRecruitUnit = False
         self.loc = (0, 0)
         self.type: Union[BuildingType, UnitType, None] = None
         self.info = []  # currently only for the associated tiles
         self.move_army_to = (-1, -1)
         self.str_rep_of_action = ""  # just for printing
         self.info_at_tile = []  # a list of tuples ((x, y), "str")
-
-    def check_validity(self):
-        return self.doBuild + self.doNothing + self.doScout == 1
 
 
 
@@ -38,9 +28,9 @@ class AI_GameStatus:
         self.costBuildC1: int = -1
         self.costBuildC2: int = -1
         self.costBuildC3: int = -1
-        self.costUnitBS: Tuple[int, int, int] = (-1, -1, -1)  # cost in resources, culture and population
-        self.costUnitKn: Tuple[int, int, int] = (-1, -1, -1)  # TODO: transform this to a dataclass
-        self.costUnitMe: Tuple[int, int, int] = (-1, -1, -1)
+        self.costUnitBS: Optional[UnitCost] = None  # cost in resources, culture and population
+        self.costUnitKn: Optional[UnitCost] = None
+        self.costUnitMe: Optional[UnitCost] = None
         self.aggressions: Set[int] = set()
         self.map: Optional[Map] = None
         self.me: Optional[AI_Player] = None

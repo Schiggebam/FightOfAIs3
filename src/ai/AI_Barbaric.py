@@ -5,7 +5,7 @@ from typing import Set
 from src.ai import AI_Toolkit
 from src.ai.AI_GameStatus import AI_Move, AI_GameStatus
 from src.ai.ai_blueprint import AI
-from src.misc.game_constants import DiploEventType, hint, BuildingType, error
+from src.misc.game_constants import DiploEventType, hint, BuildingType, error, MoveType
 
 
 class AI_Barbaric(AI):
@@ -45,15 +45,15 @@ class AI_Barbaric(AI):
 
         self.weight_scores(ai_stat, move, score_b, score_u, score_a)
 
-        if move.doUpArmy:
+        if move.move_type == MoveType.DO_RECRUIT_UNIT:
             move.str_rep_of_action = "Upgrading the army"
-        elif move.doBuild:
+        elif move.move_type == MoveType.DO_BUILD:
             move.loc = loc_b
             move.str_rep_of_action = "Building @ " + str(move.loc)
-        elif move.doUpgrade:
+        elif move.move_type == MoveType.DO_UPGRADE_BUILDING:
             move.loc = loc_u
             move.str_rep_of_action = "Upgrading @ " + str(move.loc)
-        elif move.doRecruitArmy:
+        elif move.move_type == MoveType.DO_RAISE_ARMY:
             pos = self.get_army_spawn_loc(ai_stat)
             move.loc = pos
             move.str_rep_of_action = "Recruiting @ " + str(move.loc)
@@ -105,7 +105,8 @@ class AI_Barbaric(AI):
             # if score_a > 0:
             if self.get_army_spawn_loc(ai_stat) != (-1, -1):
                 hint("AI Barbaric: Decision: Recruit new army")
-                move.doRecruitArmy = True
+                # move.doRecruitArmy = True
+                move.move_type = MoveType.DO_RAISE_ARMY
             else:
                 hint("No suitable tile to spawn the army")
             # else:
@@ -115,28 +116,32 @@ class AI_Barbaric(AI):
             if ai_stat.me.population < ai_stat.me.population_limit:
                 if score_a > 0:
                     hint("AI Barbaric: Decision: Upgrade the army")
-                    move.doUpArmy = True
+                    # move.doUpArmy = True
+                    move.move_type = MoveType.DO_RECRUIT_UNIT
                 else:
                     hint("AI Barbaric: Decision: Store more resources (not enough resources to upgrade the army)")
                     wait = True
             else:
                 hint("Population ceiling reached")
-                move.doNothing = True   # but wait is false because we check the building options in this case
+                move.move_type = MoveType.DO_NOTHING
 
         if not wait:              # so far no valid option found
-            if not (move.doRecruitArmy or move.doUpArmy or move.doNothing):
+            if not (move.move_type is MoveType.DO_RECRUIT_UNIT or
+                    move.move_type is MoveType.DO_RAISE_ARMY or
+                    move.move_type is MoveType.DO_NOTHING):
                 if score_u > 0:
                     hint("AI Barbaric: Decision: Upgrade")
-                    move.doUpgrade = True
+                    move.move_type = MoveType.DO_UPGRADE_BUILDING
                 elif score_b > 0:
                     hint("AI Barbaric: Decision: Build")
-                    move.doBuild = True
+                    move.move_type = MoveType.DO_BUILD
                 else:
                     hint("AI Barbaric: Decision: Store more resources")
                     wait = True
         # ...
         if wait:
-            move.doNothing = True       # Ai decides to wait
+            move.move_type = MoveType.DO_NOTHING
+            # Ai decides to wait
 
 
     def calculate_heatmaps(self):
@@ -165,7 +170,7 @@ class AI_Barbaric(AI):
         return 1, list_of_upgradable_buildings[idx].offset_coordinates
 
     def evaluate_move_up_army(self, ai_stat: AI_GameStatus) -> int:
-        if ai_stat.me.resources >= ai_stat.costUnitBS[0]:
+        if ai_stat.me.resources >= ai_stat.costUnitBS.resources:
             return 1
         return -1
 

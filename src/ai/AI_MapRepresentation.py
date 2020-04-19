@@ -80,11 +80,6 @@ class AI_Opponent:
     has_attacked: bool = False
     attack_loc: List[Tuple[int, Tuple[int, int]]] = -1, (-1, -1)        # aggressor's id and location of attack
 
-@dataclass
-class UnitCost:
-    resources: int
-    culture: int
-    population: int
 
 class AI_Element:
     def __init__(self, t: Tile):

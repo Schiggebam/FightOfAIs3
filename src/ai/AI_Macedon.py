@@ -10,7 +10,7 @@ from src.ai.AI_GameStatus import AI_GameStatus, AI_Move
 from src.ai.AI_MapRepresentation import Tile, AI_Army, AI_Building
 from src.ai.ai_blueprint import AI
 
-from src.misc.game_constants import DiploEventType, hint, BuildingType, error, debug, UnitType, Priority
+from src.misc.game_constants import DiploEventType, hint, BuildingType, error, debug, UnitType, Priority, MoveType
 
 DETAILED_DEBUG = False
 
@@ -394,25 +394,30 @@ class AI_Mazedonian(AI):
         # translate this into move
         best_option: AI_Mazedonian.Option = options[0]
         if type(best_option) == AI_Mazedonian.WaitOption:
-            move.doNothing = True
+            move.move_type = MoveType.DO_NOTHING
+            # move.doNothing = True
             move.str_rep_of_action = "waiting"
         elif type(best_option) == AI_Mazedonian.BuildOption:
-            move.doBuild = True
+            move.move_type = MoveType.DO_BUILD
+            # move.doBuild = True
             move.loc = best_option.site
             move.type = best_option.type
             for at in best_option.associated_tiles:
                 move.info.append(at)
             move.str_rep_of_action = f"building a {best_option.type} at " + str(move.loc)
         elif type(best_option) == AI_Mazedonian.RecruitmentOption:
-            move.doRecruitUnit = True
+            move.move_type = MoveType.DO_RECRUIT_UNIT
+            # move.doRecruitUnit = True
             move.type = best_option.type
             move.str_rep_of_action = f"recruiting a {best_option.type}"
         elif type(best_option) == AI_Mazedonian.ScoutingOption:
-            move.doScout = True
+            move.move_type = MoveType.DO_SCOUT
+            # move.doScout = True
             move.loc = best_option.site
             move.str_rep_of_action = "scouting at" + str(move.loc)
         elif type(best_option) == AI_Mazedonian.RecruitmentOption:
-            move.doRecruitArmy = True
+            move.move_type = MoveType.DO_RAISE_ARMY
+            # move.doRecruitArmy = True
             move.str_rep_of_action = "raising new army at"
         else:
             error("unexpected type")
@@ -587,29 +592,29 @@ class AI_Mazedonian(AI):
         else:
             prio_knight = Priority.increase(prio_knight)
         # mercenary
-        if ai_stat.me.population + ai_stat.costUnitMe[2] <= ai_stat.me.population_limit:
-            if ai_stat.me.resources >= ai_stat.costUnitMe[0]:
-                if ai_stat.me.culture >= ai_stat.costUnitMe[1]:
+        if ai_stat.me.population + ai_stat.costUnitMe.population <= ai_stat.me.population_limit:
+            if ai_stat.me.resources >= ai_stat.costUnitMe.resources:
+                if ai_stat.me.culture >= ai_stat.costUnitMe.culture:
                     options.append(AI_Mazedonian.RecruitmentOption(UnitType.MERCENARY, prio_merc))
                 else:
                     hint("not enough culture to recruit a mercenary. actual: {} required: {}".format(
-                        ai_stat.me.culture, ai_stat.costUnitMe[2]))
+                        ai_stat.me.culture, ai_stat.costUnitMe.culture))
             else:
                 hint("not enough resources to recruit a mercenary. actual: {} required: {}".format(
-                    ai_stat.me.resources, ai_stat.costUnitMe[0]))
+                    ai_stat.me.resources, ai_stat.costUnitMe.resources))
         else:
             hint("not enough free population to recruit a mercenary")
         # knight
-        if ai_stat.me.population + ai_stat.costUnitKn[2] <= ai_stat.me.population_limit:
-            if ai_stat.me.resources >= ai_stat.costUnitKn[0]:
-                if ai_stat.me.culture >= ai_stat.costUnitKn[1]:
+        if ai_stat.me.population + ai_stat.costUnitKn.population <= ai_stat.me.population_limit:
+            if ai_stat.me.resources >= ai_stat.costUnitKn.resources:
+                if ai_stat.me.culture >= ai_stat.costUnitKn.culture:
                     options.append(AI_Mazedonian.RecruitmentOption(UnitType.KNIGHT, prio_knight))
                 else:
                     hint("not enough culture to recruit a knight. actual: {} required: {}".format(
-                        ai_stat.me.culture, ai_stat.costUnitKn[2]))
+                        ai_stat.me.culture, ai_stat.costUnitKn.culture))
             else:
                 hint("not enough resources to recruit a knight. actual: {} required: {}".format(
-                    ai_stat.me.resources, ai_stat.costUnitKn[0]))
+                    ai_stat.me.resources, ai_stat.costUnitKn.resources))
         else:
             hint("not enough free population to recruit a knight")
         return options
