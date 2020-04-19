@@ -276,8 +276,9 @@ class GameLogic:
         # ai_map.print_map()
 
         costs = {'scout': int(1)}
-        for b_info in Building.building_info:
-            costs[b_info[1]['tex_code']] = b_info[1]['construction_cost']
+        for b_type in BuildingType:
+            if b_type != BuildingType.OTHER_BUILDING:
+                costs[Building.building_info[b_type]['tex_code']] = Building.building_info[b_type]['construction_cost']
         #if player.is_barbaric:
         costs['bs'] = Unit.get_unit_cost(UnitType.BABARIC_SOLDIER)
         #else:
@@ -619,7 +620,7 @@ class GameLogic:
         self.z_levels[2].remove(flag.sprite)
 
     def add_building(self, building: Building, player: Player):
-        hint("adding a building")
+        # hint("adding a building")
         player.buildings.append(building)
         position = HexMap.offset_to_pixel_coords(building.tile.offset_coordinates)
         building.set_sprite_pos(position, self.__camera_pos)

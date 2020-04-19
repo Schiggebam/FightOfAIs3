@@ -128,7 +128,7 @@ class AI_Mazedonian(AI):
                                                          (BuildingType.BARRACKS, 2)]
         bo_mid_game: List[Tuple[BuildingType, int]] = [(BuildingType.FARM, 6), (BuildingType.HUT, 5),
                                                        (BuildingType.BARRACKS, 4)]
-        bo_late_game: List[Tuple[BuildingType, int]] = [(BuildingType.FARM, 7), (BuildingType.HUT, 7),
+        bo_late_game: List[Tuple[BuildingType, int]] = [(BuildingType.FARM, 7), (BuildingType.HUT, 9),
                                                         (BuildingType.BARRACKS, 10)]
         self.ac_passive: AI_Mazedonian.ArmyConstellation = AI_Mazedonian.ArmyConstellation("passive", (0.5, 0.5))
         self.ac_aggressive: AI_Mazedonian.ArmyConstellation = AI_Mazedonian.ArmyConstellation("aggressive", (0.8, 0.2))
@@ -151,7 +151,8 @@ class AI_Mazedonian(AI):
 
     def do_move(self, ai_stat: AI_GameStatus, move: AI_Move):
         t1 = timeit.default_timer()
-
+        hint("------ {} -------".format(self.name))
+        self.set_vars(ai_stat)
         self.create_heat_maps(ai_stat, move)
         self.update_diplo_events(ai_stat)
         self.diplomacy.calc_round()
@@ -185,8 +186,8 @@ class AI_Mazedonian(AI):
         # debug(f"Timings: {t2 - t1}, {t3 - t2}, {t4 - t3}, total: {t4 - t1}")
         # debug(f"Timings {t2_1 - t2}, {t2_2 - t2_1}, {t3 - t2_2}")
         # clear out some data:
-        self.priolist_targets.clear()
-        self.claimed_tiles.clear()
+
+        self.reset_vars()
 
     def evaluate_army_movement(self, ai_stat: AI_GameStatus, move: AI_Move):
         if len(ai_stat.map.army_list) == 0:
@@ -236,6 +237,11 @@ class AI_Mazedonian(AI):
             hint("AI detected that it is loosing food")
             self.is_loosing_food = True
 
+    def reset_vars(self):
+        self.is_loosing_food = False
+        self.priolist_targets.clear()
+        self.claimed_tiles.clear()
+
     def create_heat_maps(self, ai_stat: AI_GameStatus, move: AI_Move):
         # cond = lambda n: AI_Toolkit.is_obj_in_list(n, ai_stat.map.walkable_tiles)
         heat_map = AI_Toolkit.simple_heat_map(ai_stat.map.building_list, ai_stat.map.walkable_tiles,
@@ -256,10 +262,11 @@ class AI_Mazedonian(AI):
         # for ai_stat.aggressions:
 
         for e_b in ai_stat.map.opp_building_list:
-            if AI_Toolkit.is_obj_in_list(e_b, self.claimed_tiles):
-                debug("New Event: ENEMY_BUILDING_IN_CLAIMED_ZONE")
-                self.diplomacy.add_event(e_b.owner, e_b.offset_coordinates,
-                                         DiploEventType.ENEMY_BUILDING_IN_CLAIMED_ZONE, -2, 3, self.name)
+            if e_b.visible:
+                if AI_Toolkit.is_obj_in_list(e_b, self.claimed_tiles):
+                    debug("New Event: ENEMY_BUILDING_IN_CLAIMED_ZONE")
+                    self.diplomacy.add_event(e_b.owner, e_b.offset_coordinates,
+                                             DiploEventType.ENEMY_BUILDING_IN_CLAIMED_ZONE, -2, 3, self.name)
         for e_a in ai_stat.map.opp_army_list:
             if AI_Toolkit.is_obj_in_list(e_a, self.claimed_tiles):
                 debug("New Event: ENEMY_ARMY_INVADING_CLAIMED_ZONE")
@@ -732,7 +739,8 @@ class AI_Mazedonian(AI):
         for e_a in ai_stat.map.opp_army_list:
             targets.add((e_a, True))
         for e_b in ai_stat.map.opp_building_list:
-            targets.add((e_b, False))
+            if e_b.visible:
+                targets.add((e_b, False))
 
         hint(f"Found {len(targets)} target(s) for our army")
         for target, is_army in targets:

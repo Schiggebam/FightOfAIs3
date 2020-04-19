@@ -189,11 +189,12 @@ class AI_Barbaric(AI):
                     target_tile = e_a.base_tile
             if target_tile is None:
                 for e_b in ai_stat.map.opp_building_list:
-                    if e_b.owner in self.hostile_player:
-                        if e_b.type != BuildingType.BARRACKS:
-                            hint("AI Barbaric: found hostile building to attack")
-                            # target_tile = AI_Toolkit.get_tile_by_xy(e_b.offset_coordinates, ai_stat.tiles_walkable)
-                            target_tile = e_b.base_tile
+                    if e_b.visible:
+                        if e_b.owner in self.hostile_player:
+                            if e_b.type != BuildingType.BARRACKS:
+                                hint("AI Barbaric: found hostile building to attack")
+                                # target_tile = AI_Toolkit.get_tile_by_xy(e_b.offset_coordinates, ai_stat.tiles_walkable)
+                                target_tile = e_b.base_tile
 
             if start_tile and target_tile:
                 path = AI_Toolkit.dijkstra_pq(start_tile, target_tile, ai_stat.map.walkable_tiles)
@@ -204,6 +205,10 @@ class AI_Barbaric(AI):
                 error(str(start_tile))
                 error(str(target_tile))
             if len(path) > 1:
+                for p in path:
+                    print(str(p.offset_coordinates) + " ", end="")
+                    move.info_at_tile.append((p.offset_coordinates, "W"))
+                print("")
                 hint("AI Barbaric: found path to hostile army / building")
                 return path[1].offset_coordinates
             else:
@@ -233,9 +238,10 @@ class AI_Barbaric(AI):
 
     def update_diplo_events(self, ai_stat: AI_GameStatus):
         for e_b in ai_stat.map.opp_building_list:
-            self.diplomacy.add_event(e_b.owner, e_b.offset_coordinates,
-                                     DiploEventType.TYPE_ENEMY_BUILDING_SCOUTED,
-                                     -1.0, 5, self.name)
+            if e_b.visible:
+                self.diplomacy.add_event(e_b.owner, e_b.offset_coordinates,
+                                         DiploEventType.TYPE_ENEMY_BUILDING_SCOUTED,
+                                         -1.0, 5, self.name)
             #for e_a in ai_stat.enemy_armies:
             #    if e_a.offset_coordinates == tile.offset_coordinates:
             #        self.diplomacy.add_event(e_a.owner, tile.offset_coordinates,

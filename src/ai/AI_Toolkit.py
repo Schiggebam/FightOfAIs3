@@ -4,7 +4,7 @@ from typing import List, Union, Tuple, Optional
 
 from src.ai.AI_GameStatus import AI_GameStatus
 from src.ai.AI_MapRepresentation import Tile, AI_Element
-from src.misc.game_constants import error, BuildingType, BuildingState, hint
+from src.misc.game_constants import error, BuildingType, BuildingState, hint, debug
 
 AI_OBJ = Union[AI_Element, Tile]
 
@@ -53,17 +53,28 @@ def dijkstra_pq(start, target, domain: List[Tile]) -> List[Tile]:
                     v.dist = alt
                     v.pre = u
     x = target
+    path.append(x)
     while x.offset_coordinates != start.offset_coordinates:
-        path.append(x)
         x = x.pre
+        path.append(x)
         if x is None:                   # this is a bit weird in conjunction with the while condition.
             break
-    path.append(start)
+    # path.append(start)
     path.reverse()
+    # check validity of path.
+    problem = False
+    for i in range(len(path) - 1):
+        if getDistance(path[i].offset_coordinates, path[i+1].offset_coordinates) != 1:
+            error("Problem in pathfinding")
+            problem = True
+    if problem:
+        for p in path:
+            print(p.offset_coordinates, end=" ")
+        print("")
     if start == path[0] and target == path[len(path) - 1]:
         return path
     else:
-        hint("Found path is incomplete")
+        debug("Found path is incomplete")
         return [start]
 
 
@@ -204,3 +215,22 @@ def has_building_under_construction(building_type: BuildingType, ai_stat: AI_Gam
             if b.state == BuildingState.UNDER_CONSTRUCTION:
                 return True
     return False
+
+def estimate_res_income(ai_stat: AI_GameStatus) -> int:
+    """roughly estimates the resource income. Does not take the fact into account, that resources might mine out"""
+    from src.misc.building import Building
+    res_per_tile = Building.building_info['resource_per_field']
+    value = 0
+    for b in ai_stat.map.building_list:
+        if b.type == BuildingType.HUT:
+            for n in get_neighbours(b):
+                if n.has_resource():
+                    value = value + res_per_tile
+    return value
+
+
+def estimate_cult_income(ai_stat: AI_GameStatus):
+    """roughly estimates the culture income"""
+    from src.misc.building import Building
+    for b in ai_stat.map.building_list:
+        pass

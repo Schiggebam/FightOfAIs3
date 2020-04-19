@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional, Dict, Any
 
 import arcade
 
@@ -9,7 +9,7 @@ from src.misc.game_constants import BuildingType, BuildingState, error
 
 class Building(Drawable):
 
-    building_info: [(int, {})] = []
+    building_info: Dict[BuildingType, Dict[str, Any]] = {}
     def __init__(self, tile: Hexagon, bui_type: BuildingType, owner_id):
         super().__init__()
         self.tile: Hexagon = tile
@@ -21,20 +21,20 @@ class Building(Drawable):
         self.__idx_texture_construction: int = -1
         self.__idx_texture_destruction: int = -1
         self.flag: Optional[Flag] = None
-        for b_info in Building.building_info:
-            if b_info[0] == bui_type:
-                self.tex_code = b_info[1]['tex_code']
-                self.construction_cost = b_info[1]['construction_cost']
-                self.culture_per_turn = b_info[1]['culture_per_turn']
-                self.resource_per_field = b_info[1]['resource_per_field']
-                self.resource_per_turn = b_info[1]['resource_per_turn']
-                self.sight_range = b_info[1]['sight_range']
-                self.description = b_info[1]['description']
-                self.food_consumption = b_info[1]['food_consumption']
-                self.construction_time = b_info[1]['construction_time']
-                self.defensive_value = b_info[1]['defensive_value']
-                self.flag_offset = (b_info[1]['flag_x'], b_info[1]['flag_y'])
-                self.grant_pop = b_info[1]['grant_pop']
+        # for b_info in Building.building_info:
+        #     if b_info[0] == bui_type:
+        self.tex_code = Building.building_info[bui_type]['tex_code']
+        self.construction_cost = Building.building_info[bui_type]['construction_cost']
+        self.culture_per_turn = Building.building_info[bui_type]['culture_per_turn']
+        self.resource_per_field = Building.building_info[bui_type]['resource_per_field']
+        self.resource_per_turn = Building.building_info[bui_type]['resource_per_turn']
+        self.sight_range = Building.building_info[bui_type]['sight_range']
+        self.description = Building.building_info[bui_type]['description']
+        self.food_consumption = Building.building_info[bui_type]['food_consumption']
+        self.construction_time = Building.building_info[bui_type]['construction_time']
+        self.defensive_value = Building.building_info[bui_type]['defensive_value']
+        self.flag_offset = (Building.building_info[bui_type]['flag_x'], Building.building_info[bui_type]['flag_y'])
+        self.grant_pop = Building.building_info[bui_type]['grant_pop']
 
     def has_texture_construction(self) -> bool:
         return not self.__idx_texture_construction == -1
@@ -72,6 +72,6 @@ class Building(Drawable):
     @staticmethod
     def get_construction_cost(bui_type: BuildingType):
         """in case we want to know the construction cost before the building is instance"""
-        for b_info in Building.building_info:
-            if b_info[0] == bui_type:
-                return b_info[1]['construction_cost']
+        # for Building.building_info in Building.building_info:
+        #     if Building.building_info[0] == bui_type:
+        return Building.building_info[bui_type]['construction_cost']
