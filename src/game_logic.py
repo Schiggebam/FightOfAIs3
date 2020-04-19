@@ -46,18 +46,19 @@ class GameLogic:
         player_info: [(str, {})] = []                           # a tuple per player, first element is player's name
         self.game_file_reader.read_player_info(player_info)
         id = 0
-        for p_info in player_info:
+        for p_info in player_info:          # -> Tuple pid and info
             p = Player(p_info[0], id, p_info[1]['colour'],
                        (int(p_info[1]['spawn_x']), int(p_info[1]['spawn_y'])),
                        p_info[1]['ai'])
             p.is_barbaric = p_info[1]['ai'] == "barbaric"
             p.is_villager = p_info[1]['ai'] == "villager"
-            if not (p.is_barbaric or p.is_villager):
-                p.player_type = PlayerType.AI
-            elif p.is_barbaric:
-                p.player_type = PlayerType.BARBARIC
-            elif p.is_villager:
-                p.player_type = PlayerType.VILLAGER
+            p.player_type = PlayerType.get_type_from_strcode(p_info[1]['ai'])
+            # if not (p.is_barbaric or p.is_villager):
+            #     p.player_type = PlayerType.AI
+            # elif p.is_barbaric:
+            #     p.player_type = PlayerType.BARBARIC
+            # elif p.is_villager:
+            #     p.player_type = PlayerType.VILLAGER
             p.init_army_loc = (p.spaw_loc[0] + p_info[1]['army_rel_to_spawn_x'],
                                p.spaw_loc[1] + p_info[1]['army_rel_to_spawn_y'])
             self.player_list.append(p)
@@ -81,6 +82,7 @@ class GameLogic:
         self.test = None
         self.total_time = 0
         self.animator_time = 0
+        self.wait_for_human = False
 
     def setup(self):
         """ load the game """
@@ -175,28 +177,32 @@ class GameLogic:
         self.__exec_command(commands)
         GameLogic.elapsed = GameLogic.elapsed + delta_time
         GameLogic.total_elapsed = GameLogic.total_elapsed + delta_time
-        #update animations
-        # if self.animator.is_active():           # -> move this to own thread possibly
-        #for p in self.player_list:
-        #    for b in p.buildings:
-        #        b.flag.next_frame(delta_time)
-        #GameLogic.ith_iteration = GameLogic.ith_iteration + 1
-        #if GameLogic.ith_iteration % 3 == 0:
         if self.show_key_frame_animation:
             for k_f in self.animator.key_frame_animations:
                 k_f.next_frame(delta_time)
-        self.animator_time = timestamp_start - timeit.default_timer()
+        # self.animator_time = timestamp_start - timeit.default_timer()
         if GameLogic.elapsed > float(0.8) and self.automatic:
             self.playNextTurn = True
             GameLogic.elapsed = float(0)
         if self.playNextTurn:
             #if not self.ai_running:
-            if self.current_player == 0:  # next time player 0 plays -> new turn
-                self.turn_nr = self.turn_nr + 1
+
             if len(self.player_list) > 0:
-                self.play_players_turn()
-                #thread = Thread(target= self.run_ai())
-                self.current_player = (self.current_player + 1) % len(self.player_list)
+                player = self.player_list[self.current_player]
+                played_move = False
+                if player.player_type != PlayerType.HUMAN:
+                    self.play_players_turn(player)
+                    played_move = True
+                else:
+                    from src.ai import human
+                    move, costs, ready = human.check_input()
+                    if ready:
+                        self.exec_ai_move(move, player, costs)
+                        played_move = True
+                if played_move:
+                    if self.current_player == 0:  # next time player 0 plays -> new turn
+                        self.turn_nr = self.turn_nr + 1
+                    self.current_player = (self.current_player + 1) % len(self.player_list)
         else:
             for s in self.z_levels[3]:
                 s.update_animation()
@@ -209,9 +215,7 @@ class GameLogic:
         self.total_time = timestamp_start - timeit.default_timer()
 
 
-    def play_players_turn(self):
-        # self.__clear_aux_sprites(1)
-        player = self.player_list[self.current_player]
+    def play_players_turn(self, player: Player):
         print("Play turn of: " + player.name)
         self.updata_map()
         # gather player data
@@ -324,11 +328,6 @@ class GameLogic:
         #     self.__add_aux_sprite(player.armies[0].tile, 1, "ou")
 
         hint("                          SUCCESSFULLY PLAYED TURN")
-
-    def run_ai(self):
-        self.ai_running = True
-        self.play_players_turn()
-        self.ai_running = False
 
     def updata_map(self):
         """this function makes sure that the map remains well defined"""

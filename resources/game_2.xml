@@ -13,8 +13,11 @@
         <building_villa code="s2" offsetX="0" offsetY="0" scale="1">../resources/objects/simple_villa.png</building_villa>
         <outline code="ou" offsetX="0" offsetY="0" scale="1">../resources/map/outline_selected.png</outline>
         <flag_red code="f1_red" offsetX="5" offsetY="-5" scale="0.75">../resources/objects/flag_red_1.png</flag_red>
-        <flag_yellow code="f1_yellow" offsetX="5" offsetY="-5" scale="0.75">../resources/objects/flag_yellow.png</flag_yellow>
-        <flag_teal code="f1_teal" offsetX="5" offsetY="-5" scale="0.75">../resources/objects/flag_teal.png</flag_teal>
+        <flag_yellow code="f1_yellow" offsetX="5" offsetY="-5" scale="0.75">../resources/objects/flag_yellow_1.png</flag_yellow>
+        <flag_teal code="f1_teal" offsetX="5" offsetY="-5" scale="0.75">../resources/objects/flag_teal_1.png</flag_teal>
+        <flag_green code="f1_green" offsetX="5" offsetY="-5" scale="0.75">../resources/objects/flag_green_1.png</flag_green>
+        <flag_pink code="f1_pink" offsetX="5" offsetY="-5" scale="0.75">../resources/objects/flag_pink_1.png</flag_pink>
+        <flag_blue code="f1_blue" offsetX="5" offsetY="-5" scale="0.75">../resources/objects/flag_blue_1.png</flag_blue>
         <camp_1 code="c1" offsetX="5" offsetY="0" scale="1">../resources/objects/camp_1.png</camp_1>
         <camp_2 code="c2" offsetX="5" offsetY="0" scale="1">../resources/objects/camp_2.png</camp_2>
         <camp_3 code="c3" offsetX="5" offsetY="0" scale="1">../resources/objects/camp_3.png</camp_3>
@@ -207,5 +210,7 @@
                  army_rel_to_spawn_x="+1" army_rel_to_spawn_y="-1">Barbaric 1</barbar1>
         <!--<village colour="teal" spawn_x="10" spawn_y="14" ai="villager"
                  army_rel_to_spawn_x="-1" army_rel_to_spawn_y="0">Barbaric 1</village>-->
+        <human colour="green" spawn_x="10" spawn_y="10" ai="human"
+               army_rel_to_spawn_x="+1" army_rel_to_spawn_y="+1">meme</human>
     </players>
 </game>

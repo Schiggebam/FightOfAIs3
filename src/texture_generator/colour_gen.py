@@ -42,9 +42,12 @@ def change_color(m, path: str, new_path: str):
 
     img.save(new_path)
 
-change_color(MATRIX_BLUE, OLD_PATH, "../../resources/objects/animated/flag_100_sprite_{}.png".format('blue'))
-change_color(MATRIX_GREEN, OLD_PATH, "../../resources/objects/animated/flag_100_sprite_{}.png".format('green'))
-change_color(MATRIX_TEAL, OLD_PATH, "../../resources/objects/animated/flag_100_sprite_{}.png".format('teal'))
-change_color(MATRIX_YELLOW, OLD_PATH, "../../resources/objects/animated/flag_100_sprite_{}.png".format('yellow'))
-change_color(MATRIX_PINK, OLD_PATH, "../../resources/objects/animated/flag_100_sprite_{}.png".format('pink'))
+change_color(MATRIX_BLUE, "../../resources/objects/flag_red_1.png", "../../resources/objects/flag_blue_1.png")
+change_color(MATRIX_PINK, "../../resources/objects/flag_red_1.png", "../../resources/objects/flag_pink_1.png")
+change_color(MATRIX_GREEN, "../../resources/objects/flag_red_1.png", "../../resources/objects/flag_green_1.png")
+# change_color(MATRIX_BLUE, OLD_PATH, "../../resources/objects/animated/flag_100_sprite_{}.png".format('blue'))
+# change_color(MATRIX_GREEN, OLD_PATH, "../../resources/objects/animated/flag_100_sprite_{}.png".format('green'))
+# change_color(MATRIX_TEAL, OLD_PATH, "../../resources/objects/animated/flag_100_sprite_{}.png".format('teal'))
+# change_color(MATRIX_YELLOW, OLD_PATH, "../../resources/objects/animated/flag_100_sprite_{}.png".format('yellow'))
+# change_color(MATRIX_PINK, OLD_PATH, "../../resources/objects/animated/flag_100_sprite_{}.png".format('pink'))
 
