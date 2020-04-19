@@ -4,8 +4,8 @@ import timeit
 
 from src.ai.AI_GameStatus import AI_GameStatus, AI_Move, AI_GameInterface
 from src.misc.animation import Animator
-from src.misc.game_constants import ResourceType, error, GroundType, debug, ENABLE_KEYFRAME_ANIMATIONS, start_progress, \
-    end_progress, progress
+from src.misc.game_constants import ResourceType, GroundType, debug, error, ENABLE_KEYFRAME_ANIMATIONS, start_progress, \
+    end_progress, progress, PlayerType, MoveType
 from src.game_accessoires import Scenario, Ground, Resource, Drawable, Flag, Unit
 from src.game_file_reader import GameFileReader
 from src.hex_map import HexMap, MapStyle, Hexagon
@@ -52,6 +52,12 @@ class GameLogic:
                        p_info[1]['ai'])
             p.is_barbaric = p_info[1]['ai'] == "barbaric"
             p.is_villager = p_info[1]['ai'] == "villager"
+            if not (p.is_barbaric or p.is_villager):
+                p.player_type = PlayerType.AI
+            elif p.is_barbaric:
+                p.player_type = PlayerType.BARBARIC
+            elif p.is_villager:
+                p.player_type = PlayerType.VILLAGER
             p.init_army_loc = (p.spaw_loc[0] + p_info[1]['army_rel_to_spawn_x'],
                                p.spaw_loc[1] + p_info[1]['army_rel_to_spawn_y'])
             self.player_list.append(p)
@@ -191,9 +197,9 @@ class GameLogic:
                 self.play_players_turn()
                 #thread = Thread(target= self.run_ai())
                 self.current_player = (self.current_player + 1) % len(self.player_list)
-            #else:
-            #    debug("AI is still calculating move... ")
-
+        else:
+            for s in self.z_levels[3]:
+                s.update_animation()
         self.playNextTurn = False
         if self.change_in_map_view:
             self.toggle_fog_of_war_lw(self.hex_map.map, show_update_bar=True)
@@ -274,10 +280,23 @@ class GameLogic:
         for a, id in enemy_armies:
             ai_map.add_opp_army(a.tile.offset_coordinates, a, id)
         # ai_map.print_map()
+        from src.ai.AI_MapRepresentation import AI_Player, AI_Opponent
+        me = AI_Player(player.id, player.name, player.player_type, player.amount_of_resources,
+                       player.culture, player.food, player.get_population(), player.get_population_limit())
+        opponents = []
+        for p in self.player_list:
+            if p.id != player.id:
+                tmp = AI_Opponent(p.id, p.name, p.player_type)
+                opponents.append(tmp)
+                for pid, loc in player.attacked_set:
+                    if pid == p.id:
+                        tmp.has_attacked = True
+                        tmp.attack_loc.append((pid, loc))
 
         costs = {'scout': int(1)}
-        for b_info in Building.building_info:
-            costs[b_info[1]['tex_code']] = b_info[1]['construction_cost']
+        for b_type in BuildingType:
+            if b_type != BuildingType.OTHER_BUILDING:
+                costs[Building.building_info[b_type]['tex_code']] = Building.building_info[b_type]['construction_cost']
         #if player.is_barbaric:
         costs['bs'] = Unit.get_unit_cost(UnitType.BABARIC_SOLDIER)
         #else:
@@ -290,10 +309,8 @@ class GameLogic:
         ai_status = AI_GameStatus()
         ai_move = AI_Move()
 
-        self.ai_interface.create_ai_status(ai_status, self.turn_nr, player.id, player.food,
-                                           player.amount_of_resources, player.culture,
-                                           costs, len(self.player_list) - 1, player.attacked_set,
-                                           player_population, player_population_limit, ai_map)
+        self.ai_interface.create_ai_status(ai_status, self.turn_nr, costs,
+                                           ai_map, me, opponents)
         player.attacked_set.clear()
         timestamp_start = timeit.default_timer()
         self.ai_interface.do_a_move(ai_status, ai_move, player.id)
@@ -350,8 +367,8 @@ class GameLogic:
         # to track when updates are necessary. # TODO handle this with more care
         self.__reorder_spritelist(self.z_levels[2])
 
-
     def exec_ai_move(self, ai_move: AI_Move, player: Player, costs):
+        self.__check_validity(ai_move)
         for d in self.hex_map.map:
             d.debug_msg = ""
         for d in ai_move.info_at_tile:
@@ -360,19 +377,18 @@ class GameLogic:
 
         print_move = False
         if print_move:
-            s = f"Recruit Army: {ai_move.doRecruitArmy}, Rec Unit: {ai_move.doRecruitUnit}"
-            s = s + f"Build: {ai_move.doBuild}, scout: {ai_move.doScout}"
+            s = str(ai_move.move_type)
             s = s + f"Loc: {ai_move.loc}, army_move: {ai_move.move_army_to}, move: {ai_move.doMoveArmy}"
             s = s + ai_move.str_rep_of_action
             debug(s)
 
         if ai_move.doMoveArmy:
-            if len(player.armies) == 1:             #TODO support for only 1 army here
+            if len(player.armies) == 1:             #FIXME has support for only 1 army here
                 self.move_army(player.armies[0], player, ai_move.move_army_to)
             else:
                 print("No army available")
 
-        if ai_move.doRecruitArmy:
+        if ai_move.move_type == MoveType.DO_RAISE_ARMY:
             if len(player.armies) == 0:
                 hint(f"spawning army at {ai_move.loc}")
                 base_hex = self.hex_map.get_hex_by_offset(ai_move.loc)
@@ -381,10 +397,10 @@ class GameLogic:
             else:
                 error("Not more than one armies allowed")
 
-        if ai_move.doUpArmy or ai_move.doRecruitUnit:
-            if len(player.armies) == 1:             #TODO support for only 1 army here
+        if ai_move.move_type == MoveType.DO_RECRUIT_UNIT:
+            if len(player.armies) == 1:             #FIXME has support for only 1 army here
                 if player.is_barbaric:
-                    cost_bs = Unit.get_unit_cost(UnitType.BABARIC_SOLDIER)[0]
+                    cost_bs = Unit.get_unit_cost(UnitType.BABARIC_SOLDIER).resources
                     if player.amount_of_resources >= cost_bs:
                         player.amount_of_resources = player.amount_of_resources - cost_bs
                         u: Unit = Unit(UnitType.BABARIC_SOLDIER)
@@ -396,15 +412,15 @@ class GameLogic:
                     if ai_move.type == UnitType.KNIGHT or ai_move.type == UnitType.MERCENARY:
                         type = ai_move.type
                         cost = Unit.get_unit_cost(type)
-                        if player.amount_of_resources < cost[0]:
+                        if player.amount_of_resources < cost.resources:
                             error("Not enough resources to recruit unit: " + str(type))
-                        elif player.culture < cost[1]:
+                        elif player.culture < cost.culture:
                             error("Not enough culture to recruit unit: " + str(type))
-                        elif player.get_population_limit() < player.get_population() + cost[2]:
+                        elif player.get_population_limit() < player.get_population() + cost.population:
                             error("Not enough free population to recruit " + str(type))
                         else:
-                            player.amount_of_resources = player.amount_of_resources - cost[0]
-                            player.culture = player.culture - cost[1]
+                            player.amount_of_resources = player.amount_of_resources - cost.resources
+                            player.culture = player.culture - cost.culture
                             u: Unit = Unit(type)
                             player.armies[0].add_unit(u)
                             hint("new unit recruited - type: " + str(type))
@@ -413,7 +429,7 @@ class GameLogic:
             else:
                 error("No army. Recruit new army first!")
 
-        if ai_move.doBuild:
+        if ai_move.move_type == MoveType.DO_BUILD:
             if not self.hex_map.get_hex_by_offset(ai_move.loc).ground.buildable:
                 error("Exec AI Move: Location is not buildable!")
                 return
@@ -442,14 +458,13 @@ class GameLogic:
 
             else:
                 error("Exec AI Move: Cannot build building! BuildingType:" + str(b_type))
-        if ai_move.doScout:
+        if ai_move.move_type == MoveType.DO_SCOUT:
             if player.amount_of_resources >= costs['scout']:
                 player.discovered_tiles.add(self.hex_map.get_hex_by_offset(ai_move.loc))
                 player.amount_of_resources = player.amount_of_resources - costs['scout']
                 self.toggle_fog_of_war_lw(player.discovered_tiles)
 
-
-        elif ai_move.doUpgrade:
+        elif ai_move.move_type == MoveType.DO_UPGRADE_BUILDING:
             b_old: Optional[Building] = None
             for upgradable in player.buildings:
                 if upgradable.tile.offset_coordinates == ai_move.loc:
@@ -469,6 +484,17 @@ class GameLogic:
             b_new = Building(base_hex, b_type, player.id)
             # print(b_new.tex_code)
             self.add_building(b_new, player)
+
+    def __check_validity(self, ai_move: AI_Move):
+        """prints warning message if AI_Move object is faulty"""
+        if ai_move.move_type is None:
+            error("AI must specify type of move")
+        if ai_move.move_type is MoveType.DO_RAISE_ARMY:
+            if ai_move.loc == (-1, -1):
+                error("AI must specify location where to raise the army")
+        if ai_move.move_type == MoveType.DO_BUILD:
+            if ai_move.loc == (-1, -1):
+                error("AI must specify the location of the building site")
 
     def check_win_condition(self, player: Player):
         for p in self.player_list:
@@ -604,22 +630,28 @@ class GameLogic:
         self.scenario.resource_list.remove(resource)
         self.z_levels[2].remove(resource.sprite)
 
-    def add_flag(self, flag: Flag, colour_code: str):
+    def add_animated_flag(self, colour_code: str, pos: Tuple[int, int]) -> Flag:
         a_tex = self.texture_store.get_animated_texture('{}_flag'.format(colour_code))
-        for tex in a_tex:
-            flag.add_texture(tex)
-        flag.set_sprite_pos(flag.position, self.__camera_pos)
-        flag.set_tex_scale(0.20)
-        flag.update_interval = 0.1
-        flag.sprite.set_texture(0)
-        self.animator.key_frame_animations.append(flag)
-        self.z_levels[2].append(flag.sprite)
+        flag = Flag(pos, a_tex, 0.2)
+        self.z_levels[3].append(flag)
+        return flag
+
+    # def add_flag(self, flag: Flag, colour_code: str):
+    #     a_tex = self.texture_store.get_animated_texture('{}_flag'.format(colour_code))
+    #     for tex in a_tex:
+    #         flag.add_texture(tex)
+    #     flag.set_sprite_pos(flag.position, self.__camera_pos)
+    #     flag.set_tex_scale(0.20)
+    #     flag.update_interval = 0.1
+    #     flag.sprite.set_texture(0)
+    #     self.animator.key_frame_animations.append(flag)
+    #     self.z_levels[2].append(flag.sprite)
 
     def del_flag(self, flag: Flag):
         self.z_levels[2].remove(flag.sprite)
 
     def add_building(self, building: Building, player: Player):
-        hint("adding a building")
+        # hint("adding a building")
         player.buildings.append(building)
         position = HexMap.offset_to_pixel_coords(building.tile.offset_coordinates)
         building.set_sprite_pos(position, self.__camera_pos)
@@ -631,9 +663,11 @@ class GameLogic:
         building.add_tex_destruction(self.texture_store.get_texture("ds"))
         self.z_levels[2].append(building.sprite)
         # add the flag:
-        flag = Flag((position[0] + building.flag_offset[0], position[1] + building.flag_offset[1]),
-                    player.colour)
-        self.add_flag(flag, player.colour_code)
+        # flag = Flag((position[0] + building.flag_offset[0], position[1] + building.flag_offset[1]),
+        #            player.colour)
+        #self.add_flag(flag, player.colour_code)
+        pos = (position[0] + building.flag_offset[0], position[1] + building.flag_offset[1])
+        flag = self.add_animated_flag(player.colour_code, pos)
         building.flag = flag
         if building.building_type == BuildingType.FARM:
             for a in building.associated_tiles:
@@ -689,7 +723,7 @@ class GameLogic:
                             post_att_u = army.get_units_as_tuple()
                             post_def_u = hostile_army.get_units_as_tuple()
                             Logger.log_battle_army_vs_army_log(pre_att_u, pre_def_u, post_att_u, post_def_u)
-                            p.attacked_set.add(player.id)
+                            p.attacked_set.add((player.id, hostile_army.tile.offset_coordinates))
                             if hostile_army.get_population() == 0:
                                 self.del_army(hostile_army, p)
                             if army.get_population() == 0:
@@ -707,7 +741,7 @@ class GameLogic:
                         post_att_u = army.get_units_as_tuple()
                         post_b = b.defensive_value
                         Logger.log_battle_army_vs_building(pre_att_u, post_att_u, pre_b, post_b)
-                        p.attacked_set.add(player.id)
+                        p.attacked_set.add((player.id, b.tile.offset_coordinates))
                         if b.defensive_value == -1:
                             b.set_state_destruction()
                         if army.get_population() == 0:

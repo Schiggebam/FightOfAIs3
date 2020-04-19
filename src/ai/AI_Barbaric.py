@@ -5,7 +5,7 @@ from typing import Set
 from src.ai import AI_Toolkit
 from src.ai.AI_GameStatus import AI_Move, AI_GameStatus
 from src.ai.ai_blueprint import AI
-from src.misc.game_constants import DiploEventType, hint, BuildingType, error
+from src.misc.game_constants import DiploEventType, hint, BuildingType, error, MoveType
 
 
 class AI_Barbaric(AI):
@@ -22,7 +22,7 @@ class AI_Barbaric(AI):
         self.own_id = own_id
         self.state = AI_Barbaric.AI_State.PASSIVE
         self.other_players = other_players
-        self.hostile_player: Set[int] = set()
+        self.hostile_player: Set[int] = set()       # TODO clear that list?
         self.previous_army_strength = -1
         self.previous_amount_of_buildings = -1
         self.issue_attack = False                   # make sure this is set to true if the AI commands an attack
@@ -45,15 +45,15 @@ class AI_Barbaric(AI):
 
         self.weight_scores(ai_stat, move, score_b, score_u, score_a)
 
-        if move.doUpArmy:
+        if move.move_type == MoveType.DO_RECRUIT_UNIT:
             move.str_rep_of_action = "Upgrading the army"
-        elif move.doBuild:
+        elif move.move_type == MoveType.DO_BUILD:
             move.loc = loc_b
             move.str_rep_of_action = "Building @ " + str(move.loc)
-        elif move.doUpgrade:
+        elif move.move_type == MoveType.DO_UPGRADE_BUILDING:
             move.loc = loc_u
             move.str_rep_of_action = "Upgrading @ " + str(move.loc)
-        elif move.doRecruitArmy:
+        elif move.move_type == MoveType.DO_RAISE_ARMY:
             pos = self.get_army_spawn_loc(ai_stat)
             move.loc = pos
             move.str_rep_of_action = "Recruiting @ " + str(move.loc)
@@ -105,38 +105,43 @@ class AI_Barbaric(AI):
             # if score_a > 0:
             if self.get_army_spawn_loc(ai_stat) != (-1, -1):
                 hint("AI Barbaric: Decision: Recruit new army")
-                move.doRecruitArmy = True
+                # move.doRecruitArmy = True
+                move.move_type = MoveType.DO_RAISE_ARMY
             else:
                 hint("No suitable tile to spawn the army")
             # else:
             #     hint("AI Barbaric: Decision: Store more resources (not enough resources to recruit new army)")
             #     wait = True
-        elif ai_stat.map.army_list[0].population < army_building_ratio * ai_stat.population_limit:
-            if ai_stat.population < ai_stat.population_limit:
+        elif ai_stat.map.army_list[0].population < army_building_ratio * ai_stat.me.population_limit:
+            if ai_stat.me.population < ai_stat.me.population_limit:
                 if score_a > 0:
                     hint("AI Barbaric: Decision: Upgrade the army")
-                    move.doUpArmy = True
+                    # move.doUpArmy = True
+                    move.move_type = MoveType.DO_RECRUIT_UNIT
                 else:
                     hint("AI Barbaric: Decision: Store more resources (not enough resources to upgrade the army)")
                     wait = True
             else:
                 hint("Population ceiling reached")
-                move.doNothing = True   # but wait is false because we check the building options in this case
+                move.move_type = MoveType.DO_NOTHING
 
         if not wait:              # so far no valid option found
-            if not (move.doRecruitArmy or move.doUpArmy or move.doNothing):
+            if not (move.move_type is MoveType.DO_RECRUIT_UNIT or
+                    move.move_type is MoveType.DO_RAISE_ARMY or
+                    move.move_type is MoveType.DO_NOTHING):
                 if score_u > 0:
                     hint("AI Barbaric: Decision: Upgrade")
-                    move.doUpgrade = True
+                    move.move_type = MoveType.DO_UPGRADE_BUILDING
                 elif score_b > 0:
                     hint("AI Barbaric: Decision: Build")
-                    move.doBuild = True
+                    move.move_type = MoveType.DO_BUILD
                 else:
                     hint("AI Barbaric: Decision: Store more resources")
                     wait = True
         # ...
         if wait:
-            move.doNothing = True       # Ai decides to wait
+            move.move_type = MoveType.DO_NOTHING
+            # Ai decides to wait
 
 
     def calculate_heatmaps(self):
@@ -144,7 +149,7 @@ class AI_Barbaric(AI):
 
     def evaluate_move_building(self, ai_stat: AI_GameStatus) -> (int, (int, int)):
         if len(ai_stat.map.building_list) < 3:
-            if ai_stat.player_resources >= ai_stat.costBuildC1 and len(ai_stat.map.buildable_tiles) > 0:
+            if ai_stat.me.resources >= ai_stat.costBuildC1 and len(ai_stat.map.buildable_tiles) > 0:
                 # find a random building location
                 idx = random.randint(0, len(ai_stat.map.buildable_tiles) - 1)
                 return 1, ai_stat.map.buildable_tiles[idx].offset_coordinates
@@ -154,10 +159,10 @@ class AI_Barbaric(AI):
         list_of_upgradable_buildings = []
         for b in ai_stat.map.building_list:
             if b.type == BuildingType.CAMP_1:
-                if ai_stat.player_resources >= ai_stat.costBuildC2:
+                if ai_stat.me.resources >= ai_stat.costBuildC2:
                     list_of_upgradable_buildings.append(b)
             if b.type == BuildingType.CAMP_2:
-                if ai_stat.player_resources >= ai_stat.costBuildC3:
+                if ai_stat.me.resources >= ai_stat.costBuildC3:
                     list_of_upgradable_buildings.append(b)
         if len(list_of_upgradable_buildings) == 0:
             return -1, (0, 0)           # no building available that the AI can upgrade
@@ -165,7 +170,7 @@ class AI_Barbaric(AI):
         return 1, list_of_upgradable_buildings[idx].offset_coordinates
 
     def evaluate_move_up_army(self, ai_stat: AI_GameStatus) -> int:
-        if ai_stat.player_resources >= ai_stat.costUnitBS[0]:
+        if ai_stat.me.resources >= ai_stat.costUnitBS.resources:
             return 1
         return -1
 
@@ -189,11 +194,12 @@ class AI_Barbaric(AI):
                     target_tile = e_a.base_tile
             if target_tile is None:
                 for e_b in ai_stat.map.opp_building_list:
-                    if e_b.owner in self.hostile_player:
-                        if e_b.type != BuildingType.BARRACKS:
-                            hint("AI Barbaric: found hostile building to attack")
-                            # target_tile = AI_Toolkit.get_tile_by_xy(e_b.offset_coordinates, ai_stat.tiles_walkable)
-                            target_tile = e_b.base_tile
+                    if e_b.visible:
+                        if e_b.owner in self.hostile_player:
+                            if e_b.type != BuildingType.BARRACKS:
+                                hint("AI Barbaric: found hostile building to attack")
+                                # target_tile = AI_Toolkit.get_tile_by_xy(e_b.offset_coordinates, ai_stat.tiles_walkable)
+                                target_tile = e_b.base_tile
 
             if start_tile and target_tile:
                 path = AI_Toolkit.dijkstra_pq(start_tile, target_tile, ai_stat.map.walkable_tiles)
@@ -204,6 +210,10 @@ class AI_Barbaric(AI):
                 error(str(start_tile))
                 error(str(target_tile))
             if len(path) > 1:
+                for p in path:
+                    print(str(p.offset_coordinates) + " ", end="")
+                    move.info_at_tile.append((p.offset_coordinates, "W"))
+                print("")
                 hint("AI Barbaric: found path to hostile army / building")
                 return path[1].offset_coordinates
             else:
@@ -233,9 +243,10 @@ class AI_Barbaric(AI):
 
     def update_diplo_events(self, ai_stat: AI_GameStatus):
         for e_b in ai_stat.map.opp_building_list:
-            self.diplomacy.add_event(e_b.owner, e_b.offset_coordinates,
-                                     DiploEventType.TYPE_ENEMY_BUILDING_SCOUTED,
-                                     -1.0, 5, self.name)
+            if e_b.visible:
+                self.diplomacy.add_event(e_b.owner, e_b.offset_coordinates,
+                                         DiploEventType.TYPE_ENEMY_BUILDING_SCOUTED,
+                                         -1.0, 5, self.name)
             #for e_a in ai_stat.enemy_armies:
             #    if e_a.offset_coordinates == tile.offset_coordinates:
             #        self.diplomacy.add_event(e_a.owner, tile.offset_coordinates,
@@ -253,9 +264,8 @@ class AI_Barbaric(AI):
             #        self.hostile_player.remove(other_p_id)
 
     def has_been_attacked(self, ai_stat: AI_GameStatus):
-        if len(ai_stat.aggressions) > 0:
-            for a in ai_stat.aggressions:
-                self.hostile_player.add(a)
+        for pid, loc in ai_stat.opponents:
+            self.hostile_player.add(pid)
             hint("Barbaric AI: aggression found!")
             return True
         if self.previous_amount_of_buildings > len(ai_stat.map.building_list):

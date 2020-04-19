@@ -1,10 +1,12 @@
 import traceback
 from typing import List, Tuple, Optional, Dict
 
+from dataclasses import dataclass
+
 from src.game_accessoires import Resource, Army
 from src.hex_map import HexMap
 from src.misc.building import Building
-from src.misc.game_constants import GroundType, error, UnitType, ResourceType, BuildingType, BuildingState
+from src.misc.game_constants import GroundType, error, UnitType, ResourceType, BuildingType, BuildingState, PlayerType
 
 
 class Tile:
@@ -58,6 +60,27 @@ class Tile:
     def has_n_nw(self):
         return self.tile_nw is not None
 
+@dataclass
+class AI_Player:
+    id: int
+    name: str
+    type: PlayerType
+    resources: int
+    culture: int
+    food: int
+    population: int
+    population_limit: int
+
+
+@dataclass
+class AI_Opponent:
+    id: int
+    name: str
+    type: PlayerType
+    has_attacked: bool = False
+    attack_loc: List[Tuple[int, Tuple[int, int]]] = -1, (-1, -1)        # aggressor's id and location of attack
+
+
 class AI_Element:
     def __init__(self, t: Tile):
         self.base_tile: Tile = t
@@ -87,6 +110,11 @@ class AI_Building(AI_Element):
         self.state: Optional[BuildingState] = None
         self.owner: int = -1  # if this is -1, it means that this is not a enemy building. Otherwise the player_id is stored here
         self.associated_tiles: List[Tile] = []
+        # TODO this is a hack:
+        # Problem is, that the building might not be visible, but one if its associates tiles is. How to deal with this?
+        # One could promote all associated tiles to own buildings ?! For now, I set this flag, but it relies on the AI
+        # to check it (otherwise pathfinding might fail)
+        self.visible = True
 
 class Map:
     def __init__(self):
@@ -182,9 +210,6 @@ class Map:
         return ai_a
 
 
-    #def__add_opp_building(self, building: Building) -> AI_Building:
-    #
-
     def __add_building(self, offset_coordinates: Tuple[int, int], building: Building) -> AI_Building:
         tile = self.__get_tile(offset_coordinates)
         ai_b = AI_Building(tile)
@@ -196,6 +221,11 @@ class Map:
                 t = self.__get_tile(a.offset_coordinates)
                 ai_b.associated_tiles.append(t)
                 self.farm_field_tiles.append(t)
+        ai_b.visible = False
+        for t in self.discovered_tiles:
+            if t.offset_coordinates == ai_b.offset_coordinates:
+                ai_b.visible = True
+                break
         return ai_b
 
     def get_tile(self, offset_coordinates: Tuple[int, int]) -> Tile:

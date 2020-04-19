@@ -1,10 +1,11 @@
 from __future__ import annotations
-from typing import List, Tuple
+from typing import List, Tuple, Dict, Any
 
 import arcade
+from arcade import AnimationKeyframe
 
 from src.hex_map import Hexagon
-from src.misc.game_constants import ResourceType, error, GroundType, PlayerColour, UnitType
+from src.misc.game_constants import ResourceType, error, GroundType, PlayerColour, UnitType, UnitCost
 
 
 class Drawable:
@@ -61,17 +62,15 @@ class Ground(Drawable):
 
 
 class Resource(Drawable):
-    # e.g. ('Resource.ResourceType.GOLD', {amount: 150, ...}
-    resource_info: [(int, {})] = []  # a dict containing all information about the resources
+
+    resource_info: Dict[ResourceType, Dict[str, Any]] = {}  # a dict containing all information about the resources
 
     def __init__(self, tile: Hexagon, res_type: ResourceType):
         super().__init__()
         self.tile: Hexagon = tile
         self.remaining_amount: int = int(0)
         self.resource_type: ResourceType = res_type
-        for r_info in Resource.resource_info:
-            if r_info[0] == res_type:
-                self.remaining_amount = r_info[1]['amount']
+        self.remaining_amount = Resource.resource_info[res_type]['amount']
 
     def demand_res(self, request):
         if request <= self.remaining_amount:
@@ -84,34 +83,28 @@ class Resource(Drawable):
 
 
 class Unit:
-    unit_info: [(int, {})] = []
+    unit_info: Dict[UnitType, Dict[str, Any]] = {}
 
-    def __init__(self, type: UnitType):
-        self.unit_type: UnitType = type
-        for u_info in Unit.unit_info:
-            if u_info[0] == self.unit_type:
-                self.name = u_info[1]['name']
-                self.attack_value = u_info[1]['attack']
-                self.defence_value = u_info[1]['defence']
-                self.population = u_info[1]['population']
-                self.cost_resource = u_info[1]['cost_resource']
-                self.cost_culture = u_info[1]['cost_culture']
+    def __init__(self, u_type: UnitType):
+        self.unit_type: UnitType = u_type
+        self.name = Unit.unit_info[u_type]['name']
+        self.attack_value = Unit.unit_info[u_type]['attack']
+        self.defence_value = Unit.unit_info[u_type]['defence']
+        self.population = Unit.unit_info[u_type]['population']
+        self.cost_resource = Unit.unit_info[u_type]['cost_resource']
+        self.cost_culture = Unit.unit_info[u_type]['cost_culture']
 
     @staticmethod
-    def get_unit_cost(ut: UnitType) -> (int, int, int):
-        """returns a tuple of the cost in resources, culture and population"""
-        for u_info in Unit.unit_info:
-            if u_info[0] == ut:
-                return u_info[1]['cost_resource'], u_info[1]['cost_culture'], u_info[1]['population']
-        return -1, -1, -1
+    def get_unit_cost(ut: UnitType) -> UnitCost:
+        """returns a UnitCost of the cost in resources, culture and population"""
+        return UnitCost(Unit.unit_info[ut]['cost_resource'],
+                        Unit.unit_info[ut]['cost_culture'],
+                        Unit.unit_info[ut]['population'])
 
     @staticmethod
     def get_unit_stats(ut: UnitType) -> (int, int, int):
         """returns a tuple of the attack and defence value and population of the unit"""
-        for u_info in Unit.unit_info:
-            if u_info[0] == ut:
-                return u_info[1]['attack'], u_info[1]['defence'], u_info[1]['population']
-        return -1, -1, -1
+        return Unit.unit_info[ut]['attack'], Unit.unit_info[ut]['defence'], Unit.unit_info[ut]['population']
 
 
 class Army(Drawable):
@@ -185,14 +178,18 @@ class Army(Drawable):
                 self.get_amount_by_unit(UnitType.BABARIC_SOLDIER))
 
 
-class Flag(Drawable):
-    def __init__(self, position: (int, int), colour: PlayerColour):
-        super().__init__()
-        self.position: (int, int) = position
-        self.colour: PlayerColour = colour
+class Flag(arcade.AnimatedTimeBasedSprite):
+    def __init__(self, pos: Tuple[int, int], animated_tex: List[arcade.Texture], scale=1):
+        super().__init__(scale=scale, center_x=pos[0], center_y=pos[1])
+        i = 0
+        for tex in animated_tex:
+            self.append_texture(tex)
+            self.frames.append(AnimationKeyframe(i, 80, tex))
+            i += 1
+        self.set_texture(0)
 
 
-class Scenario():
+class Scenario:
     def __init__(self):
         self.resource_list: [Resource] = []
         self.aux_sprites: [(Hexagon, Drawable)] = []

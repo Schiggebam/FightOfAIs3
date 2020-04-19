@@ -10,7 +10,7 @@ from src.ai.AI_GameStatus import AI_GameStatus, AI_Move
 from src.ai.AI_MapRepresentation import Tile, AI_Army, AI_Building
 from src.ai.ai_blueprint import AI
 
-from src.misc.game_constants import DiploEventType, hint, BuildingType, error, debug, UnitType, Priority
+from src.misc.game_constants import DiploEventType, hint, BuildingType, error, debug, UnitType, Priority, MoveType
 
 DETAILED_DEBUG = False
 
@@ -128,7 +128,7 @@ class AI_Mazedonian(AI):
                                                          (BuildingType.BARRACKS, 2)]
         bo_mid_game: List[Tuple[BuildingType, int]] = [(BuildingType.FARM, 6), (BuildingType.HUT, 5),
                                                        (BuildingType.BARRACKS, 4)]
-        bo_late_game: List[Tuple[BuildingType, int]] = [(BuildingType.FARM, 7), (BuildingType.HUT, 7),
+        bo_late_game: List[Tuple[BuildingType, int]] = [(BuildingType.FARM, 7), (BuildingType.HUT, 9),
                                                         (BuildingType.BARRACKS, 10)]
         self.ac_passive: AI_Mazedonian.ArmyConstellation = AI_Mazedonian.ArmyConstellation("passive", (0.5, 0.5))
         self.ac_aggressive: AI_Mazedonian.ArmyConstellation = AI_Mazedonian.ArmyConstellation("aggressive", (0.8, 0.2))
@@ -151,7 +151,8 @@ class AI_Mazedonian(AI):
 
     def do_move(self, ai_stat: AI_GameStatus, move: AI_Move):
         t1 = timeit.default_timer()
-
+        hint("------ {} -------".format(self.name))
+        self.set_vars(ai_stat)
         self.create_heat_maps(ai_stat, move)
         self.update_diplo_events(ai_stat)
         self.diplomacy.calc_round()
@@ -185,8 +186,8 @@ class AI_Mazedonian(AI):
         # debug(f"Timings: {t2 - t1}, {t3 - t2}, {t4 - t3}, total: {t4 - t1}")
         # debug(f"Timings {t2_1 - t2}, {t2_2 - t2_1}, {t3 - t2_2}")
         # clear out some data:
-        self.priolist_targets.clear()
-        self.claimed_tiles.clear()
+
+        self.reset_vars()
 
     def evaluate_army_movement(self, ai_stat: AI_GameStatus, move: AI_Move):
         if len(ai_stat.map.army_list) == 0:
@@ -232,9 +233,14 @@ class AI_Mazedonian(AI):
                     hint("targets value to low. Will not attack")
 
     def set_vars(self, ai_stat: AI_GameStatus):
-        if self.previous_food > ai_stat.player_food:
+        if self.previous_food > ai_stat.me.food:
             hint("AI detected that it is loosing food")
             self.is_loosing_food = True
+
+    def reset_vars(self):
+        self.is_loosing_food = False
+        self.priolist_targets.clear()
+        self.claimed_tiles.clear()
 
     def create_heat_maps(self, ai_stat: AI_GameStatus, move: AI_Move):
         # cond = lambda n: AI_Toolkit.is_obj_in_list(n, ai_stat.map.walkable_tiles)
@@ -256,10 +262,11 @@ class AI_Mazedonian(AI):
         # for ai_stat.aggressions:
 
         for e_b in ai_stat.map.opp_building_list:
-            if AI_Toolkit.is_obj_in_list(e_b, self.claimed_tiles):
-                debug("New Event: ENEMY_BUILDING_IN_CLAIMED_ZONE")
-                self.diplomacy.add_event(e_b.owner, e_b.offset_coordinates,
-                                         DiploEventType.ENEMY_BUILDING_IN_CLAIMED_ZONE, -2, 3, self.name)
+            if e_b.visible:
+                if AI_Toolkit.is_obj_in_list(e_b, self.claimed_tiles):
+                    debug("New Event: ENEMY_BUILDING_IN_CLAIMED_ZONE")
+                    self.diplomacy.add_event(e_b.owner, e_b.offset_coordinates,
+                                             DiploEventType.ENEMY_BUILDING_IN_CLAIMED_ZONE, -2, 3, self.name)
         for e_a in ai_stat.map.opp_army_list:
             if AI_Toolkit.is_obj_in_list(e_a, self.claimed_tiles):
                 debug("New Event: ENEMY_ARMY_INVADING_CLAIMED_ZONE")
@@ -286,10 +293,11 @@ class AI_Mazedonian(AI):
             strength: AI_Mazedonian.Strength = AI_Mazedonian.Strength.UNKNOWN
             for e_a in ai_stat.map.opp_army_list:
                 if e_a.owner == other_p_id:
-                    if abs(e_a.population - ai_stat.map.army_list[0].population) < self.threshold_considered_equal:
+                    t_equal = self.threshold_considered_equal
+                    if abs(e_a.population - ai_stat.map.army_list[0].population) < t_equal:
                         # self.__update_estimated_strength(other_p_id, AI_Mazedonian.EQUAL)
                         strength = AI_Mazedonian.Strength.EQUAL
-                    elif e_a.population > ai_stat.map.army_list[0].population:
+                    elif e_a.population - ai_stat.map.army_list[0].population:
                         # self.__update_estimated_strength(other_p_id, AI_Mazedonian.STRONGER)
                         strength = AI_Mazedonian.Strength.STRONGER
                     elif e_a.population < ai_stat.map.army_list[0].population:
@@ -386,25 +394,30 @@ class AI_Mazedonian(AI):
         # translate this into move
         best_option: AI_Mazedonian.Option = options[0]
         if type(best_option) == AI_Mazedonian.WaitOption:
-            move.doNothing = True
+            move.move_type = MoveType.DO_NOTHING
+            # move.doNothing = True
             move.str_rep_of_action = "waiting"
         elif type(best_option) == AI_Mazedonian.BuildOption:
-            move.doBuild = True
+            move.move_type = MoveType.DO_BUILD
+            # move.doBuild = True
             move.loc = best_option.site
             move.type = best_option.type
             for at in best_option.associated_tiles:
                 move.info.append(at)
             move.str_rep_of_action = f"building a {best_option.type} at " + str(move.loc)
         elif type(best_option) == AI_Mazedonian.RecruitmentOption:
-            move.doRecruitUnit = True
+            move.move_type = MoveType.DO_RECRUIT_UNIT
+            # move.doRecruitUnit = True
             move.type = best_option.type
             move.str_rep_of_action = f"recruiting a {best_option.type}"
         elif type(best_option) == AI_Mazedonian.ScoutingOption:
-            move.doScout = True
+            move.move_type = MoveType.DO_SCOUT
+            # move.doScout = True
             move.loc = best_option.site
             move.str_rep_of_action = "scouting at" + str(move.loc)
         elif type(best_option) == AI_Mazedonian.RecruitmentOption:
-            move.doRecruitArmy = True
+            move.move_type = MoveType.DO_RAISE_ARMY
+            # move.doRecruitArmy = True
             move.str_rep_of_action = "raising new army at"
         else:
             error("unexpected type")
@@ -459,7 +472,7 @@ class AI_Mazedonian(AI):
                                 racks_opt.score = Priority.increase(racks_opt.score)
                     else:
                         hint("Build order contains unknown building type -> " + str(t))
-            if ai_stat.player_food < self.food_lower_limit:
+            if ai_stat.me.food < self.food_lower_limit:
                 if farm_opt is None:  # we force to look for a site even if the BO does not allow for it
                     farm_opt = value_farm, site_farm = self.__best_building_site_farm(ai_stat)
 
@@ -478,7 +491,7 @@ class AI_Mazedonian(AI):
         fields = []
         p = Priority.P_NO
         is_next_to_res = False  # just for printing
-        if ai_stat.player_resources >= ai_stat.costBuildFarm:
+        if ai_stat.me.resources >= ai_stat.costBuildFarm:
             for ai_t in ai_stat.map.buildable_tiles:
                 tmp = False  # just for printing
                 possible_fields = []
@@ -515,7 +528,7 @@ class AI_Mazedonian(AI):
         """building sites get scored by their number of resource fields next to them"""
         best_score = -1
         best_site = (-1, -1)
-        if ai_stat.player_resources >= ai_stat.costBuildS1:
+        if ai_stat.me.resources >= ai_stat.costBuildS1:
             for ai_t in ai_stat.map.buildable_tiles:
                 score = AI_Toolkit.num_resources_on_adjacent(ai_t)
                 if best_score < score:
@@ -525,7 +538,7 @@ class AI_Mazedonian(AI):
 
     def __best_building_site_barracks(self, ai_stat: AI_GameStatus) -> Tuple[Priority, Tuple[int, int]]:
         """building sites should be a claimed tile and not next to a resource"""
-        if ai_stat.player_resources >= ai_stat.costBuildRacks:
+        if ai_stat.me.resources >= ai_stat.costBuildRacks:
             candidates = []
             for c in self.claimed_tiles:
                 if not c.is_buildable:  # if tile is not buildable, forget it
@@ -551,7 +564,7 @@ class AI_Mazedonian(AI):
 
     def evaluate_move_recruitment(self, ai_stat: AI_GameStatus) -> List[Union[RecruitmentOption, RaiseArmyOption]]:
         options = []
-        if ai_stat.population >= ai_stat.population_limit:
+        if ai_stat.me.population >= ai_stat.me.population_limit:
             return options
         if len(ai_stat.map.army_list) == 0:
             options.append(AI_Mazedonian.RaiseArmyOption(Priority.P_HIGH))
@@ -559,7 +572,7 @@ class AI_Mazedonian(AI):
         # calculate offset to desired population by build order
         prio_merc = Priority.P_LOW
         prio_knight = Priority.P_LOW
-        offset = self.build_order.population - ai_stat.population
+        offset = self.build_order.population - ai_stat.me.population
         if offset > 0:
             prio_merc = Priority.increase(prio_merc)
             prio_knight = Priority.increase(prio_knight)
@@ -579,29 +592,29 @@ class AI_Mazedonian(AI):
         else:
             prio_knight = Priority.increase(prio_knight)
         # mercenary
-        if ai_stat.population + ai_stat.costUnitMe[2] <= ai_stat.population_limit:
-            if ai_stat.player_resources >= ai_stat.costUnitMe[0]:
-                if ai_stat.player_culture >= ai_stat.costUnitMe[1]:
+        if ai_stat.me.population + ai_stat.costUnitMe.population <= ai_stat.me.population_limit:
+            if ai_stat.me.resources >= ai_stat.costUnitMe.resources:
+                if ai_stat.me.culture >= ai_stat.costUnitMe.culture:
                     options.append(AI_Mazedonian.RecruitmentOption(UnitType.MERCENARY, prio_merc))
                 else:
                     hint("not enough culture to recruit a mercenary. actual: {} required: {}".format(
-                        ai_stat.player_culture, ai_stat.costUnitMe[2]))
+                        ai_stat.me.culture, ai_stat.costUnitMe.culture))
             else:
                 hint("not enough resources to recruit a mercenary. actual: {} required: {}".format(
-                    ai_stat.player_resources, ai_stat.costUnitMe[0]))
+                    ai_stat.me.resources, ai_stat.costUnitMe.resources))
         else:
             hint("not enough free population to recruit a mercenary")
         # knight
-        if ai_stat.population + ai_stat.costUnitKn[2] <= ai_stat.population_limit:
-            if ai_stat.player_resources >= ai_stat.costUnitKn[0]:
-                if ai_stat.player_culture >= ai_stat.costUnitKn[1]:
+        if ai_stat.me.population + ai_stat.costUnitKn.population <= ai_stat.me.population_limit:
+            if ai_stat.me.resources >= ai_stat.costUnitKn.resources:
+                if ai_stat.me.culture >= ai_stat.costUnitKn.culture:
                     options.append(AI_Mazedonian.RecruitmentOption(UnitType.KNIGHT, prio_knight))
                 else:
                     hint("not enough culture to recruit a knight. actual: {} required: {}".format(
-                        ai_stat.player_culture, ai_stat.costUnitKn[2]))
+                        ai_stat.me.culture, ai_stat.costUnitKn.culture))
             else:
                 hint("not enough resources to recruit a knight. actual: {} required: {}".format(
-                    ai_stat.player_resources, ai_stat.costUnitKn[0]))
+                    ai_stat.me.resources, ai_stat.costUnitKn.resources))
         else:
             hint("not enough free population to recruit a knight")
         return options
@@ -610,7 +623,7 @@ class AI_Mazedonian(AI):
         """scores the scouting options, currently by the distance to a own building
         (want to make sure that all claimable tiles are scouted) and by the proximity to a resource fieled"""
         options: List[AI_Mazedonian.ScoutingOption] = []
-        if ai_stat.player_resources < ai_stat.costScout:
+        if ai_stat.me.resources < ai_stat.costScout:
             return options
 
         for s in ai_stat.map.scoutable_tiles:
@@ -658,7 +671,7 @@ class AI_Mazedonian(AI):
             self.previous_army_population = ai_stat.map.army_list[0].population
         else:
             self.previous_army_population = 0
-        self.previous_food = ai_stat.player_food
+        self.previous_food = ai_stat.me.food
 
     def __get_protocol_and_bo(self, ai_stat: AI_GameStatus):
         """simply defines if the AI is in early game, mid-game or late-game -> done by build order
@@ -704,7 +717,7 @@ class AI_Mazedonian(AI):
             for t in tmp:
                 if t[0] == b.type:
                     t[1] = t[1] - 1
-        return (tmp, bo.population - ai_stat.population)
+        return (tmp, bo.population - ai_stat.me.population)
 
     def __compare_to_ac(self, army: AI_Army, ac: ArmyConstellation) -> UnitType:
         off_merc = ac.ac[0] - (army.mercenaries / army.population)
@@ -732,7 +745,8 @@ class AI_Mazedonian(AI):
         for e_a in ai_stat.map.opp_army_list:
             targets.add((e_a, True))
         for e_b in ai_stat.map.opp_building_list:
-            targets.add((e_b, False))
+            if e_b.visible:
+                targets.add((e_b, False))
 
         hint(f"Found {len(targets)} target(s) for our army")
         for target, is_army in targets:
@@ -763,8 +777,8 @@ class AI_Mazedonian(AI):
             hint("No Targets found")
 
     def __print_situation(self, ai_stat: AI_GameStatus):
-        hint(f"Res: {ai_stat.player_resources}, Cul: {ai_stat.player_culture}, Food: {ai_stat.player_food}"
-             f", Pop: {ai_stat.population} / {ai_stat.population_limit}")
+        hint(f"Res: {ai_stat.me.resources}, Cul: {ai_stat.me.culture}, Food: {ai_stat.me.food}"
+             f", Pop: {ai_stat.me.population} / {ai_stat.me.population_limit}")
         for h in self.hostile_player:
             hint("hostile player: [ID:] {} estimated strength: {}".format(h, self.opponent_strength[h]))
 

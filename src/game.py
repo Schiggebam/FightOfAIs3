@@ -160,7 +160,7 @@ class Game(arcade.Window):
         self.z_level_renderer.render()  # call the z-level Renderer
 
         output = f"Drawing time: {self.draw_time:.3f} #sprites: {self.num_of_sprites}"
-        output_update = f"Max Update time: {self.max_update_time:.3f}"
+        output_update = f"Update time: {self.max_update_time:.3f}"
         other_times = f"A: {self.game_logic.animator_time:.3f}  T: {self.game_logic.total_time:.3f}"
         arcade.draw_text(output, 20, SCREEN_HEIGHT - 40, self.draw_time_colour, 16)
         arcade.draw_text(output_update, 20, SCREEN_HEIGHT - 60, arcade.color.WHITE, 16)
