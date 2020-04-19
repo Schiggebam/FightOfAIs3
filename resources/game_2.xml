@@ -210,7 +210,7 @@
                  army_rel_to_spawn_x="+1" army_rel_to_spawn_y="-1">Barbaric 1</barbar1>
         <!--<village colour="teal" spawn_x="10" spawn_y="14" ai="villager"
                  army_rel_to_spawn_x="-1" army_rel_to_spawn_y="0">Barbaric 1</village>-->
-        <human colour="green" spawn_x="10" spawn_y="10" ai="human"
-               army_rel_to_spawn_x="+1" army_rel_to_spawn_y="+1">meme</human>
+        <!--<human colour="green" spawn_x="10" spawn_y="10" ai="human"
+               army_rel_to_spawn_x="+1" army_rel_to_spawn_y="+1">meme</human>-->
     </players>
 </game>

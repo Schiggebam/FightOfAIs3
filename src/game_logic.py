@@ -193,12 +193,12 @@ class GameLogic:
                 if player.player_type != PlayerType.HUMAN:
                     self.play_players_turn(player)
                     played_move = True
-                else:
-                    from src.ai import human
-                    move, costs, ready = human.check_input()
-                    if ready:
-                        self.exec_ai_move(move, player, costs)
-                        played_move = True
+                #else:
+                    # from src.ai import human
+                    # move, costs, ready = human.check_input()
+                    #if ready:
+                    #self.exec_ai_move(move, player, costs)
+                    #    played_move = True
                 if played_move:
                     if self.current_player == 0:  # next time player 0 plays -> new turn
                         self.turn_nr = self.turn_nr + 1
