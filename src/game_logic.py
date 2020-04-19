@@ -295,7 +295,7 @@ class GameLogic:
                 for pid, loc in player.attacked_set:
                     if pid == p.id:
                         tmp.has_attacked = True
-                        tmp.attack_loc.append((pid, loc))
+                        # tmp.attack_loc.append((pid, loc))
 
         costs = {'scout': int(1)}
         for b_type in BuildingType:
