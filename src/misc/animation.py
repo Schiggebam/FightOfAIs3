@@ -62,6 +62,8 @@ class Animator:
             if move.start_time_ms == -1:
                 move.start_time_ms = time
             if time > move.start_time_ms + move.time_ms:    #simulation has ended
+                # FIXME this will probably fail if the camera is moving at the same time
+                move.drawable.set_sprite_pos(move.destination, move.camera_pos)
                 move.finished = True
             else:
                 move.update(time)

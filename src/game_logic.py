@@ -585,7 +585,6 @@ class GameLogic:
                     for my_dis in set().union(player.discovered_tiles, scoutable_tiles):
                         if o_b.tile.offset_coordinates == my_dis.offset_coordinates:
                             e_set.add((o_b, other_player.id))
-        # print(e_set)
         return e_set
 
     def get_enemy_armies(self, player:  Player) -> set:
@@ -608,9 +607,13 @@ class GameLogic:
                 if res.tile in player.discovered_tiles:
                     res.sprite.alpha = 255
             for p in self.player_list:
+                for a in p.armies:
+                    if a.tile in player.discovered_tiles:
+                        a.sprite.alpha = 255
                 for b in p.buildings:
                     if b.tile in player.discovered_tiles:
                         b.sprite.alpha = 255
+                        b.flag.alpha = 255
                         for a in b.associated_drawables:
                             a.sprite.alpha = 255
         self.__reorder_spritelist(self.z_levels[Z_GAME_OBJ])
@@ -620,29 +623,32 @@ class GameLogic:
         v = 255 if self.map_hack else 0
         for res in self.scenario.resource_list:
             res.sprite.alpha = v
-
-
         tot = len(tile_list)
         counter = 0
         if show_update_bar:
             start_progress("Updating map view")
-        for hex in tile_list:
-            if counter % 5 == 0 and show_update_bar:
-                progress(counter)
-            counter = counter + 1
-            hex.ground.set_active_texture(1 if self.map_hack else 0)
-            # hex.ground.sprite.alpha = 255 if self.map_hack else 0
+        if self.change_in_map_view:
+            for hex in tile_list:
+                if counter % 5 == 0 and show_update_bar:
+                    progress(counter)
+                counter = counter + 1
+                hex.ground.set_active_texture(1 if self.map_hack else 0)
+                # hex.ground.sprite.alpha = 255 if self.map_hack else 0
         if show_update_bar:
             end_progress()
         for player in self.player_list:
+            for a in player.armies:
+                a.sprite.alpha = v
             for b in player.buildings:
                 b.sprite.alpha = v
+                b.flag.alpha = v
                 for a in b.associated_drawables:
                     a.sprite.alpha = v
-
+        t2 = timeit.default_timer()
         for player in self.player_list:
             self.update_fog_of_war(player)
-        print("Toggeling the map took: {} s".format(timeit.default_timer() - t1))
+        t3 = timeit.default_timer()
+        debug("Toggeling the map took: {} s (fog of war update: {})".format(t3 - t1, t3 - t2))
 
     def add_resource(self, resource: Resource):
         self.scenario.resource_list.append(resource)
@@ -690,7 +696,8 @@ class GameLogic:
         # flag = Flag((position[0] + building.flag_offset[0], position[1] + building.flag_offset[1]),
         #            player.colour)
         #self.add_flag(flag, player.colour_code)
-        pos = (position[0] + building.flag_offset[0], position[1] + building.flag_offset[1])
+        pos = (position[0] + building.flag_offset[0] + self.__camera_pos[0],
+               position[1] + building.flag_offset[1] + self.__camera_pos[1])
         flag = self.add_animated_flag(player.colour_code, pos)
         building.flag = flag
         if building.building_type == BuildingType.FARM:
@@ -722,6 +729,7 @@ class GameLogic:
         army.set_sprite_pos(HexMap.offset_to_pixel_coords(army.tile.offset_coordinates), self.__camera_pos)
         army.is_barbaric = player.is_barbaric
         self.__set_sprite(army, "f1_" + player.colour_code)
+        self.toggle_fog_of_war_lw(player.discovered_tiles)
         self.z_levels[Z_GAME_OBJ].append(army.sprite)
 
     def move_army(self, army: Army, player: Player, pos: (int, int)):
