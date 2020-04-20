@@ -241,7 +241,8 @@ class HumanInteraction:
                     ######
                 for c in candidates:
                     pix_c = HexMap.offset_to_pixel_coords(c.offset_coordinates)
-                    si = SelectionIcon(pix_c[0], pix_c[1], self.textures['hi_specify'], Action.NONE, c, scale=0.9)
+                    si = SelectionIcon(pix_c[0] + self.camera_pos[0], pix_c[1] + self.camera_pos[1],
+                                       self.textures['hi_specify'], Action.NONE, c, scale=0.9)
                     self.zlvl_icons.append(si)
                     self.candidates.append(si)
             else:

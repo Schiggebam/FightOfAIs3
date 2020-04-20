@@ -690,7 +690,8 @@ class GameLogic:
         # flag = Flag((position[0] + building.flag_offset[0], position[1] + building.flag_offset[1]),
         #            player.colour)
         #self.add_flag(flag, player.colour_code)
-        pos = (position[0] + building.flag_offset[0], position[1] + building.flag_offset[1])
+        pos = (position[0] + building.flag_offset[0] + self.__camera_pos[0],
+               position[1] + building.flag_offset[1] + self.__camera_pos[1])
         flag = self.add_animated_flag(player.colour_code, pos)
         building.flag = flag
         if building.building_type == BuildingType.FARM:
