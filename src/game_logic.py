@@ -3,9 +3,9 @@ import timeit
 # from threading import Thread
 
 from src.ai.AI_GameStatus import AI_GameStatus, AI_Move, AI_GameInterface
+
 from src.misc.animation import Animator
-from src.misc.game_constants import ResourceType, GroundType, debug, error, ENABLE_KEYFRAME_ANIMATIONS, start_progress, \
-    end_progress, progress, PlayerType, MoveType
+from src.misc.game_constants import *
 from src.game_accessoires import Scenario, Ground, Resource, Drawable, Flag, Unit
 from src.game_file_reader import GameFileReader
 from src.hex_map import HexMap, MapStyle, Hexagon
@@ -20,6 +20,8 @@ class GameLogic:
         self.game_file_reader: GameFileReader = GameFileReader(game_xml_file)
         self.z_levels: [arcade.SpriteList] = z_levels               # reference to the sprite lists
         self.hex_map: Optional[HexMap] = None
+        from src.ai.human import HumanInteraction
+        self.hi: Optional[HumanInteraction] = None
         self.ai_interface: AI_GameInterface = AI_GameInterface()
         self.scenario: Scenario = Scenario()
         self.income_calc: IncomeCalculator = IncomeCalculator(self.hex_map, self.scenario)
@@ -34,7 +36,7 @@ class GameLogic:
         self.player_list: [Player] = []
         self.map_view: [bool] = []              # true if we show the players view, otherwise false
         self.change_in_map_view = False
-        self.map_hack = True
+        self.map_hack = False
         self.winner: Optional[Player] = None
 
         # read game data
@@ -115,7 +117,7 @@ class GameLogic:
                 ground.set_sprite_pos(HexMap.offset_to_pixel_coords((x, y)), self.__camera_pos)
                 ground.add_texture(self.texture_store.get_texture("fw"))
                 ground.tex_code = map_data[y][x]
-                self.z_levels[1].append(ground.sprite)
+                self.z_levels[Z_MAP].append(ground.sprite)
 
         from src.misc.smooth_map import SmoothMap
         SmoothMap.smooth_map(self.hex_map)
@@ -163,15 +165,15 @@ class GameLogic:
                 army.add_unit(unit)
                 self.add_army(army, player)
 
-        self.__reorder_spritelist(self.z_levels[2])
+        self.__reorder_spritelist(self.z_levels[Z_GAME_OBJ])
         self.toggle_fog_of_war_lw(self.hex_map.map)
         self.show_key_frame_animation = ENABLE_KEYFRAME_ANIMATIONS
         debug(f"Keyframes are {'enabled' if ENABLE_KEYFRAME_ANIMATIONS else 'disabled (enable by typing <switch_ka> in console)'}")
         # HexMap.hex_distance(self.hex_map.get_hex_by_offset((0,0)), self.hex_map.get_hex_by_offset((2,2)))
 
     elapsed = float(0)
-    total_elapsed = float(0)
-    # ith_iteration = 0
+    total_elapsed = float(0)    #    TODO make this a member
+
     def update(self, delta_time: float, commands :[]):
         timestamp_start = timeit.default_timer()
         self.__exec_command(commands)
@@ -187,26 +189,41 @@ class GameLogic:
         if self.playNextTurn:
             #if not self.ai_running:
 
+            print("BUUU")
             if len(self.player_list) > 0:
                 player = self.player_list[self.current_player]
                 played_move = False
                 if player.player_type != PlayerType.HUMAN:
-                    self.play_players_turn(player)
+                    ai_move = self.play_players_turn(player)
+                    if ai_move:     # player might have lost
+                        self.exec_ai_move(ai_move, player)
                     played_move = True
-                #else:
-                    # from src.ai import human
-                    # move, costs, ready = human.check_input()
-                    #if ready:
-                    #self.exec_ai_move(move, player, costs)
-                    #    played_move = True
+                else:
+                    if not self.wait_for_human:
+                        self.play_players_turn(player)
+                        self.wait_for_human = True
+                        self.automatic = False
+                        self.playNextTurn = False
+                    else:
+                        self.exec_ai_move(self.hi.get_move(), player)
+                        self.wait_for_human = False
+                        played_move = True
+                        self.playNextTurn = True
                 if played_move:
+                    self.automatic = True
                     if self.current_player == 0:  # next time player 0 plays -> new turn
                         self.turn_nr = self.turn_nr + 1
                     self.current_player = (self.current_player + 1) % len(self.player_list)
+                    if self.player_list[self.current_player].player_type == PlayerType.HUMAN:      # -> already gives the human player its resources
+                        self.playNextTurn = True    # smoother gameplay
+                    else:
+                        self.playNextTurn = False
+            else:                                   # this is in case of no players
+                self.playNextTurn = False
         else:
-            for s in self.z_levels[3]:
+            for s in self.z_levels[Z_FLYING]:
                 s.update_animation()
-        self.playNextTurn = False
+
         if self.change_in_map_view:
             self.toggle_fog_of_war_lw(self.hex_map.map, show_update_bar=True)
             self.change_in_map_view = False
@@ -215,7 +232,7 @@ class GameLogic:
         self.total_time = timestamp_start - timeit.default_timer()
 
 
-    def play_players_turn(self, player: Player):
+    def play_players_turn(self, player: Player) -> Optional[AI_Move]:
         print("Play turn of: " + player.name)
         self.updata_map()
         # gather player data
@@ -236,7 +253,7 @@ class GameLogic:
         if player.has_lost:
             for army in player.armies:
                 self.del_army(army, player)
-            return
+            return None
 
         player.income = self.income_calc.calculate_income(player)
         player.amount_of_resources = player.amount_of_resources + player.income
@@ -316,18 +333,23 @@ class GameLogic:
         self.ai_interface.create_ai_status(ai_status, self.turn_nr, costs,
                                            ai_map, me, opponents)
         player.attacked_set.clear()
-        timestamp_start = timeit.default_timer()
-        self.ai_interface.do_a_move(ai_status, ai_move, player.id)
-        debug(f"AI took: {timeit.default_timer() - timestamp_start} s")
+        if player.player_type == PlayerType.HUMAN:
+            self.hi.request_move(ai_status, ai_move, player.id)
+            self.wait_for_human = True
+        else:
+            timestamp_start = timeit.default_timer()
+            self.ai_interface.do_a_move(ai_status, ai_move, player.id)
+            debug(f"AI took: {timeit.default_timer() - timestamp_start} s")
 
-        self.exec_ai_move(ai_move, player, costs)
+        # self.exec_ai_move(ai_move, player, costs)
         ai_status.clear()
         del ai_status
 
         # if not player.is_barbaric:
         #     self.__add_aux_sprite(player.armies[0].tile, 1, "ou")
 
-        hint("                          SUCCESSFULLY PLAYED TURN")
+
+        return ai_move
 
     def updata_map(self):
         """this function makes sure that the map remains well defined"""
@@ -364,9 +386,9 @@ class GameLogic:
 
         # This is a bit of brute force approach and not really necessary. However, animations made it hard
         # to track when updates are necessary. # TODO handle this with more care
-        self.__reorder_spritelist(self.z_levels[2])
+        self.__reorder_spritelist(self.z_levels[Z_GAME_OBJ])
 
-    def exec_ai_move(self, ai_move: AI_Move, player: Player, costs):
+    def exec_ai_move(self, ai_move: AI_Move, player: Player):
         self.__check_validity(ai_move)
         for d in self.hex_map.map:
             d.debug_msg = ""
@@ -458,9 +480,10 @@ class GameLogic:
             else:
                 error("Exec AI Move: Cannot build building! BuildingType:" + str(b_type))
         if ai_move.move_type == MoveType.DO_SCOUT:
-            if player.amount_of_resources >= costs['scout']:
+            #FIXME cost of scouting is hardcoded
+            if player.amount_of_resources >= 1:
                 player.discovered_tiles.add(self.hex_map.get_hex_by_offset(ai_move.loc))
-                player.amount_of_resources = player.amount_of_resources - costs['scout']
+                player.amount_of_resources = player.amount_of_resources - 1
                 self.toggle_fog_of_war_lw(player.discovered_tiles)
 
         elif ai_move.move_type == MoveType.DO_UPGRADE_BUILDING:
@@ -483,6 +506,8 @@ class GameLogic:
             b_new = Building(base_hex, b_type, player.id)
             # print(b_new.tex_code)
             self.add_building(b_new, player)
+
+        hint("                          SUCCESSFULLY PLAYED TURN")
 
     def __check_validity(self, ai_move: AI_Move):
         """prints warning message if AI_Move object is faulty"""
@@ -560,7 +585,7 @@ class GameLogic:
                     for my_dis in set().union(player.discovered_tiles, scoutable_tiles):
                         if o_b.tile.offset_coordinates == my_dis.offset_coordinates:
                             e_set.add((o_b, other_player.id))
-        print(e_set)
+        # print(e_set)
         return e_set
 
     def get_enemy_armies(self, player:  Player) -> set:
@@ -588,7 +613,7 @@ class GameLogic:
                         b.sprite.alpha = 255
                         for a in b.associated_drawables:
                             a.sprite.alpha = 255
-        self.__reorder_spritelist(self.z_levels[2])
+        self.__reorder_spritelist(self.z_levels[Z_GAME_OBJ])
 
     def toggle_fog_of_war_lw(self, tile_list: Set[Hexagon], show_update_bar=False):
         t1 = timeit.default_timer()
@@ -623,16 +648,16 @@ class GameLogic:
         self.scenario.resource_list.append(resource)
         resource.set_sprite_pos(HexMap.offset_to_pixel_coords(resource.tile.offset_coordinates), self.__camera_pos)
         self.__set_sprite(resource, resource.tex_code)
-        self.z_levels[2].append(resource.sprite)
+        self.z_levels[Z_GAME_OBJ].append(resource.sprite)
 
     def del_resource(self, resource: Resource):
         self.scenario.resource_list.remove(resource)
-        self.z_levels[2].remove(resource.sprite)
+        self.z_levels[Z_GAME_OBJ].remove(resource.sprite)
 
     def add_animated_flag(self, colour_code: str, pos: Tuple[int, int]) -> Flag:
         a_tex = self.texture_store.get_animated_texture('{}_flag'.format(colour_code))
         flag = Flag(pos, a_tex, 0.2)
-        self.z_levels[3].append(flag)
+        self.z_levels[Z_FLYING].append(flag)
         return flag
 
     # def add_flag(self, flag: Flag, colour_code: str):
@@ -647,7 +672,7 @@ class GameLogic:
     #     self.z_levels[2].append(flag.sprite)
 
     def del_flag(self, flag: Flag):
-        self.z_levels[3].remove(flag)
+        self.z_levels[Z_FLYING].remove(flag)
 
     def add_building(self, building: Building, player: Player):
         # hint("adding a building")
@@ -660,7 +685,7 @@ class GameLogic:
             building.add_tex_construction(self.texture_store.get_texture("cs"))
             building.set_state_construction()
         building.add_tex_destruction(self.texture_store.get_texture("ds"))
-        self.z_levels[2].append(building.sprite)
+        self.z_levels[Z_GAME_OBJ].append(building.sprite)
         # add the flag:
         # flag = Flag((position[0] + building.flag_offset[0], position[1] + building.flag_offset[1]),
         #            player.colour)
@@ -673,7 +698,7 @@ class GameLogic:
                 self.extend_building(building, a, "cf")
 
         self.toggle_fog_of_war_lw(player.discovered_tiles)
-        self.__reorder_spritelist(self.z_levels[2])
+        self.__reorder_spritelist(self.z_levels[Z_GAME_OBJ])
 
 
     def extend_building(self, building: Building, tile: Hexagon, tex_code: str):
@@ -683,21 +708,21 @@ class GameLogic:
         building.associated_drawables.append(drawable)
         drawable.sprite.alpha = 100
         self.__set_sprite(drawable, tex_code)
-        self.z_levels[2].append(drawable.sprite)
+        self.z_levels[Z_GAME_OBJ].append(drawable.sprite)
 
     def del_building(self, building: Building, player: Player):
         self.del_flag(building.flag)
         for drawable in building.associated_drawables:
-            self.z_levels[2].remove(drawable.sprite)
+            self.z_levels[Z_GAME_OBJ].remove(drawable.sprite)
         player.buildings.remove(building)
-        self.z_levels[2].remove(building.sprite)
+        self.z_levels[Z_GAME_OBJ].remove(building.sprite)
 
     def add_army(self, army: Army, player: Player):
         player.armies.append(army)
         army.set_sprite_pos(HexMap.offset_to_pixel_coords(army.tile.offset_coordinates), self.__camera_pos)
         army.is_barbaric = player.is_barbaric
         self.__set_sprite(army, "f1_" + player.colour_code)
-        self.z_levels[2].append(army.sprite)
+        self.z_levels[Z_GAME_OBJ].append(army.sprite)
 
     def move_army(self, army: Army, player: Player, pos: (int, int)):
         is_moving = True
@@ -752,7 +777,7 @@ class GameLogic:
                 army.tile = new_hex
                 hint('army is moving to ' + str(army.tile.offset_coordinates))
                 #army.set_sprite_pos(HexMap.offset_to_pixel_coords(new_hex.offset_coordinates))
-                self.__reorder_spritelist(self.z_levels[2])
+                self.__reorder_spritelist(self.z_levels[Z_GAME_OBJ])
             else:
                 error(f"Army cannot move that far: {self.hex_map.hex_distance(new_hex, army.tile)}")
 
@@ -762,7 +787,7 @@ class GameLogic:
     def del_army(self, army: Army, player: Player):
         hint("Game Logic: deleting army of player " + str(player.name))
         self.animator.stop_animation(army)
-        self.z_levels[2].remove(army.sprite)
+        self.z_levels[Z_GAME_OBJ].remove(army.sprite)
         player.armies.remove(army)
 
     def __set_sprite(self, drawable: Drawable, tex_code: str):
@@ -799,35 +824,35 @@ class GameLogic:
                     return a, Army
         return None, None
 
-    def add_aux_sprite(self, hex, zlvl, tex_code):              # TODO ugly method duplicated
-        self.__add_aux_sprite(hex, zlvl, tex_code)
+    def add_aux_sprite(self, hex, tex_code):              # TODO ugly method duplicated
+        self.__add_aux_sprite(hex, tex_code)
 
-    def __add_aux_sprite(self, hex: Hexagon, zlvl: int, tex_code: str):
+    def __add_aux_sprite(self, hex: Hexagon, tex_code: str):
         aux = Drawable()
         self.scenario.aux_sprites.append((hex, aux))
         aux.set_sprite_pos(HexMap.offset_to_pixel_coords(hex.offset_coordinates), self.__camera_pos)
         self.__set_sprite(aux, tex_code)
-        self.z_levels[zlvl].append(aux.sprite)
-        self.__reorder_spritelist(self.z_levels[zlvl])
+        self.z_levels[Z_AUX].append(aux.sprite)
+        self.__reorder_spritelist(self.z_levels[Z_AUX])
 
-    def __clear_aux_sprites(self, zlvl):
-        to_be_del: [arcade.Sprite] = []
+    def __clear_aux_sprites(self):
+        to_be_del: List[(Hexagon, Drawable)] = []
         for aux in self.scenario.aux_sprites:
             to_be_del.append(aux)
         for tbd in to_be_del:
             if tbd:
-                self.__rmv_aux_sprite(tbd[zlvl].sprite, 1)
+                self.__rmv_aux_sprite(tbd[1].sprite)
                 self.scenario.aux_sprites.remove(tbd)
 
-    def __rmv_aux_sprite(self, sprite: arcade.Sprite, zlvl: int):
-        self.z_levels[zlvl].remove(sprite)
+    def __rmv_aux_sprite(self, sprite: arcade.Sprite):
+        self.z_levels[Z_AUX].remove(sprite)
 
     def __exec_command(self, c_list):
         for c in c_list:
             cmd = c[0]
             if cmd == "mark_tile":
                 hex = self.hex_map.get_hex_by_offset((int(c[1]), int(c[2])))
-                self.__add_aux_sprite(hex, 1, "ou")
+                self.__add_aux_sprite(hex, "ou")
             elif cmd == "set_res":
                 for p in self.player_list:
                     if p.id == int(c[1]):
@@ -840,13 +865,13 @@ class GameLogic:
                 for p in self.player_list:
                     if p.id == int(c[1]):
                         for dt in p.discovered_tiles:
-                            self.__add_aux_sprite(dt, 1, "ou")
+                            self.__add_aux_sprite(dt, "ou")
             elif cmd == "hl_walkable":
                 for hex in self.hex_map.map:
                     if hex.ground.walkable:
-                        self.__add_aux_sprite(hex, 1, "ou")
+                        self.__add_aux_sprite(hex, "ou")
             elif cmd == "clear_aux":
-                self.__clear_aux_sprites(1)
+                self.__clear_aux_sprites()
             elif cmd == "switch_ka":
                 self.show_key_frame_animation = not self.show_key_frame_animation
                 debug(f"keyframes are {'enabled' if self.show_key_frame_animation else 'disabled'}")

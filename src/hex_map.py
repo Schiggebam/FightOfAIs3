@@ -1,5 +1,7 @@
 from enum import Enum
-from typing import Optional, Tuple
+from typing import Optional, Tuple, List
+
+from src.misc.game_constants import hint, error
 
 TILE_HIGHT = 52 * 1
 TILE_WIDTH = 66 * 1
@@ -7,6 +9,7 @@ TILEMAP_ORIGIN_X = 40
 TILEMAP_ORIGIN_Y = 0
 LEFT_MARGIN = 0
 BOTTOM_MARGIN = 130
+
 
 class Hexagon:
     def __init__(self, grid_pos: (int, int)):
@@ -16,13 +19,13 @@ class Hexagon:
         self.debug_msg = ""
 
 
-
 class MapStyle(Enum):
     S_V_C = 0   # bottom side horizontal, each row has equal amount of elements
 
 
 class HexMap:
     def __init__(self, map_dim: (int, int), style: MapStyle):
+        hint("HexMap size: {}".format(map_dim))
         if style != MapStyle.S_V_C:
             print("HexMap: Only supported style so far: S_V_C")
         self.map_dim = map_dim
@@ -123,7 +126,7 @@ class HexMap:
         z = z - 1
         return self.get_hex_by_cube((x, y, z))
 
-    def get_neighbours(self, h: Hexagon) -> [Hexagon]:
+    def get_neighbours(self, h: Hexagon) -> List[Hexagon]:
         nei = [self.get_hex_northeast(h),
                 self.get_hex_east(h),
                 self.get_hex_southeast(h),
@@ -132,7 +135,7 @@ class HexMap:
                 self.get_hex_northwest(h)]
         return list(filter(None, nei))
 
-    def get_neighbours_dist2(self, h:Hexagon) -> [Hexagon]:
+    def get_neighbours_dist2(self, h:Hexagon) -> List[Hexagon]:
         x, y ,z = h.cube_coordinates
         dist_2 = [(x, y+2, z-2), (x+1, y+1, z-2), (x+2, y, z-2),
          (x+2, y-1, z-1), (x+2, y-2, z), (x+1, y-2, z+1),
@@ -144,12 +147,12 @@ class HexMap:
         nei.extend(self.get_neighbours(h))
         return list(filter(None, nei))
 
-    def get_neighbours_dist(self, h: Hexagon, dist: int):
+    def get_neighbours_dist(self, h: Hexagon, dist: int) -> Optional[List[Hexagon]]:
         if dist < 0:
-            print("HexMap: negative distance?")
+            error("HexMap: negative distance?")
             return None
         elif dist == 0:
-            return h
+            return [h]          # return a list to be consistent
         elif dist == 1:
             return self.get_neighbours(h)
         elif dist == 2:
@@ -160,6 +163,19 @@ class HexMap:
                 if HexMap.hex_distance(h, hex) <= dist:
                     nei.append(hex)
             return list(filter(None, nei))
+
+    def get_hex_by_pixel(self, pix_on_screen: Tuple[int, int], camera_pos: Tuple[int, int]):
+        # idx_x = 0
+        # idx_aligned_x = 0
+        idx_y = round((pix_on_screen[1] - BOTTOM_MARGIN - camera_pos[1]) / (TILE_HIGHT / 2))
+        if idx_y % 2 != 0:
+            idx_x = round((pix_on_screen[0] - TILEMAP_ORIGIN_X - TILE_WIDTH / 2 - camera_pos[0]) / TILE_WIDTH)
+            # idx_aligned_x = idx_x + 0.5
+        else:
+            idx_x = round((pix_on_screen[0] - TILEMAP_ORIGIN_X - camera_pos[0]) / TILE_WIDTH)
+            # idx_aligned_x = idx_x
+        return self.get_hex_by_offset((idx_x, idx_y))
+
 
     @staticmethod
     def hex_distance(hex_a: Hexagon, hex_b: Hexagon) -> int:

@@ -3,6 +3,7 @@ from typing import List, Optional
 
 import arcade
 
+from src.ai.human import HumanInteraction
 from src.game_logic import GameLogic
 from src.misc.game_logic_misc import Logger
 from src.ui.IconButton import IconButton
@@ -59,9 +60,10 @@ class AutomaticIconButton(IconButton):
         pass
 
 class UI:
-    def __init__(self, gl, screen_width, screen_height):
+    def __init__(self, gl, hi, screen_width, screen_height):
         self.camera_pos = (0, 0)
         self.gl: GameLogic = gl # holds an instance of the game logic
+        self.hi: HumanInteraction = hi
         self.buttonlist = []
         self.panel_list = []
         sb = NextTurnButton(screen_width-150, 70, self.callBack1)
@@ -78,6 +80,7 @@ class UI:
 
         self.buttonlist.append(self.ba)
         self.buttonlist.append(sb)
+
         self.buttonlist.append(diplo_button)
         self.buttonlist.append(ai_button)
         self.screen_width = screen_width
@@ -86,17 +89,20 @@ class UI:
         self.playerinfo = {}
         self.volatile_panel = []
         self.win_screen_shown = False
+        self.status_text = ""
         x_offset = 60
         map_hack_button = AutomaticIconButton (self.screen_width - 50, 20, self.callBack_map_hack,
                                                "../resources/other/watch_button_pressed.png",
                                                "../resources/other/watch_button_unpressed.png", scale=0.75)
-        map_hack_button.on_press()
+        #map_hack_button.on_press()
         self.buttonlist.append(map_hack_button)
         for p in self.gl.player_list:
             watch_button = AutomaticIconButton( 50 + x_offset, 20, self.callBack_watch,
                                                "../resources/other/watch_button_pressed.png",
                                                "../resources/other/watch_button_unpressed.png", scale=0.5)
             watch_button.args.append(p.id)
+            if p.player_type == PlayerType.HUMAN:
+                watch_button.on_press()
             self.buttonlist.append(watch_button)
             x_offset = x_offset + 250
         for b in self.buttonlist:
@@ -109,6 +115,7 @@ class UI:
         self.diplo_panel = PanelDiplo(self.screen_width - 280, 250, "Diplo panel", self.gl)
         self.panel_list.append(self.ai_panel)
         self.panel_list.append(self.diplo_panel)
+        self.gl.playNextTurn = True                 # FIXME this is stupid
 
     def draw(self):
         for hex in self.gl.hex_map.map:
@@ -118,6 +125,7 @@ class UI:
                 arcade.draw_text(hex.debug_msg, x + self.camera_pos[0], y + self.camera_pos[1], arcade.color.BLACK)
 
         # bottom pane
+        # FIXME: replace this by a sprite -> much faster
         arcade.draw_rectangle_filled(self.screen_width/2, 50, self.screen_width, 120,
                                      arcade.color.BISTRE)
         arcade.draw_rectangle_filled(self.screen_width / 2, 50, self.screen_width-20, 110,
@@ -138,34 +146,42 @@ class UI:
         # draw the player stats:
         x_offset = 30
         for p in self.gl.player_list:
-            res = str(p.amount_of_resources)
-            num_b = str(len(p.buildings))
-            cult = str(p.culture)
-            food = str(p.food)
-            pop = str(p.get_population())
             arcade.draw_text(str(p.name) + " [" + str(p.id) + "]", x_offset, 100, arcade.color.WHITE, 14)
-            if not p.has_lost:
-                # arcade.draw_text("Resources: " + res, x_offset + 10, 67, arcade.color.WHITE, 12)
-                # arcade.draw_text("Buildings: " + num_b, x_offset + 10, 54, arcade.color.WHITE, 12)
-                # arcade.draw_text("Culture: " + cult, x_offset + 10, 41, arcade.color.WHITE, 12)
-                # arcade.draw_text("Food: " + food, x_offset + 10, 28, arcade.color.WHITE, 12)
-                # arcade.draw_text(f"Population: {} / {}", x_offset + 10, 15, arcade.color.WHITE, 12)
-                arcade.draw_text(self.playerinfo[p.id], x_offset + 10, 15, arcade.color.WHITE)
-            else:
-                arcade.draw_text("LOST", x_offset + 10, 67, arcade.color.RED, 14)
-
+            arcade.draw_text(self.playerinfo[p.id][0], x_offset + 10, 15, self.playerinfo[p.id][1], self.playerinfo[p.id][2])
             x_offset = x_offset + 250
+
+        #FIXME not perfect here:
+        if self.gl.player_list[self.gl.current_player].player_type == PlayerType.HUMAN:
+            arcade.draw_text("Your turn! Give orders and hit next turn.", self.screen_width - 600, 80,
+                             arcade.color.WHITE, 16)
+            c1 = arcade.color.GREEN
+            s1 = "Army movement set"
+            c2 = arcade.color.GREEN
+            s2 = "Action set"
+            if self.hi.move.move_army_to == (-1,-1):
+                c1 = arcade.color.ORANGE
+                s1 = "Awaiting orders to move the army"
+            if self.hi.move.move_type is None or self.hi.move.move_type == MoveType.DO_NOTHING:
+                c2 = arcade.color.ORANGE
+                s2 = "Awaiting orders to build/scout/upgrade/recruit"
+            arcade.draw_text(s1, self.screen_width - 570, 50, c1, 12)
+            arcade.draw_text(s2, self.screen_width - 570, 30, c2, 12)
 
     def update(self):
         if self.ai_panel.show:
             self.ai_panel.update(self.gl)
+
+
         for player in self.gl.player_list:
-            s = f"Resources: {player.amount_of_resources} \n"
-            s = s + f"Buildings: {len(player.buildings)} \n"
-            s = s + f"Culture: {player.culture} \n"
-            s = s + f"Food: {player.food} \n"
-            s = s + f"Population {player.get_population()} / {player.get_population_limit()}\n"
-            self.playerinfo[player.id] = s
+            if not player.has_lost:
+                s = f"Resources: {player.amount_of_resources} \n"
+                s = s + f"Buildings: {len(player.buildings)} \n"
+                s = s + f"Culture: {player.culture} \n"
+                s = s + f"Food: {player.food} \n"
+                s = s + f"Population {player.get_population()} / {player.get_population_limit()}\n"
+                self.playerinfo[player.id] = (s, arcade.color.WHITE, 12)
+            else:
+                self.playerinfo[player.id] = ("LOST", arcade.color.RED, 18)
         if self.gl.winner and not self.win_screen_shown:
             won_panel = PanelGameWon(self.screen_width/2, self.screen_height/2, self.gl.winner)
             self.show_volatile_panel(won_panel)
@@ -254,7 +270,7 @@ class UI:
 
         from src.hex_map import HexMap
         candidates = []
-        for hex in self.gl.hex_map.map:
+        for hex in self.gl.hex_map.map:     #FIXME should avoid looping over all elements. This is trash here
             hex_pix = tuple(map(sum, zip(HexMap.offset_to_pixel_coords(hex.offset_coordinates), self.camera_pos)))
             dist = sqrt(((x - hex_pix[0])*0.5 * (x - hex_pix[0])*0.5) + ((y - hex_pix[1]) * (y - hex_pix[1])))
             if dist < 30:
@@ -266,15 +282,15 @@ class UI:
             from src.game_accessoires import Resource
             from src.game_accessoires import Army
             if a_class == Building:
-                b_panel = PanelBuilding(x, y + 150 if y < self.screen_height/2 else y - 150,
+                b_panel = PanelBuilding(x, y + 200 if y < self.screen_height/2 else y - 200,
                                         a.building_type, a.owner_id, a.building_state)
                 self.show_volatile_panel(b_panel)
             elif a_class == Resource:
-                r_panel = PanelResource(x, y + 150 if y < self.screen_height / 2 else y - 150,
+                r_panel = PanelResource(x, y + 200 if y < self.screen_height / 2 else y - 200,
                                         a.resource_type, a.remaining_amount)
                 self.show_volatile_panel(r_panel)
             elif a_class == Army:
-                a_panel = PanelArmy(x, y + 150 if y < self.screen_height / 2 else y - 150, a)
+                a_panel = PanelArmy(x, y + 200 if y < self.screen_height / 2 else y - 200, a)
                 self.show_volatile_panel(a_panel)
             return True
         return False

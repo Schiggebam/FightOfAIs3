@@ -205,15 +205,15 @@ class AI_Barbaric(AI):
                 path = AI_Toolkit.dijkstra_pq(start_tile, target_tile, ai_stat.map.walkable_tiles)
             else:
                 error("AI Barbaric: start_tile or target_tile not valid! (1)")
-                for walk in ai_stat.map.walkable_tiles:
-                    move.info_at_tile.append((walk.offset_coordinates, "w"))
+                # for walk in ai_stat.map.walkable_tiles:
+                #     move.info_at_tile.append((walk.offset_coordinates, "w"))
                 error(str(start_tile))
                 error(str(target_tile))
             if len(path) > 1:
-                for p in path:
-                    print(str(p.offset_coordinates) + " ", end="")
-                    move.info_at_tile.append((p.offset_coordinates, "W"))
-                print("")
+                # for p in path:
+                #     print(str(p.offset_coordinates) + " ", end="")
+                #     move.info_at_tile.append((p.offset_coordinates, "W"))
+                # print("")
                 hint("AI Barbaric: found path to hostile army / building")
                 return path[1].offset_coordinates
             else:

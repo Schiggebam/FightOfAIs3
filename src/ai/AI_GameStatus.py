@@ -1,4 +1,4 @@
-from typing import Set, Tuple, Optional, Union, List
+from typing import Set, Tuple, Optional, Union, List, Any
 
 from src.ai.AI_MapRepresentation import Map, AI_Player, AI_Opponent
 from src.misc.game_constants import error, UnitType, BuildingType, MoveType, UnitCost
@@ -7,13 +7,13 @@ from src.misc.game_constants import error, UnitType, BuildingType, MoveType, Uni
 class AI_Move:
     def __init__(self):
         self.move_type: Optional[MoveType] = None
-        self.doMoveArmy = False
-        self.loc = (0, 0)
+        self.doMoveArmy: bool = False
+        self.loc: Tuple[int, int] = (0, 0)
         self.type: Union[BuildingType, UnitType, None] = None
-        self.info = []  # currently only for the associated tiles
-        self.move_army_to = (-1, -1)
-        self.str_rep_of_action = ""  # just for printing
-        self.info_at_tile = []  # a list of tuples ((x, y), "str")
+        self.info: List[Any] = []  # currently only for the associated tiles
+        self.move_army_to: Tuple[int, int] = (-1, -1)
+        self.str_rep_of_action: str = ""  # just for printing
+        self.info_at_tile: List[Tuple[Tuple[int, int], str]] = []  # a list of tuples ((x, y), "str")
 
 
 

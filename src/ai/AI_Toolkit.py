@@ -4,6 +4,7 @@ from typing import List, Union, Tuple, Optional
 
 from src.ai.AI_GameStatus import AI_GameStatus
 from src.ai.AI_MapRepresentation import Tile, AI_Element
+from src.hex_map import Hexagon
 from src.misc.game_constants import error, BuildingType, BuildingState, hint, debug
 
 AI_OBJ = Union[AI_Element, Tile]
@@ -163,7 +164,7 @@ def cube_distance(a, b):
     return (abs(a[0] - b[0]) + abs(a[1] - b[1]) + abs(a[2] - b[2])) / 2
 
 
-def is_obj_in_list(obj: AI_OBJ, list) -> bool:
+def is_obj_in_list(obj: Union[AI_OBJ, Hexagon], list) -> bool:
     """check whether a the offset coordinates of an object match the ones of an element in the list"""
     for e in list:
         if e.offset_coordinates == obj.offset_coordinates:

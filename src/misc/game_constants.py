@@ -11,7 +11,18 @@ from enum import Enum
 
 import arcade
 
+#####################
+### Game Settings ###
+#####################
+
 CAMERA_SENSITIVITY = 250
+NUM_Z_LEVELS = 5
+
+Z_MAP = 1
+Z_AUX = 2
+Z_FLYING = 4
+Z_GAME_OBJ = 3
+
 ERRORS_ARE_FATAL = False
 DEBUG = True
 DETAILED_DEBUG_INFO = 1     # 0: no info, 1: includes calling class, 2: includes calling method

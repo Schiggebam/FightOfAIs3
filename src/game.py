@@ -1,17 +1,19 @@
+from typing import Any, List
+
 import arcade
 import os
 from os import sys, path
 import timeit
 
-from src.ai import human
-#from src.ai.human import HumanInteraction
+
+from src.ai.human import HumanInteraction
 
 sys.path.append(path.dirname(path.dirname(path.abspath(__file__))))
 # print(os.getcwd())
 
 from src.console import Console
 from src.game_logic import GameLogic
-from src.misc.game_constants import CAMERA_SENSITIVITY
+from src.misc.game_constants import *
 from src.ui.ui import UI
 
 SCREEN_WIDTH = 1280
@@ -19,7 +21,7 @@ SCREEN_HEIGHT = 720
 SCREEN_TITLE = "Fight of AIs"
 
 
-NUM_Z_LEVELS = 4
+
 
 GAME_XML_FILE = "../resources/game_2.xml"
 SETUP_COMMANDS = "../resources/initial_commands.txt"
@@ -41,6 +43,7 @@ class ZlvlRenderer:
         self.down_key = False
         self.left_key = False
         self.right_key = False
+        self.camera_event_listener: List[Any] = []
 
     def render(self):
         for z in self.z_levels:
@@ -80,6 +83,8 @@ class ZlvlRenderer:
             self.gl.set_camera_pos(self.camera_x, self.camera_y)
             self.gl.animator.camera_pos = (self.camera_x, self.camera_y)
             self.ui.camera_pos = (self.camera_x, self.camera_y)
+            for listener in self.camera_event_listener:
+                listener.camera_pos = (self.camera_x, self.camera_y)
             self.camera_has_moved = False
             self.rel_x = 0
             self.rel_y = 0
@@ -96,11 +101,13 @@ class Game(arcade.Window):
 
         self.z_level_renderer: ZlvlRenderer = ZlvlRenderer(NUM_Z_LEVELS)
         self.game_logic: GameLogic = GameLogic(GAME_XML_FILE, self.z_level_renderer.z_levels)
-#        self.hi = HumanInteraction(self.z_level_renderer.z_levels[2])
+        self.hi = HumanInteraction(self.game_logic, self.z_level_renderer.z_levels[2],
+                                   self.z_level_renderer.z_levels[4])
         self.console: Console = Console()
-        self.ui = UI(self.game_logic, SCREEN_WIDTH, SCREEN_HEIGHT)
+        self.ui = UI(self.game_logic, self.hi, SCREEN_WIDTH, SCREEN_HEIGHT)
         self.z_level_renderer.ui = self.ui
         self.z_level_renderer.gl = self.game_logic
+        self.z_level_renderer.camera_event_listener.append(self.hi)
 
         self.commands: [(str, str)] = []
 
@@ -120,6 +127,7 @@ class Game(arcade.Window):
         self.commands.extend(self.console.initial_commands(SETUP_COMMANDS))
         self.game_logic.setup()
         self.ui.setup()
+        self.game_logic.hi = self.hi
 
     def on_update(self, delta_time):
         # pr.enable()
@@ -178,6 +186,7 @@ class Game(arcade.Window):
         found = self.ui.check_mouse_press_for_buttons(x, y)
         #if not found:
         self.ui.hl_pressed_tile(x, y)
+        self.hi.handle_click(x, y)
 
     def on_mouse_release(self, x, y, button, key_modifiers):
         self.ui.check_mouse_release_for_buttons(x, y)
@@ -203,8 +212,9 @@ class Game(arcade.Window):
         if key == arcade.key.RIGHT:
             self.z_level_renderer.right_key = False
 
-    # def on_mouse_motion(self, x: float, y: float, dx: float, dy: float):
-    #     self.hi.show_selection_tool(x, y)
+    def on_mouse_motion(self, x: float, y: float, dx: float, dy: float):
+        # pass
+        self.hi.show_selection_tool(x, y)
 
 def main():
     window = Game(SCREEN_WIDTH, SCREEN_HEIGHT, SCREEN_TITLE)

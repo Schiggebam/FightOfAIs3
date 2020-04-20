@@ -202,15 +202,16 @@
                           cost_resource="5" cost_culture="0">description</Barbaric_Soldier>
     </units>
     <players>
-        <player1 colour="red" spawn_x="4" spawn_y="5" ai="expansionist"
-                 army_rel_to_spawn_x="-1" army_rel_to_spawn_y="-1">peter pan</player1>
+<!--        <player1 colour="red" spawn_x="4" spawn_y="5" ai="expansionist"-->
+<!--                 army_rel_to_spawn_x="-1" army_rel_to_spawn_y="-1">peter pan</player1>-->
         <!--<player2 colour="teal" spawn_x="14" spawn_y="6" ai="expansionist"
                  army_rel_to_spawn_x="0" army_rel_to_spawn_y="-1">peter pan</player2>-->
-        <barbar1 colour="yellow" spawn_x="5" spawn_y="9" ai="barbaric"
-                 army_rel_to_spawn_x="+1" army_rel_to_spawn_y="-1">Barbaric 1</barbar1>
+        <human colour="green" spawn_x="10" spawn_y="10" ai="human"
+               army_rel_to_spawn_x="+1" army_rel_to_spawn_y="+1">BLUBKOPF</human>
+<!--        <barbar1 colour="yellow" spawn_x="5" spawn_y="9" ai="barbaric"-->
+<!--                 army_rel_to_spawn_x="+1" army_rel_to_spawn_y="-1">Barbaric 1</barbar1>-->
         <!--<village colour="teal" spawn_x="10" spawn_y="14" ai="villager"
                  army_rel_to_spawn_x="-1" army_rel_to_spawn_y="0">Barbaric 1</village>-->
-        <!--<human colour="green" spawn_x="10" spawn_y="10" ai="human"
-               army_rel_to_spawn_x="+1" army_rel_to_spawn_y="+1">meme</human>-->
+
     </players>
 </game>
