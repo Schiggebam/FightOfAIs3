@@ -17,8 +17,9 @@ class PanelAI(SimplePanel):
     def update(self, gl):
         self.text = ""
         for p in gl.player_list:
-            self.text = self.text + p.name + ": \n"
-            self.text = self.text + gl.ai_interface.query_ai('state', None, p.id) + "\n"
+            if p.player_type != PlayerType.HUMAN:
+                self.text = self.text + p.name + ": \n"
+                self.text = self.text + gl.ai_interface.query_ai('state', None, p.id) + "\n"
 
     def draw(self):
         super().draw()
@@ -39,15 +40,22 @@ class PanelDiplo(SimplePanel):
         x_offset = 50
         y_offset = 30
         it = 0
+        #FIXME way to much logic in the draw thread UHGG
         for p in self.gl.player_list:
-            it = it + 1
-            arcade.draw_text(str(p.id), self.text_box_x + it * x_offset, self.text_box_y, arcade.color.WHITE, font_size=14, font_name='verdana')
+            if p.player_type != PlayerType.HUMAN:
+                it = it + 1
+                arcade.draw_text(str(p.id), self.text_box_x + it * x_offset, self.text_box_y, arcade.color.WHITE, font_size=14, font_name='verdana')
         it = 0
         for p in self.gl.player_list:
-            it = it + 1
-            arcade.draw_text(str(p.id), self.text_box_x, self.text_box_y - it * y_offset, arcade.color.WHITE, font_size=14, font_name='verdana')
+            if p.player_type != PlayerType.HUMAN:
+                it = it + 1
+                arcade.draw_text(str(p.id), self.text_box_x, self.text_box_y - it * y_offset, arcade.color.WHITE, font_size=14, font_name='verdana')
         for i in range(len(self.gl.player_list)):
             for j in range(len(self.gl.player_list)):
+                if self.gl.player_list[i].player_type == PlayerType.HUMAN:
+                    continue
+                if self.gl.player_list[j].player_type == PlayerType.HUMAN:
+                    continue
                 diplo_value = "---"
                 if (j != i):
                     diplo_value = str(self.gl.ai_interface.query_ai("diplo", j, i))

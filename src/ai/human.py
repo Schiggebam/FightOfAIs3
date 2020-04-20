@@ -215,8 +215,8 @@ class HumanInteraction:
                     self.move.move_type = MoveType.DO_BUILD
                     self.move.loc = active_icon.hex.offset_coordinates
                     self.active_hexagon = active_icon.hex
-                    candidates = [x for x in self.gl.hex_map.get_neighbours(self.active_hexagon) if x.ground.buildable
-                                  and AI_Toolkit.is_obj_in_list(x, self.game_status.map.discovered_tiles)]
+                    candidates = [x for x in self.gl.hex_map.get_neighbours(self.active_hexagon) if
+                                  AI_Toolkit.is_obj_in_list(x, self.game_status.map.buildable_tiles)]
                     self.set_state(HI_State.SPECIFY_FIELDS)
                 elif action == Action.BUILD_HUT:
                     self.move.type = BuildingType.HUT
@@ -247,8 +247,8 @@ class HumanInteraction:
                 elif action == Action.ARMY_MOVEMENT:
                     self.move.doMoveArmy = True
                     self.active_hexagon = active_icon.hex
-                    candidates = [x for x in self.gl.hex_map.get_neighbours(self.active_hexagon) if x.ground.walkable
-                                  and AI_Toolkit.is_obj_in_list(x, self.game_status.map.discovered_tiles)]
+                    candidates = [x for x in self.gl.hex_map.get_neighbours(self.active_hexagon) if
+                                  AI_Toolkit.is_obj_in_list(x, self.game_status.map.walkable_tiles)]
                     self.set_state(HI_State.SPECIFY_MOVEMENT)
                     ######
                 for c in candidates:
