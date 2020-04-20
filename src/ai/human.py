@@ -26,6 +26,7 @@ class Action(Enum):
     RECRUIT_MERC = 74
     SCOUT = 75
     ARMY_MOVEMENT = 76
+    RAISE_ARMY = 77
     NONE = 79
 
 
@@ -112,7 +113,10 @@ class HumanInteraction:
                                       arcade.load_texture(res + 'hi_scout_gray.png')),
                          'hi_specify': (arcade.load_texture(res + 'hi_specify_1.png'),
                                         arcade.load_texture(res + 'hi_specify_2.png'),
-                                        arcade.load_texture(res + 'hi_specify_2.png'))}
+                                        arcade.load_texture(res + 'hi_specify_2.png')),
+                         'hi_raise_army': (arcade.load_texture(res + 'hi_raise_army_np.png'),
+                                           arcade.load_texture(res + 'hi_raise_army_p.png'),
+                                           arcade.load_texture(res + 'hi_raise_army_gray.png'))}
 
 
     def get_icon_coordinates(self, pos: Tuple[int, int], num: int) -> List[Tuple[int, int]] :
@@ -176,8 +180,12 @@ class HumanInteraction:
                         if n.is_active:
                             self.move.info.append(n.hex.offset_coordinates)
                             n.gray_out()
+                has_valid_can = False
+                for n in self.candidates:
+                    if n.is_active:
+                        has_valid_can = True
 
-                if len(self.move.info) == 3:
+                if len(self.move.info) == 3 or not has_valid_can:
                     self.active_hexagon = None
                     self.set_state(HI_State.GRIDMODE)
 
@@ -232,6 +240,10 @@ class HumanInteraction:
                     self.move.move_type = MoveType.DO_SCOUT
                     self.move.loc = active_icon.hex.offset_coordinates
                     self.set_state(HI_State.GRIDMODE)
+                elif action == Action.RAISE_ARMY:
+                    self.move.move_type = MoveType.DO_RAISE_ARMY
+                    self.move.loc = active_icon.hex.offset_coordinates
+                    self.set_state(HI_State.GRIDMODE)
                 elif action == Action.ARMY_MOVEMENT:
                     self.move.doMoveArmy = True
                     self.active_hexagon = active_icon.hex
@@ -268,7 +280,8 @@ class HumanInteraction:
                     has_res_for_hut = Building.building_info[BuildingType.HUT]['construction_cost'] <= self.game_status.me.resources
                     has_res_for_farm = Building.building_info[BuildingType.FARM]['construction_cost'] <= self.game_status.me.resources
                     has_res_for_racks = Building.building_info[BuildingType.BARRACKS]['construction_cost'] <= self.game_status.me.resources
-                    pos_list = self.get_icon_coordinates((mouse_x, mouse_y), 3)
+                    can_raise_army = len(self.game_status.map.army_list) == 0
+                    pos_list = self.get_icon_coordinates((mouse_x, mouse_y), 4)
                     idx = 0
                     self.active_selection.append(SelectionIcon(pos_list[idx][0], pos_list[idx][1],
                                                  self.textures['hi_build_farm'],
@@ -281,10 +294,13 @@ class HumanInteraction:
                     self.active_selection.append(SelectionIcon(pos_list[idx][0], pos_list[idx][1],
                                                  self.textures['hi_build_racks'],
                                                  Action.BUILD_RACKS, h, is_active=has_res_for_racks))
+                    idx += 1
+                    self.active_selection.append(SelectionIcon(pos_list[idx][0], pos_list[idx][1],
+                                                               self.textures['hi_raise_army'],
+                                                               Action.RAISE_ARMY, h, is_active=can_raise_army))
 
                 else:
                     # at this point it is not scoutable nor buildable
-                    print("hello")
                     return
 
             elif obj_class is Army:

@@ -626,12 +626,13 @@ class GameLogic:
         counter = 0
         if show_update_bar:
             start_progress("Updating map view")
-        for hex in tile_list:
-            if counter % 5 == 0 and show_update_bar:
-                progress(counter)
-            counter = counter + 1
-            hex.ground.set_active_texture(1 if self.map_hack else 0)
-            # hex.ground.sprite.alpha = 255 if self.map_hack else 0
+        if self.change_in_map_view:
+            for hex in tile_list:
+                if counter % 5 == 0 and show_update_bar:
+                    progress(counter)
+                counter = counter + 1
+                hex.ground.set_active_texture(1 if self.map_hack else 0)
+                # hex.ground.sprite.alpha = 255 if self.map_hack else 0
         if show_update_bar:
             end_progress()
         for player in self.player_list:
@@ -639,10 +640,11 @@ class GameLogic:
                 b.sprite.alpha = v
                 for a in b.associated_drawables:
                     a.sprite.alpha = v
-
+        t2 = timeit.default_timer()
         for player in self.player_list:
             self.update_fog_of_war(player)
-        print("Toggeling the map took: {} s".format(timeit.default_timer() - t1))
+        t3 = timeit.default_timer()
+        debug("Toggeling the map took: {} s (fog of war update: {})".format(t3 - t1, t3 - t2))
 
     def add_resource(self, resource: Resource):
         self.scenario.resource_list.append(resource)
