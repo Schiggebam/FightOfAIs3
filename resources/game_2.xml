@@ -22,7 +22,7 @@
         <camp_2 code="c2" offsetX="5" offsetY="0" scale="1">../resources/objects/camp_2.png</camp_2>
         <camp_3 code="c3" offsetX="5" offsetY="0" scale="1">../resources/objects/camp_3.png</camp_3>
         <corn_field code="cf" offsetX="0" offsetY="0" scale="1">../resources/objects/corn_field.png</corn_field>
-        <construction_site code="cs" offsetX="0" offsetY="5" scale="1">../resources/objects/construction_site.png</construction_site>
+        <construction_site code="cs" offsetX="0" offsetY="0" scale="1">../resources/objects/construction_site.png</construction_site>
         <destruction_site code="ds" offsetX="0" offsetY="5" scale="1">../resources/objects/destruction_site.png</destruction_site>
         <village_center code="v1" offsetX="10" offsetY="5" scale="1">../resources/objects/village/small_3.png</village_center>
         <village_church_e code="vk_e" offsetX="5" offsetY="10" scale="1">../resources/objects/village/village_church_e.png</village_church_e>
@@ -208,8 +208,8 @@
                  army_rel_to_spawn_x="0" army_rel_to_spawn_y="-1">peter pan</player2>-->
         <human colour="green" spawn_x="10" spawn_y="10" ai="human"
                army_rel_to_spawn_x="+1" army_rel_to_spawn_y="+1">BLUBKOPF</human>
-<!--        <barbar1 colour="yellow" spawn_x="5" spawn_y="9" ai="barbaric"-->
-<!--                 army_rel_to_spawn_x="+1" army_rel_to_spawn_y="-1">Barbaric 1</barbar1>-->
+        <barbar1 colour="yellow" spawn_x="5" spawn_y="9" ai="barbaric"
+                 army_rel_to_spawn_x="+1" army_rel_to_spawn_y="-1">Barbaric 1</barbar1>
         <!--<village colour="teal" spawn_x="10" spawn_y="14" ai="villager"
                  army_rel_to_spawn_x="-1" army_rel_to_spawn_y="0">Barbaric 1</village>-->
 

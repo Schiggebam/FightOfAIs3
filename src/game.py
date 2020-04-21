@@ -1,16 +1,12 @@
 from typing import Any, List
 
-import arcade
 import os
 from os import sys, path
 import timeit
 
-
-from src.ai.human import HumanInteraction
-
 sys.path.append(path.dirname(path.dirname(path.abspath(__file__))))
 # print(os.getcwd())
-
+from src.ui.human import HumanInteraction
 from src.console import Console
 from src.game_logic import GameLogic
 from src.misc.game_constants import *
@@ -120,6 +116,7 @@ class Game(arcade.Window):
         self.num_of_sprites: int = 0
         self.fps_colour = arcade.color.WHITE
         self.draw_time_colour = arcade.color.WHITE
+        self.wall_clock_time = .0
 
     def setup(self):
         # arcade.set_background_color(arcade.color.DARK_BLUE)
@@ -131,10 +128,11 @@ class Game(arcade.Window):
 
     def on_update(self, delta_time):
         # pr.enable()
+        self.wall_clock_time += delta_time
         timestamp_start = timeit.default_timer()
         self.commands.extend(self.console.get())
-        self.game_logic.update(delta_time, self.commands)
-        self.ui.update()
+        self.game_logic.update(delta_time, self.commands, self.wall_clock_time)
+        self.ui.update(self.wall_clock_time)
         self.z_level_renderer.update(delta_time)
         self.commands.clear()
 
@@ -188,7 +186,7 @@ class Game(arcade.Window):
             #if not found:
             self.ui.hl_pressed_tile(x, y, button)
 
-            self.hi.handle_click(x, y, button)
+            self.hi.handle_mouse_press(int(x), int(y), button)
 
     def on_mouse_release(self, x, y, button, key_modifiers):
         if button == 1 or button == 4:
@@ -221,7 +219,7 @@ class Game(arcade.Window):
 
     def on_mouse_motion(self, x: float, y: float, dx: float, dy: float):
         # pass
-        self.hi.show_selection_tool(x, y)
+        self.hi.handle_mouse_motin(int(x), int(y))
 
 def main():
     window = Game(SCREEN_WIDTH, SCREEN_HEIGHT, SCREEN_TITLE)

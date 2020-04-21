@@ -1,15 +1,17 @@
 from math import sqrt
-from typing import List, Optional
+from typing import List, Optional, Tuple
 
-import arcade
-
-from src.ai.human import HumanInteraction
+from src.ui.human import HumanInteraction
 from src.game_logic import GameLogic
-from src.misc.game_logic_misc import Logger
 from src.ui.IconButton import IconButton
 from src.ui.SimpleButton import TextButton
 from src.ui.ui_panels import *
+from dataclasses import dataclass
 
+@dataclass
+class Notification:
+    text: str
+    duration: float
 
 
 class NextTurnButton(TextButton):
@@ -90,6 +92,8 @@ class UI:
         self.volatile_panel = []
         self.win_screen_shown = False
         self.status_text = ""
+        self.notifications_text = ""
+        self.notifications: List[Tuple[Notification, float]] = []
         x_offset = 20
         map_hack_button = AutomaticIconButton (self.screen_width - 50, 20, self.callBack_map_hack,
                                                "../resources/other/watch_button_pressed.png",
@@ -167,9 +171,19 @@ class UI:
             arcade.draw_text(s1, self.screen_width - 570, 50, c1, 12)
             arcade.draw_text(s2, self.screen_width - 570, 30, c2, 12)
 
-    def update(self):
+        # draw notifications
+        if len(self.notifications_text) > 0:
+            arcade.draw_text(self.notifications_text, self.screen_width/2 - 100, 150, arcade.color.WHITE, 14)
+
+    def update(self, wall_clock_time):
         if self.ai_panel.show:
             self.ai_panel.update(self.gl)
+
+        # build string for notifications
+        self.notifications = [x for x in self.notifications if x[0].duration > wall_clock_time]
+        self.notifications_text = ""
+        for n, t in self.notifications:
+            self.notifications_text += n.text + "\n"
 
 
         for player in self.gl.player_list:
@@ -215,6 +229,9 @@ class UI:
                 if log.log_type == LogType.DIPLO_ENEMY_BUILDING_SCOUTED:
                     panel_diplo = PanelLogDiplo(pos[i][0], pos[i][1], log)
                     self.show_volatile_panel(panel_diplo)
+
+                if log.log_type == LogType.NOTIFICATION:
+                    self.notifications.append((Notification(log.text, wall_clock_time + 5), wall_clock_time))
             self.halt_progress()
 
     def callBack1(self):

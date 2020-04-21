@@ -1,6 +1,67 @@
-from src.misc.game_constants import DiploEventType, error
+from dataclasses import dataclass
+from typing import Callable, Tuple, List, Union
+
+from src.ai.AI_MapRepresentation import AI_Building, AI_Army, Tile
+from src.misc.game_constants import DiploEventType, error, Priority, UnitType, BuildingType
 from src.misc.game_logic_misc import Logger
 
+
+@dataclass
+class WaitOption:
+    score: Priority
+    weighted_score: float = 0
+
+@dataclass
+class UpgradeOption:
+    type: BuildingType
+    site: Tuple[int, int]
+    score: Priority
+    weighted_score: float = 0
+
+@dataclass
+class BuildOption:
+    type: BuildingType
+    site: Tuple[int, int]
+    associated_tiles: List[Tuple[int, int]]
+    score: Priority
+    weighted_score: float = 0
+
+
+@dataclass
+class RecruitmentOption:
+    type: UnitType
+    score: Priority
+    weighted_score: float = 0
+
+
+@dataclass
+class RaiseArmyOption:
+    site: Tuple[int, int]
+    score: Priority
+    weighted_score: float = 0
+
+
+@dataclass
+class ScoutingOption:
+    site: Tuple[int, int]
+    score: Priority             # Caution changed this to Priority!!
+    weighted_score: float = 0
+
+@dataclass()
+class ArmyMovementOption:
+    target: Union[AI_Building, AI_Army, Tile]
+    score: Priority
+    next_step: Tuple[int, int]
+    weighted_score: float = 0
+
+
+Option = Union[BuildOption, RecruitmentOption, ScoutingOption, WaitOption, RaiseArmyOption, UpgradeOption]
+
+
+@dataclass
+class Weight:
+    condition: Callable[..., bool]
+    weight: float
 
 class AI_Diplo:
 

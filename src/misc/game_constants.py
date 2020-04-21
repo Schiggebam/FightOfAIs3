@@ -158,6 +158,7 @@ class LogType(Enum):
     BATTLE_ARMY_VS_ARMY = 900
     BATTLE_ARMY_VS_BUILDING = 901
     DIPLO_ENEMY_BUILDING_SCOUTED = 902
+    NOTIFICATION = 903
 
 
 # ground
@@ -339,6 +340,11 @@ class UnitCost:
 ###############
 ### STATES ####
 ###############
+
+# class GameLogicState(Enum):
+#     READY_TO_PLAY_TURN = 50
+#     WAIT_FOR_HI = 51
+
 
 class BuildingState(Enum):
     UNDER_CONSTRUCTION = 30
