@@ -9,6 +9,7 @@ from src.hex_map import *
 from src.ai.AI_GameStatus import AI_Move, AI_GameStatus
 from src.misc.building import Building
 from src.misc.game_constants import MoveType, BuildingType, UnitType
+from src.misc.game_logic_misc import Logger
 
 
 class HI_State(Enum):
@@ -172,6 +173,7 @@ class HumanInteraction:
                     if icon.highlighted:
                         icon.normal()
 
+
     def handle_click(self, mouse_x: int, mouse_y: int, button):
         if button == 4:     # Right click on mouse
             self.set_state(HI_State.GRIDMODE)
@@ -211,8 +213,11 @@ class HumanInteraction:
             candidates = []
             for icon in self.active_selection:
                 if self.__check_icon_boudning_box(mouse_x, mouse_y, icon):
-                    action = icon.action
-                    active_icon = icon
+                    if icon.is_active:
+                        action = icon.action
+                        active_icon = icon
+                    else:
+                        Logger.log_notification("Invalid option")
             if action:
                 if action == Action.BUILD_FARM:
                     self.move.type = BuildingType.FARM

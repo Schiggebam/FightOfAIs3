@@ -132,14 +132,19 @@ class Logger:
             self.post_att_units: Tuple[int, int, int] = post_att_u
             self.post_def_units: Tuple[int, int, int] = post_def_u
 
-    class EventLog(Log, ):
-        def __init__(self, log_type, event: DiploEventType, relative_change: float, loc: (int, int), lifetime: int, player_name: str):
+    class EventLog(Log):
+        def __init__(self, log_type: LogType, event: DiploEventType, relative_change: float, loc: (int, int), lifetime: int, player_name: str):
             super().__init__(log_type)
             self.event_type = event
             self.relative_change = relative_change
             self.loc = loc
             self.lifetime = lifetime
             self.player_name = player_name
+
+    class NotificationLog(Log):
+        def __init__(self, log_type: LogType, text: str):
+            super().__init__(log_type)
+            self.text = text
 
     logs: queue.Queue = queue.Queue()
 
@@ -166,3 +171,6 @@ class Logger:
                                   event, relative_change, loc, lifetime, player_name)
             Logger.logs.put(log)
 
+    @staticmethod
+    def log_notification(text: str):
+        Logger.logs.put(Logger.NotificationLog(LogType.NOTIFICATION, text))

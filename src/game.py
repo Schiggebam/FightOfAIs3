@@ -120,6 +120,7 @@ class Game(arcade.Window):
         self.num_of_sprites: int = 0
         self.fps_colour = arcade.color.WHITE
         self.draw_time_colour = arcade.color.WHITE
+        self.wall_clock_time = .0
 
     def setup(self):
         # arcade.set_background_color(arcade.color.DARK_BLUE)
@@ -131,10 +132,11 @@ class Game(arcade.Window):
 
     def on_update(self, delta_time):
         # pr.enable()
+        self.wall_clock_time += delta_time
         timestamp_start = timeit.default_timer()
         self.commands.extend(self.console.get())
         self.game_logic.update(delta_time, self.commands)
-        self.ui.update()
+        self.ui.update(self.wall_clock_time)
         self.z_level_renderer.update(delta_time)
         self.commands.clear()
 
