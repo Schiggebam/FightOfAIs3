@@ -66,7 +66,7 @@ class UI:
         self.hi: HumanInteraction = hi
         self.buttonlist = []
         self.panel_list = []
-        sb = NextTurnButton(screen_width-150, 70, self.callBack1)
+        self.next_turn_button = NextTurnButton(screen_width-150, 70, self.callBack1)
         self.ba = AutomaticButton(screen_width-150, 30, self.callBack_automatic)
         diplo_button = AutomaticIconButton(screen_width-50, 150, self.callBack_diplo,
                                            "../resources/other/diplo_button_pressed.png",
@@ -79,7 +79,7 @@ class UI:
 
 
         self.buttonlist.append(self.ba)
-        self.buttonlist.append(sb)
+        self.buttonlist.append(self.next_turn_button)
 
         self.buttonlist.append(diplo_button)
         self.buttonlist.append(ai_button)
@@ -90,14 +90,14 @@ class UI:
         self.volatile_panel = []
         self.win_screen_shown = False
         self.status_text = ""
-        x_offset = 60
+        x_offset = 20
         map_hack_button = AutomaticIconButton (self.screen_width - 50, 20, self.callBack_map_hack,
                                                "../resources/other/watch_button_pressed.png",
                                                "../resources/other/watch_button_unpressed.png", scale=0.75)
         #map_hack_button.on_press()
         self.buttonlist.append(map_hack_button)
         for p in self.gl.player_list:
-            watch_button = AutomaticIconButton( 50 + x_offset, 20, self.callBack_watch,
+            watch_button = AutomaticIconButton( 10 + x_offset, 90, self.callBack_watch,
                                                "../resources/other/watch_button_pressed.png",
                                                "../resources/other/watch_button_unpressed.png", scale=0.5)
             watch_button.args.append(p.id)
@@ -144,9 +144,9 @@ class UI:
             b.draw()
 
         # draw the player stats:
-        x_offset = 30
+        x_offset = 50
         for p in self.gl.player_list:
-            arcade.draw_text(str(p.name) + " [" + str(p.id) + "]", x_offset, 100, arcade.color.WHITE, 14)
+            arcade.draw_text(str(p.name) + " [" + str(p.id) + "]", x_offset, 85, arcade.color.WHITE, 14)
             arcade.draw_text(self.playerinfo[p.id][0], x_offset + 10, 15, self.playerinfo[p.id][1], self.playerinfo[p.id][2])
             x_offset = x_offset + 250
 
@@ -178,7 +178,7 @@ class UI:
                 s = s + f"Buildings: {len(player.buildings)} \n"
                 s = s + f"Culture: {player.culture} \n"
                 s = s + f"Food: {player.food} \n"
-                s = s + f"Population {player.get_population()} / {player.get_population_limit()}\n"
+                s = s + f"Population {player.get_population()} / {player.get_population_limit()}"
                 self.playerinfo[player.id] = (s, arcade.color.WHITE, 12)
             else:
                 self.playerinfo[player.id] = ("LOST", arcade.color.RED, 18)
@@ -261,12 +261,13 @@ class UI:
             return True
         return False
 
-    def hl_pressed_tile(self, x, y):
-        if len(self.volatile_panel) > 0:
+    def hl_pressed_tile(self, x, y, button):
+        if len(self.volatile_panel) > 0 or button == 4:
             for p in self.volatile_panel:
                 self.panel_list.remove(p)
                 self.sprite_list.remove(p.sprite)
             self.volatile_panel.clear()
+            return
 
         from src.hex_map import HexMap
         candidates = []

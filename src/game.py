@@ -183,13 +183,16 @@ class Game(arcade.Window):
         self.draw_time = timeit.default_timer() - timestamp_start
 
     def on_mouse_press(self, x, y, button, key_modifiers):
-        found = self.ui.check_mouse_press_for_buttons(x, y)
-        #if not found:
-        self.ui.hl_pressed_tile(x, y)
-        self.hi.handle_click(x, y)
+        if button == 1 or button == 4:          # only accepts left and right clicks
+            found = self.ui.check_mouse_press_for_buttons(x, y)
+            #if not found:
+            self.ui.hl_pressed_tile(x, y, button)
+
+            self.hi.handle_click(x, y, button)
 
     def on_mouse_release(self, x, y, button, key_modifiers):
-        self.ui.check_mouse_release_for_buttons(x, y)
+        if button == 1 or button == 4:
+            self.ui.check_mouse_release_for_buttons(x, y)
 
     def on_key_press(self, key: int, modifiers: int):
         if key == arcade.key.UP:
@@ -200,6 +203,8 @@ class Game(arcade.Window):
             self.z_level_renderer.left_key = True
         if key == arcade.key.RIGHT:
             self.z_level_renderer.right_key = True
+        if key == arcade.key.SPACE:
+            self.ui.next_turn_button.on_press()
 
 
     def on_key_release(self, key: int, modifiers: int):
@@ -211,6 +216,8 @@ class Game(arcade.Window):
             self.z_level_renderer.left_key = False
         if key == arcade.key.RIGHT:
             self.z_level_renderer.right_key = False
+        if key == arcade.key.SPACE:
+            self.ui.next_turn_button.on_release()
 
     def on_mouse_motion(self, x: float, y: float, dx: float, dy: float):
         # pass
