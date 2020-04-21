@@ -172,7 +172,11 @@ class HumanInteraction:
                     if icon.highlighted:
                         icon.normal()
 
-    def handle_click(self, mouse_x: int, mouse_y: int):
+    def handle_click(self, mouse_x: int, mouse_y: int, button):
+        if button == 4:     # Right click on mouse
+            self.set_state(HI_State.GRIDMODE)
+            return
+
         if self.state == HI_State.SPECIFY_FIELDS:
             if self.active_hexagon:
                 for n in self.candidates:

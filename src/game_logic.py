@@ -784,6 +784,7 @@ class GameLogic:
                 hint('army is moving to ' + str(army.tile.offset_coordinates))
                 #army.set_sprite_pos(HexMap.offset_to_pixel_coords(new_hex.offset_coordinates))
                 self.__reorder_spritelist(self.z_levels[Z_GAME_OBJ])
+                self.toggle_fog_of_war_lw(player.discovered_tiles)
             else:
                 error(f"Army cannot move that far: {self.hex_map.hex_distance(new_hex, army.tile)}")
 

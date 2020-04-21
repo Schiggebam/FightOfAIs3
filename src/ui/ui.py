@@ -261,12 +261,13 @@ class UI:
             return True
         return False
 
-    def hl_pressed_tile(self, x, y):
-        if len(self.volatile_panel) > 0:
+    def hl_pressed_tile(self, x, y, button):
+        if len(self.volatile_panel) > 0 or button == 4:
             for p in self.volatile_panel:
                 self.panel_list.remove(p)
                 self.sprite_list.remove(p.sprite)
             self.volatile_panel.clear()
+            return
 
         from src.hex_map import HexMap
         candidates = []
