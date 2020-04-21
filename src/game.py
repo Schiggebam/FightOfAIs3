@@ -190,7 +190,7 @@ class Game(arcade.Window):
             #if not found:
             self.ui.hl_pressed_tile(x, y, button)
 
-            self.hi.handle_click(x, y, button)
+            self.hi.handle_mouse_press(x, y, button)
 
     def on_mouse_release(self, x, y, button, key_modifiers):
         if button == 1 or button == 4:
@@ -223,7 +223,7 @@ class Game(arcade.Window):
 
     def on_mouse_motion(self, x: float, y: float, dx: float, dy: float):
         # pass
-        self.hi.show_selection_tool(x, y)
+        self.hi.handle_mouse_motin(x, y)
 
 def main():
     window = Game(SCREEN_WIDTH, SCREEN_HEIGHT, SCREEN_TITLE)
