@@ -200,6 +200,8 @@ class Game(arcade.Window):
             self.z_level_renderer.left_key = True
         if key == arcade.key.RIGHT:
             self.z_level_renderer.right_key = True
+        if key == arcade.key.SPACE:
+            self.ui.next_turn_button.on_press()
 
 
     def on_key_release(self, key: int, modifiers: int):
@@ -211,6 +213,8 @@ class Game(arcade.Window):
             self.z_level_renderer.left_key = False
         if key == arcade.key.RIGHT:
             self.z_level_renderer.right_key = False
+        if key == arcade.key.SPACE:
+            self.ui.next_turn_button.on_release()
 
     def on_mouse_motion(self, x: float, y: float, dx: float, dy: float):
         # pass

@@ -188,8 +188,6 @@ class GameLogic:
             GameLogic.elapsed = float(0)
         if self.playNextTurn:
             #if not self.ai_running:
-
-            print("BUUU")
             if len(self.player_list) > 0:
                 player = self.player_list[self.current_player]
                 played_move = False

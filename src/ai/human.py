@@ -335,6 +335,9 @@ class HumanInteraction:
         if state == HI_State.GRIDMODE:
             for c in self.candidates:
                 self.zlvl_icons.remove(c)
+            for a in self.active_selection:
+                self.zlvl_icons.remove(a)
+            self.active_selection.clear()
             self.candidates.clear()
             self.selection_tool.alpha = 200
             self.selection_tool.center_x = -50
