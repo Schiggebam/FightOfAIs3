@@ -1,4 +1,3 @@
-import arcade
 import timeit
 # from threading import Thread
 
@@ -20,7 +19,7 @@ class GameLogic:
         self.game_file_reader: GameFileReader = GameFileReader(game_xml_file)
         self.z_levels: [arcade.SpriteList] = z_levels               # reference to the sprite lists
         self.hex_map: Optional[HexMap] = None
-        from src.ai.human import HumanInteraction
+        from src.ui.human import HumanInteraction
         self.hi: Optional[HumanInteraction] = None
         self.ai_interface: AI_GameInterface = AI_GameInterface()
         self.scenario: Scenario = Scenario()
@@ -55,12 +54,7 @@ class GameLogic:
             p.is_barbaric = p_info[1]['ai'] == "barbaric"
             p.is_villager = p_info[1]['ai'] == "villager"
             p.player_type = PlayerType.get_type_from_strcode(p_info[1]['ai'])
-            # if not (p.is_barbaric or p.is_villager):
-            #     p.player_type = PlayerType.AI
-            # elif p.is_barbaric:
-            #     p.player_type = PlayerType.BARBARIC
-            # elif p.is_villager:
-            #     p.player_type = PlayerType.VILLAGER
+
             p.init_army_loc = (p.spaw_loc[0] + p_info[1]['army_rel_to_spawn_x'],
                                p.spaw_loc[1] + p_info[1]['army_rel_to_spawn_y'])
             self.player_list.append(p)
@@ -168,17 +162,16 @@ class GameLogic:
         self.__reorder_spritelist(self.z_levels[Z_GAME_OBJ])
         self.toggle_fog_of_war_lw(self.hex_map.map)
         self.show_key_frame_animation = ENABLE_KEYFRAME_ANIMATIONS
-        debug(f"Keyframes are {'enabled' if ENABLE_KEYFRAME_ANIMATIONS else 'disabled (enable by typing <switch_ka> in console)'}")
+        #debug(f"Keyframes are {'enabled' if ENABLE_KEYFRAME_ANIMATIONS else 'disabled (enable by typing <switch_ka> in console)'}")
         # HexMap.hex_distance(self.hex_map.get_hex_by_offset((0,0)), self.hex_map.get_hex_by_offset((2,2)))
 
-    elapsed = float(0)
-    total_elapsed = float(0)    #    TODO make this a member
+    elapsed = float(0)      # TODO make this a member
 
-    def update(self, delta_time: float, commands :[]):
+
+    def update(self, delta_time: float, commands :[], wall_clock_time: float):
         timestamp_start = timeit.default_timer()
         self.__exec_command(commands)
         GameLogic.elapsed = GameLogic.elapsed + delta_time
-        GameLogic.total_elapsed = GameLogic.total_elapsed + delta_time
         if self.show_key_frame_animation:
             for k_f in self.animator.key_frame_animations:
                 k_f.next_frame(delta_time)
@@ -186,8 +179,9 @@ class GameLogic:
         if GameLogic.elapsed > float(0.8) and self.automatic:
             self.playNextTurn = True
             GameLogic.elapsed = float(0)
-        if self.playNextTurn:
-            #if not self.ai_running:
+
+        if self.playNextTurn:                           # if ready ot play turn
+            #if not self.ai_running:                     # State: Ready_to_play_turn -> PLAYING
             if len(self.player_list) > 0:
                 player = self.player_list[self.current_player]
                 played_move = False
@@ -195,10 +189,10 @@ class GameLogic:
                     ai_move = self.play_players_turn(player)
                     if ai_move:     # player might have lost
                         self.exec_ai_move(ai_move, player)
-                    played_move = True
+                    played_move = True                      # State PLAYING -> TURN PLAYED
                 else:
                     if not self.wait_for_human:
-                        self.play_players_turn(player)
+                        self.play_players_turn(player)      # STATE: WAIT_FOR MOVE ->
                         self.wait_for_human = True
                         self.automatic = False
                         self.playNextTurn = False
@@ -226,7 +220,7 @@ class GameLogic:
             self.toggle_fog_of_war_lw(self.hex_map.map, show_update_bar=True)
             self.change_in_map_view = False
 
-        self.animator.update(GameLogic.total_elapsed)
+        self.animator.update(wall_clock_time)
         self.total_time = timestamp_start - timeit.default_timer()
 
 

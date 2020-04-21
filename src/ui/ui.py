@@ -1,11 +1,8 @@
 from math import sqrt
 from typing import List, Optional, Tuple
 
-import arcade
-
-from src.ai.human import HumanInteraction
+from src.ui.human import HumanInteraction
 from src.game_logic import GameLogic
-from src.misc.game_logic_misc import Logger
 from src.ui.IconButton import IconButton
 from src.ui.SimpleButton import TextButton
 from src.ui.ui_panels import *

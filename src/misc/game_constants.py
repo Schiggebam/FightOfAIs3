@@ -341,6 +341,11 @@ class UnitCost:
 ### STATES ####
 ###############
 
+# class GameLogicState(Enum):
+#     READY_TO_PLAY_TURN = 50
+#     WAIT_FOR_HI = 51
+
+
 class BuildingState(Enum):
     UNDER_CONSTRUCTION = 30
     ACTIVE = 31

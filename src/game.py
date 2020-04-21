@@ -1,12 +1,11 @@
 from typing import Any, List
 
-import arcade
 import os
 from os import sys, path
 import timeit
 
 
-from src.ai.human import HumanInteraction
+from src.ui.human import HumanInteraction
 
 sys.path.append(path.dirname(path.dirname(path.abspath(__file__))))
 # print(os.getcwd())
@@ -135,7 +134,7 @@ class Game(arcade.Window):
         self.wall_clock_time += delta_time
         timestamp_start = timeit.default_timer()
         self.commands.extend(self.console.get())
-        self.game_logic.update(delta_time, self.commands)
+        self.game_logic.update(delta_time, self.commands, self.wall_clock_time)
         self.ui.update(self.wall_clock_time)
         self.z_level_renderer.update(delta_time)
         self.commands.clear()

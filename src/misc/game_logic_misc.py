@@ -57,8 +57,6 @@ class IncomeCalculator:
 
 class FightCalculator:
 
-
-
     @staticmethod
     def army_vs_army(attacker: Army, defender: Army):
         attack_value = attacker.get_attack_strength()

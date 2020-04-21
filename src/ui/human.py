@@ -56,8 +56,9 @@ class SelectionIcon(arcade.Sprite):
         self.hex = hexagon
         self.highlighted = False
         self.is_active = is_active
+        self.info_text: str = ""
         if not self.is_active:
-            self.set_texture(2)
+            self.gray_out()
         else:
             self.set_texture(1)
 
@@ -74,6 +75,22 @@ class SelectionIcon(arcade.Sprite):
     def gray_out(self):
         self.is_active = False
         self.set_texture(2)
+        if self.action == Action.BUILD_RACKS:
+            self.info_text = "Not enough resources to build a barracks"
+        elif self.action == Action.BUILD_HUT:
+            self.info_text = "Not enough resources to build a hut"
+        elif self.action == Action.BUILD_FARM:
+            self.info_text = "Not enough resources to build a farm"
+        elif self.action == Action.RECRUIT_KNIGHT:
+            self.info_text = "Not enough resources/culture/population to recruit a knight"
+        elif self.action == Action.RECRUIT_MERC:
+            self.info_text = "Not enough resource/culture/population to recruit a mercenary"
+        elif self.action == Action.RAISE_ARMY:
+            self.info_text = "Cannot raise an army if there is already a existing army"
+        elif self.action == Action.SCOUT:
+            self.info_text = "You need at least 1 resource to scout"
+        else:
+            self.info_text = ""
 
 
 class HumanInteraction:
@@ -325,7 +342,10 @@ class HumanInteraction:
                     action = icon.action
                     active_icon = icon
                 else:
-                    Logger.log_notification("Invalid option")
+                    if len(icon.info_text) > 0:
+                        Logger.log_notification(icon.info_text)
+                    else:
+                        Logger.log_notification("Invalid option")
         if action:
             if action == Action.BUILD_FARM:
                 self.move.type = BuildingType.FARM
