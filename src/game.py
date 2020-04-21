@@ -4,12 +4,9 @@ import os
 from os import sys, path
 import timeit
 
-
-from src.ui.human import HumanInteraction
-
 sys.path.append(path.dirname(path.dirname(path.abspath(__file__))))
 # print(os.getcwd())
-
+from src.ui.human import HumanInteraction
 from src.console import Console
 from src.game_logic import GameLogic
 from src.misc.game_constants import *
@@ -189,7 +186,7 @@ class Game(arcade.Window):
             #if not found:
             self.ui.hl_pressed_tile(x, y, button)
 
-            self.hi.handle_mouse_press(x, y, button)
+            self.hi.handle_mouse_press(int(x), int(y), button)
 
     def on_mouse_release(self, x, y, button, key_modifiers):
         if button == 1 or button == 4:
@@ -222,7 +219,7 @@ class Game(arcade.Window):
 
     def on_mouse_motion(self, x: float, y: float, dx: float, dy: float):
         # pass
-        self.hi.handle_mouse_motin(x, y)
+        self.hi.handle_mouse_motin(int(x), int(y))
 
 def main():
     window = Game(SCREEN_WIDTH, SCREEN_HEIGHT, SCREEN_TITLE)

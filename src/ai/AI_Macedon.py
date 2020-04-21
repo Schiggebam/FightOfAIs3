@@ -150,7 +150,7 @@ class AI_Mazedonian(AI):
             self.m_weights.append(AI_Mazedonian.Weight(c, v))
 
     def do_move(self, ai_stat: AI_GameStatus, move: AI_Move):
-        t1 = timeit.default_timer()
+        # t1 = timeit.default_timer()
         hint("------ {} -------".format(self.name))
         self.set_vars(ai_stat)
         self.create_heat_maps(ai_stat, move)
@@ -166,12 +166,12 @@ class AI_Mazedonian(AI):
 
         build_options: List[AI_Mazedonian.BuildOption] = self.evaluate_move_building(ai_stat)
         # TODO handle building upgrads
-        t2_1 = timeit.default_timer()
+        # t2_1 = timeit.default_timer()
         recruitment_options: List[Union[AI_Mazedonian.RecruitmentOption, AI_Mazedonian.RaiseArmyOption]] = \
             self.evaluate_move_recruitment(ai_stat)
-        t2_2 = timeit.default_timer()
+        # t2_2 = timeit.default_timer()
         scouting_options: List[AI_Mazedonian.ScoutingOption] = self.evaluate_move_scouting(ai_stat)
-        t3 = timeit.default_timer()
+        # t3 = timeit.default_timer()
 
         all_options: List[AI_Mazedonian.Option] = []
         all_options.extend(build_options)
@@ -182,7 +182,7 @@ class AI_Mazedonian(AI):
         self.weight_options(all_options, ai_stat, move)
         self.evaluate_army_movement(ai_stat, move)
         self.set_counters(ai_stat)
-        t4 = timeit.default_timer()
+        # t4 = timeit.default_timer()
         # debug(f"Timings: {t2 - t1}, {t3 - t2}, {t4 - t3}, total: {t4 - t1}")
         # debug(f"Timings {t2_1 - t2}, {t2_2 - t2_1}, {t3 - t2_2}")
         # clear out some data:
@@ -395,11 +395,9 @@ class AI_Mazedonian(AI):
         best_option: AI_Mazedonian.Option = options[0]
         if type(best_option) == AI_Mazedonian.WaitOption:
             move.move_type = MoveType.DO_NOTHING
-            # move.doNothing = True
             move.str_rep_of_action = "waiting"
         elif type(best_option) == AI_Mazedonian.BuildOption:
             move.move_type = MoveType.DO_BUILD
-            # move.doBuild = True
             move.loc = best_option.site
             move.type = best_option.type
             for at in best_option.associated_tiles:
@@ -407,17 +405,14 @@ class AI_Mazedonian(AI):
             move.str_rep_of_action = f"building a {best_option.type} at " + str(move.loc)
         elif type(best_option) == AI_Mazedonian.RecruitmentOption:
             move.move_type = MoveType.DO_RECRUIT_UNIT
-            # move.doRecruitUnit = True
             move.type = best_option.type
             move.str_rep_of_action = f"recruiting a {best_option.type}"
         elif type(best_option) == AI_Mazedonian.ScoutingOption:
             move.move_type = MoveType.DO_SCOUT
-            # move.doScout = True
             move.loc = best_option.site
             move.str_rep_of_action = "scouting at" + str(move.loc)
-        elif type(best_option) == AI_Mazedonian.RecruitmentOption:
+        elif type(best_option) == AI_Mazedonian.RaiseArmyOption:
             move.move_type = MoveType.DO_RAISE_ARMY
-            # move.doRecruitArmy = True
             move.str_rep_of_action = "raising new army at"
         else:
             error("unexpected type")
