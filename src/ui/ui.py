@@ -119,7 +119,6 @@ class UI:
         self.diplo_panel = PanelDiplo(self.screen_width - 280, 250, "Diplo panel", self.gl)
         self.panel_list.append(self.ai_panel)
         self.panel_list.append(self.diplo_panel)
-        self.gl.playNextTurn = True                 # FIXME this is stupid
 
     def draw(self):
         for hex in self.gl.hex_map.map:

@@ -34,8 +34,8 @@ class GameLogic:
 
         self.player_list: [Player] = []
         self.map_view: [bool] = []              # true if we show the players view, otherwise false
-        self.change_in_map_view = False
-        self.map_hack = False
+        self.change_in_map_view = MAP_HACK_ENABLE_AT_STARTUP
+        self.map_hack = MAP_HACK_ENABLE_AT_STARTUP
         self.winner: Optional[Player] = None
 
         # read game data
@@ -79,6 +79,7 @@ class GameLogic:
         self.total_time = 0
         self.animator_time = 0
         self.wait_for_human = False
+        self.has_human_player = False
 
     def setup(self):
         """ load the game """
@@ -135,7 +136,7 @@ class GameLogic:
                 r: Resource = Resource(hex, ResourceType.get_type_from_strcode(map_obj[0]))
                 r.tex_code = map_obj[0]
                 self.add_resource(r)
-
+        player_ids: List[int] = []
         for player in self.player_list:
             other_players_ids: List[int] = []
             for p in self.player_list:
@@ -153,17 +154,23 @@ class GameLogic:
             b.set_state_active()
             tmp = self.hex_map.get_neighbours_dist(base_hex, b.sight_range)
             player.discovered_tiles.update(tmp)
+            if player.player_type is PlayerType.HUMAN:
+                self.has_human_player = True
             if not player.is_barbaric:
                 unit = Unit(player.get_initial_unit_type())
                 army = Army(self.hex_map.get_hex_by_offset(player.init_army_loc), player.id)
                 army.add_unit(unit)
                 self.add_army(army, player)
+            player_ids.append(player.id)
 
         self.__reorder_spritelist(self.z_levels[Z_GAME_OBJ])
         self.toggle_fog_of_war_lw(self.hex_map.map)
         self.show_key_frame_animation = ENABLE_KEYFRAME_ANIMATIONS
         #debug(f"Keyframes are {'enabled' if ENABLE_KEYFRAME_ANIMATIONS else 'disabled (enable by typing <switch_ka> in console)'}")
         # HexMap.hex_distance(self.hex_map.get_hex_by_offset((0,0)), self.hex_map.get_hex_by_offset((2,2)))
+        from src.ai.performance import PerformanceLogger
+        PerformanceLogger.setup(player_ids)
+
 
     elapsed = float(0)      # TODO make this a member
 
@@ -202,7 +209,8 @@ class GameLogic:
                         played_move = True
                         self.playNextTurn = True
                 if played_move:
-                    self.automatic = True
+                    if self.has_human_player:
+                        self.automatic = True
                     if self.current_player == 0:  # next time player 0 plays -> new turn
                         self.turn_nr = self.turn_nr + 1
                     self.current_player = (self.current_player + 1) % len(self.player_list)

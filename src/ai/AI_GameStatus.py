@@ -130,6 +130,11 @@ class AI_GameInterface:
 
     def do_a_move(self, ai_stat: AI_GameStatus, move: AI_Move, player_id):
         self.dict_of_ais[player_id].do_move(ai_stat, move)
+        # performance logging
+        from src.ai.performance import ScoreSpentResources
+        score = ScoreSpentResources.evaluate(ai_stat.map)
+        from src.ai.performance import PerformanceLogger
+        PerformanceLogger.log_performance_file(ai_stat.turn_nr, ai_stat.me.id, score)
 
     def query_ai(self, query, arg, player_id) -> str:
         if query == "diplo":

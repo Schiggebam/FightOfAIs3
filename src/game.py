@@ -126,6 +126,11 @@ class Game(arcade.Window):
         self.ui.setup()
         self.game_logic.hi = self.hi
 
+    def on_close(self):
+        from src.ai.performance import PerformanceLogger
+        PerformanceLogger.show()
+        super().on_close()
+
     def on_update(self, delta_time):
         # pr.enable()
         self.wall_clock_time += delta_time

@@ -1,14 +1,14 @@
 import random
 import timeit
 from enum import Enum
-from typing import Set, List, Callable, Tuple, Union, Optional, Dict, Any
+from typing import Set, List, Tuple, Union, Optional, Dict, Any
 
 from dataclasses import dataclass
 
 from src.ai import AI_Toolkit
 from src.ai.AI_GameStatus import AI_GameStatus, AI_Move
 from src.ai.AI_MapRepresentation import Tile, AI_Army, AI_Building
-from src.ai.ai_blueprint import AI
+from src.ai.ai_blueprint import AI, WaitOption, BuildOption, RecruitmentOption, ScoutingOption, Weight, Option
 
 from src.misc.game_constants import DiploEventType, hint, BuildingType, error, debug, UnitType, Priority, MoveType
 
@@ -45,39 +45,9 @@ class AI_Mazedonian(AI):
         population: int
 
     @dataclass
-    class WaitOption:
-        score: Priority
-        weighted_score: float = 0
-
-    @dataclass()
-    class BuildOption:
-        type: BuildingType
-        site: Tuple[int, int]
-        associated_tiles: List[Tuple[int, int]]
-        score: Priority
-        weighted_score: float = 0
-
-    @dataclass
-    class RecruitmentOption:
-        type: UnitType
-        score: Priority
-        weighted_score: float = 0
-
-    @dataclass
     class RaiseArmyOption:
         score: Priority
         weighted_score: float = 0
-
-    @dataclass
-    class ScoutingOption:
-        site: Tuple[int, int]
-        score: Priority
-        weighted_score: float = 0
-
-    @dataclass
-    class Weight:
-        condition: Callable[..., bool]
-        weight: float
 
     @dataclass()
     class AttackTarget:  # TODO rename to army movement
@@ -142,12 +112,12 @@ class AI_Mazedonian(AI):
         self.w_scouting_resource: float = 1
         self.w_scouting_claimed: float = 1
 
-        self.weights: List[AI_Mazedonian.Weight] = []
-        self.m_weights: List[AI_Mazedonian.Weight] = []
+        self.weights: List[Weight] = []
+        self.m_weights: List[Weight] = []
         for c, v in setup_weights(self):
-            self.weights.append(AI_Mazedonian.Weight(c, v))
+            self.weights.append(Weight(c, v))
         for c, v in setup_movement_weights(self):
-            self.m_weights.append(AI_Mazedonian.Weight(c, v))
+            self.m_weights.append(Weight(c, v))
 
     def do_move(self, ai_stat: AI_GameStatus, move: AI_Move):
         # t1 = timeit.default_timer()
@@ -164,21 +134,21 @@ class AI_Mazedonian(AI):
         self.__print_situation(ai_stat)
         t2 = timeit.default_timer()
 
-        build_options: List[AI_Mazedonian.BuildOption] = self.evaluate_move_building(ai_stat)
+        build_options: List[BuildOption] = self.evaluate_move_building(ai_stat)
         # TODO handle building upgrads
         # t2_1 = timeit.default_timer()
-        recruitment_options: List[Union[AI_Mazedonian.RecruitmentOption, AI_Mazedonian.RaiseArmyOption]] = \
+        recruitment_options: List[Union[RecruitmentOption, AI_Mazedonian.RaiseArmyOption]] = \
             self.evaluate_move_recruitment(ai_stat)
         # t2_2 = timeit.default_timer()
-        scouting_options: List[AI_Mazedonian.ScoutingOption] = self.evaluate_move_scouting(ai_stat)
+        scouting_options: List[ScoutingOption] = self.evaluate_move_scouting(ai_stat)
         # t3 = timeit.default_timer()
 
-        all_options: List[AI_Mazedonian.Option] = []
+        all_options: List[Option] = []
         all_options.extend(build_options)
         all_options.extend(recruitment_options)
         # all_options.extend(scouting_options)
         all_options.append(scouting_options[0])  # reducing complexity - just consider the best scouting option
-        all_options.append(AI_Mazedonian.WaitOption(Priority.P_MEDIUM))  # do nothing is an option
+        all_options.append(WaitOption(Priority.P_MEDIUM))  # do nothing is an option
         self.weight_options(all_options, ai_stat, move)
         self.evaluate_army_movement(ai_stat, move)
         self.set_counters(ai_stat)
@@ -382,9 +352,9 @@ class AI_Mazedonian(AI):
         hint("---")
         for opt in options:
             s = f"\tOption of type: {type(opt)}, score: {opt.weighted_score}"
-            if type(opt) == AI_Mazedonian.RecruitmentOption or type(opt) == AI_Mazedonian.BuildOption:
+            if type(opt) == RecruitmentOption or type(opt) == BuildOption:
                 s = s + f", type {opt.type}"
-            if type(opt) == AI_Mazedonian.ScoutingOption:
+            if type(opt) == ScoutingOption:
                 s = s + f", site: {opt.site}"
             s = s + f", former priority: {opt.score}"
             hint(s)
@@ -393,22 +363,22 @@ class AI_Mazedonian(AI):
             hint(s)
 
         # translate this into move
-        best_option: AI_Mazedonian.Option = options[0]
-        if type(best_option) == AI_Mazedonian.WaitOption:
+        best_option: Option = options[0]
+        if type(best_option) == WaitOption:
             move.move_type = MoveType.DO_NOTHING
             move.str_rep_of_action = "waiting"
-        elif type(best_option) == AI_Mazedonian.BuildOption:
+        elif type(best_option) == BuildOption:
             move.move_type = MoveType.DO_BUILD
             move.loc = best_option.site
             move.type = best_option.type
             for at in best_option.associated_tiles:
                 move.info.append(at)
             move.str_rep_of_action = f"building a {best_option.type} at " + str(move.loc)
-        elif type(best_option) == AI_Mazedonian.RecruitmentOption:
+        elif type(best_option) == RecruitmentOption:
             move.move_type = MoveType.DO_RECRUIT_UNIT
             move.type = best_option.type
             move.str_rep_of_action = f"recruiting a {best_option.type}"
-        elif type(best_option) == AI_Mazedonian.ScoutingOption:
+        elif type(best_option) == ScoutingOption:
             move.move_type = MoveType.DO_SCOUT
             move.loc = best_option.site
             move.str_rep_of_action = "scouting at" + str(move.loc)
@@ -441,28 +411,28 @@ class AI_Mazedonian(AI):
             prio_racks = Priority.P_NO
             value_hut = -1
             # site_farm = (-1, -1)
-            farm_opt = AI_Mazedonian.BuildOption(BuildingType.FARM, (-1, -1), [], Priority.P_NO)
-            racks_opt = AI_Mazedonian.BuildOption(BuildingType.BARRACKS, (-1, -1), [], Priority.P_NO)
-            hut_opt = AI_Mazedonian.BuildOption(BuildingType.HUT, (-1, -1), [], Priority.P_NO)
+            farm_opt = BuildOption(BuildingType.FARM, (-1, -1), [], Priority.P_NO)
+            racks_opt = BuildOption(BuildingType.BARRACKS, (-1, -1), [], Priority.P_NO)
+            hut_opt = BuildOption(BuildingType.HUT, (-1, -1), [], Priority.P_NO)
             site_racks = (-1, -1)
             site_hut = (-1, -1)
             for t, v in offset_to_bo:
                 # hint(f"for type: {t}, v: {v}")
                 if v > 0:  # only check this building type if it is part of the bo
                     if t == BuildingType.FARM:
-                        farm_opt: AI_Mazedonian.BuildOption = self.__best_building_site_farm(ai_stat)
+                        farm_opt: BuildOption = self.__best_building_site_farm(ai_stat)
                         if v >= 2:
                             if farm_opt.score.value > 0:  # not Priority.P_NO
                                 farm_opt.score = Priority.increase(farm_opt.score)
                     elif t == BuildingType.HUT:
                         value_hut, site_hut = self.__best_building_site_hut(ai_stat)
-                        hut_opt = AI_Mazedonian.BuildOption(BuildingType.HUT, site_hut, [], normalize(value_hut))
+                        hut_opt = BuildOption(BuildingType.HUT, site_hut, [], normalize(value_hut))
                         if v >= 2:
                             if hut_opt.score.value > 0:  # not Priority.P_NO
                                 hut_opt.score = Priority.increase(hut_opt.score)
                     elif t == BuildingType.BARRACKS:
                         prio_racks, site_racks = self.__best_building_site_barracks(ai_stat)
-                        racks_opt = AI_Mazedonian.BuildOption(BuildingType.BARRACKS, site_racks, [], prio_racks)
+                        racks_opt = BuildOption(BuildingType.BARRACKS, site_racks, [], prio_racks)
                         if v >= 2:
                             if prio_racks.value > 0:  # not Priority.P_NO
                                 racks_opt.score = Priority.increase(racks_opt.score)
@@ -518,7 +488,7 @@ class AI_Mazedonian(AI):
         elif len(fields) >= 1:
             p = Priority.P_LOW
         # hint(f"                            type eval: {type(p)}")
-        return AI_Mazedonian.BuildOption(BuildingType.FARM, best_site, fields, p)
+        return BuildOption(BuildingType.FARM, best_site, fields, p)
 
     def __best_building_site_hut(self, ai_stat: AI_GameStatus) -> Tuple[int, Tuple[int, int]]:
         """building sites get scored by their number of resource fields next to them"""
@@ -591,7 +561,7 @@ class AI_Mazedonian(AI):
         if ai_stat.me.population + ai_stat.costUnitMe.population <= ai_stat.me.population_limit:
             if ai_stat.me.resources >= ai_stat.costUnitMe.resources:
                 if ai_stat.me.culture >= ai_stat.costUnitMe.culture:
-                    options.append(AI_Mazedonian.RecruitmentOption(UnitType.MERCENARY, prio_merc))
+                    options.append(RecruitmentOption(UnitType.MERCENARY, prio_merc))
                 else:
                     hint("not enough culture to recruit a mercenary. actual: {} required: {}".format(
                         ai_stat.me.culture, ai_stat.costUnitMe.culture))
@@ -604,7 +574,7 @@ class AI_Mazedonian(AI):
         if ai_stat.me.population + ai_stat.costUnitKn.population <= ai_stat.me.population_limit:
             if ai_stat.me.resources >= ai_stat.costUnitKn.resources:
                 if ai_stat.me.culture >= ai_stat.costUnitKn.culture:
-                    options.append(AI_Mazedonian.RecruitmentOption(UnitType.KNIGHT, prio_knight))
+                    options.append(RecruitmentOption(UnitType.KNIGHT, prio_knight))
                 else:
                     hint("not enough culture to recruit a knight. actual: {} required: {}".format(
                         ai_stat.me.culture, ai_stat.costUnitKn.culture))
@@ -618,12 +588,12 @@ class AI_Mazedonian(AI):
     def evaluate_move_scouting(self, ai_stat: AI_GameStatus) -> List[ScoutingOption]:
         """scores the scouting options, currently by the distance to a own building
         (want to make sure that all claimable tiles are scouted) and by the proximity to a resource fieled"""
-        options: List[AI_Mazedonian.ScoutingOption] = []
+        options: List[ScoutingOption] = []
         if ai_stat.me.resources < ai_stat.costScout:
             return options
 
         for s in ai_stat.map.scoutable_tiles:
-            options.append(AI_Mazedonian.ScoutingOption(s.offset_coordinates, Priority.P_NO))
+            options.append(ScoutingOption(s.offset_coordinates, Priority.P_NO))
 
         for so in options:
             value = 0
@@ -754,11 +724,6 @@ class AI_Mazedonian(AI):
                     value = 5 if is_army else 4
                 else:  # opp has unknown strength or equal
                     value = 3 if is_army else 2
-
-                # if AI_Toolkit.is_obj_in_list(target, self.claimed_tiles):
-                #     value = value + 3 if is_army else 2
-                # if self.previous_amount_of_buildings > len(ai_stat.map.building_list):  # a building got destroyed
-                #     value = value + 3 if is_army else 0
 
             hint(f"Target @ {str(target.offset_coordinates)} ({'army' if is_army else 'building'}) has value {value}")
             # self.priolist_targets.append((value, target, is_army))

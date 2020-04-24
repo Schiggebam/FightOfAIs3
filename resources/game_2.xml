@@ -184,13 +184,13 @@
             defensive_value="2" flag_x="0" flag_y="50" grant_pop="0">description</B2>
         <C1 code="c1" construction_cost="7" culture_per_turn="0" resource_per_field="0"
             resource_per_turn="1" sight_range="3" food_consumption="0" construction_time="0"
-            defensive_value="2" flag_x="0" flag_y="20" grant_pop="5">description</C1>
+            defensive_value="2" flag_x="0" flag_y="20" grant_pop="7">description</C1>
         <C2 code="c2" construction_cost="10" culture_per_turn="0" resource_per_field="0"
             resource_per_turn="1" sight_range="3" food_consumption="0" construction_time="0"
-            defensive_value="6" flag_x="0" flag_y="20" grant_pop="7">description</C2>
+            defensive_value="6" flag_x="0" flag_y="20" grant_pop="10">description</C2>
         <C3 code="c3" construction_cost="10" culture_per_turn="0" resource_per_field="0"
             resource_per_turn="1" sight_range="3" food_consumption="0" construction_time="0"
-            defensive_value="10" flag_x="0" flag_y="20" grant_pop="10">description</C3>
+            defensive_value="10" flag_x="0" flag_y="20" grant_pop="14">description</C3>
         <V1 code="vl1" construction_cost="7" culture_per_turn="1" resource_per_field="0"
             resource_per_turn="1" sight_range="3" food_consumption="5" construction_time="0"
             defensive_value="10" flag_x="5" flag_y="65" grant_pop="5">description</V1>
@@ -210,15 +210,15 @@
         <Knight code="unit_b" name="knight" attack="2" defence="5" population="1"
                 cost_resource="10" cost_culture="10">description</Knight>
         <Barbaric_Soldier code="unit_c" name="barbaric soldier" attack="2" defence="2" population="1"
-                          cost_resource="5" cost_culture="0">description</Barbaric_Soldier>
+                          cost_resource="3" cost_culture="0">description</Barbaric_Soldier>
     </units>
     <players>
-<!--        <player1 colour="red" spawn_x="4" spawn_y="5" ai="expansionist"-->
-<!--                 army_rel_to_spawn_x="-1" army_rel_to_spawn_y="-1">peter pan</player1>-->
+        <player1 colour="red" spawn_x="10" spawn_y="10" ai="expansionist"
+                 army_rel_to_spawn_x="-1" army_rel_to_spawn_y="-1">peter pan</player1>
         <!--<player2 colour="teal" spawn_x="14" spawn_y="6" ai="expansionist"
                  army_rel_to_spawn_x="0" army_rel_to_spawn_y="-1">peter pan</player2>-->
-        <human colour="green" spawn_x="10" spawn_y="10" ai="human"
-               army_rel_to_spawn_x="-1" army_rel_to_spawn_y="0">BLUBKOPF</human>
+<!--        <human colour="green" spawn_x="10" spawn_y="10" ai="human"-->
+<!--               army_rel_to_spawn_x="-1" army_rel_to_spawn_y="0">BLUBKOPF</human>-->
         <barbar1 colour="yellow" spawn_x="5" spawn_y="9" ai="barbaric"
                  army_rel_to_spawn_x="+1" army_rel_to_spawn_y="-1">Barbaric 1</barbar1>
 <!--        <village colour="teal" spawn_x="5" spawn_y="9" ai="villager"-->
