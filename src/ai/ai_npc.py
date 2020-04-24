@@ -218,7 +218,7 @@ class AI_NPC(AI):
     def evaluate_move_recruit_unit(self, ai_stat: AI_GameStatus) -> Union[None, RaiseArmyOption, RecruitmentOption]:
         if len(ai_stat.map.army_list) == 0:
             for b in ai_stat.map.building_list:
-                nei = AI_Toolkit.get_neibours_on_set(b, ai_stat.map.walkable_tiles)
+                nei = AI_Toolkit.get_neibours_on_set(b, ai_stat.map.buildable_tiles)  # buildable -> to avoid opp armies
                 if len(nei) == 0:
                     continue
                 x = random.sample(nei, 1)[0]
@@ -247,7 +247,13 @@ class AI_NPC(AI):
                 start_tile = ai_stat.map.army_list[0].base_tile
                 for target in targets:
                     target_tile = target.base_tile
-                    path = AI_Toolkit.dijkstra_pq(start_tile, target_tile, ai_stat.map.walkable_tiles)
+                    path = []
+                    if not (start_tile is None or target_tile is None):
+                        path = AI_Toolkit.dijkstra_pq(start_tile, target_tile, ai_stat.map.walkable_tiles)
+                    else:
+                        print(target_tile)
+                        print(start_tile)
+                        error("error in pathfinding of ai npc.")
                     # for p in path:
                     #     print(p.offset_coordinates, end=" ")
                     # print(" ")
@@ -340,14 +346,17 @@ class AI_NPC(AI):
         #     return True         # army got attacked without commanding it
         return False
 
-    def get_army_spawn_loc(self, ai_stat: AI_GameStatus) -> (int, int):
-        building_tile = ai_stat.map.building_list[0]
-        nei = AI_Toolkit.get_neibours_on_set(building_tile, ai_stat.map.buildable_tiles)
-        if len(nei) == 0:           # this seems to be unlikely but avoids crashing just in case
-            hint("No suitable tile to spawn the army!")
-            return -1, -1
-        idx = random.randint(0, len(nei) - 1)
-        return nei[idx].offset_coordinates
+    # def get_army_spawn_loc(self, ai_stat: AI_GameStatus) -> (int, int):
+    #     building_tile = ai_stat.map.building_list[0]
+    #     nei = AI_Toolkit.get_neibours_on_set(building_tile, ai_stat.map.buildable_tiles)
+    #     if len(nei) == 0:           # this seems to be unlikely but avoids crashing just in case
+    #         hint("No suitable tile to spawn the army!")
+    #         return -1, -1
+    #     idx = random.randint(0, len(nei) - 1)
+    #     for opp_a in ai_stat.map.opp_army_list:
+    #         if opp_a.offset_coordinates == nei[idx].offset_coordinates:
+    #             return -1, -1
+    #     return nei[idx].offset_coordinates
 
     def get_state_as_str(self):
         if self.state == AI_NPC.AI_State.PASSIVE:

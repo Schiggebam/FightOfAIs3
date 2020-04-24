@@ -136,7 +136,7 @@ class GameLogic:
                 r: Resource = Resource(hex, ResourceType.get_type_from_strcode(map_obj[0]))
                 r.tex_code = map_obj[0]
                 self.add_resource(r)
-        player_ids: List[int] = []
+        player_ids: List[Tuple[int, str]] = []
         for player in self.player_list:
             other_players_ids: List[int] = []
             for p in self.player_list:
@@ -161,7 +161,7 @@ class GameLogic:
                 army = Army(self.hex_map.get_hex_by_offset(player.init_army_loc), player.id)
                 army.add_unit(unit)
                 self.add_army(army, player)
-            player_ids.append(player.id)
+            player_ids.append((player.id, player.colour_code))
 
         self.__reorder_spritelist(self.z_levels[Z_GAME_OBJ])
         self.toggle_fog_of_war_lw(self.hex_map.map)
@@ -183,7 +183,7 @@ class GameLogic:
             for k_f in self.animator.key_frame_animations:
                 k_f.next_frame(delta_time)
         # self.animator_time = timestamp_start - timeit.default_timer()
-        if GameLogic.elapsed > float(0.8) and self.automatic:
+        if GameLogic.elapsed > float(GAME_LOGIC_CLK_SPEED if self.turn_nr < 80 else 1) and self.automatic:
             self.playNextTurn = True
             GameLogic.elapsed = float(0)
 
@@ -221,8 +221,9 @@ class GameLogic:
             else:                                   # this is in case of no players
                 self.playNextTurn = False
         else:
-            for s in self.z_levels[Z_FLYING]:
-                s.update_animation()
+            if self.show_key_frame_animation:
+                for s in self.z_levels[Z_FLYING]:
+                    s.update_animation()
 
         if self.change_in_map_view:
             self.toggle_fog_of_war_lw(self.hex_map.map, show_update_bar=True)

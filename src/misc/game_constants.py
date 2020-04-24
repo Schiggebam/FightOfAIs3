@@ -28,6 +28,7 @@ DEBUG = True
 DETAILED_DEBUG_INFO = 1     # 0: no info, 1: includes calling class, 2: includes calling method
 ENABLE_KEYFRAME_ANIMATIONS = False
 MAP_HACK_ENABLE_AT_STARTUP = True
+GAME_LOGIC_CLK_SPEED = 0.75
 
 class bcolors:
     HEADER = '\033[95m'

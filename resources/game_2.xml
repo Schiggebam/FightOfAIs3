@@ -209,7 +209,7 @@
                    cost_resource="10" cost_culture="0">description</Mercenary>
         <Knight code="unit_b" name="knight" attack="2" defence="5" population="1"
                 cost_resource="10" cost_culture="10">description</Knight>
-        <Barbaric_Soldier code="unit_c" name="barbaric soldier" attack="2" defence="2" population="1"
+        <Barbaric_Soldier code="unit_c" name="barbaric soldier" attack="1" defence="2" population="1"
                           cost_resource="3" cost_culture="0">description</Barbaric_Soldier>
     </units>
     <players>
@@ -221,6 +221,8 @@
 <!--               army_rel_to_spawn_x="-1" army_rel_to_spawn_y="0">BLUBKOPF</human>-->
         <barbar1 colour="yellow" spawn_x="5" spawn_y="9" ai="barbaric"
                  army_rel_to_spawn_x="+1" army_rel_to_spawn_y="-1">Barbaric 1</barbar1>
+        <barbar2 colour="blue" spawn_x="12" spawn_y="15" ai="barbaric"
+                 army_rel_to_spawn_x="+1" army_rel_to_spawn_y="-1">Barbaric 2</barbar2>
 <!--        <village colour="teal" spawn_x="5" spawn_y="9" ai="villager"-->
 <!--                 army_rel_to_spawn_x="-1" army_rel_to_spawn_y="0">Barbaric 1</village>-->
 

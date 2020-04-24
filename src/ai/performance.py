@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Dict, List
+from typing import Dict, List, Tuple
 
 import matplotlib.pyplot as plt
 
@@ -42,11 +42,13 @@ class PerformanceLogger:
     """can print the performance to a csv file """
 
     data: Dict[int, List[PerfomanceLog]] = {}
+    pid_c: List[Tuple[int, str]] = []
 
     @staticmethod
-    def setup(player_ids: List[int]):
-        for pid in player_ids:
+    def setup(player_ids_and_colours: List[Tuple[int, str]]):
+        for pid, c in player_ids_and_colours:
             PerformanceLogger.data[pid] = []
+            PerformanceLogger.pid_c.append((pid, PerformanceLogger.__colour_to_numpy_code(c)))
 
     @staticmethod
     def log_performance_file(turn_nr: int, player_id: int, score: int):
@@ -66,12 +68,33 @@ class PerformanceLogger:
             y_idx += 1
         if y_idx == 1:
             plt.plot(x, y[0])
-        elif y_idx == 2:
+        elif y_idx == 2 or y_idx == 3:
             x = x[:len(y[1])]
             y1 = y[0][:len(y[1])]
             y2 = y[1][:len(y[1])]
-            # print(x)
-            # print(y1)
-            # print(y2)
-            plt.plot(x, y1, x, y2)
-            plt.show()
+            c1 = PerformanceLogger.pid_c[0][1]
+            c2 = PerformanceLogger.pid_c[1][1]
+            if y_idx == 3:
+                x = x[:len(y[2])]
+                y1 = y[0][:len(y[2])]
+                y2 = y[1][:len(y[2])]
+                y3 = y[2][:len(y[2])]
+                c3 = PerformanceLogger.pid_c[2][1]
+                plt.plot(x, y1, c1, x, y2, c2, x, y3, c3)
+                plt.show()
+            else:
+                plt.plot(x, y1, c1, x, y2, c2)
+                plt.show()
+
+
+
+    @staticmethod
+    def __colour_to_numpy_code(code: str) -> str:
+        if code == "red":
+            return 'r'
+        if code == "blue":
+            return 'b'
+        if code == "green":
+            return 'g'
+        if code == "yellow":
+            return 'y'

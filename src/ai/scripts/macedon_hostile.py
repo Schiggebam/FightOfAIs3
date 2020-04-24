@@ -3,7 +3,7 @@ from typing import Any, Dict, Callable, Tuple, List
 from src.ai import AI_Toolkit
 from src.ai.AI_GameStatus import AI_GameStatus
 from src.ai.AI_Macedon import AI_Mazedonian
-from src.ai.AI_MapRepresentation import AI_Army
+from src.ai.AI_MapRepresentation import AI_Army, AI_Building
 from src.ai.ai_blueprint import WaitOption, BuildOption, RecruitmentOption, ScoutingOption, RaiseArmyOption
 from src.misc.game_constants import hint, BuildingType
 
@@ -30,6 +30,15 @@ def setup_weights(self) -> List[Tuple[Callable, float]]:
         return False
 
     w.append((w1, 3))
+
+    def w1_1(elem: AI_Mazedonian.Option, ai_stat: AI_GameStatus) -> bool:
+        """Idea: addition to w1: if we are gaining food, make building a farm less important"""
+        if type(elem) is BuildOption:
+            if elem.type == BuildingType.FARM:
+                return not self.is_loosing_food
+        return False
+
+    w.append((w1_1, -1.5))
 
     def w2(elem: AI_Mazedonian.Option, ai_stat: AI_GameStatus) -> bool:
         """Idea: If AI looses food, recruitment is halted"""
@@ -82,11 +91,11 @@ def setup_weights(self) -> List[Tuple[Callable, float]]:
     def w7(elem: AI_Mazedonian.Option, ai_stat: AI_GameStatus) -> bool:
         """Idea: slightly decrease scouting and waiting if a lot of resources are available"""
         if type(elem) is ScoutingOption or type(elem) is WaitOption:
-            if ai_stat.me.resources > 70:
+            if ai_stat.me.resources > 40:
                 return True
         return False
 
-    w.append((w7, -1))
+    w.append((w7, -1.5))
 
     def w8(elem: AI_Mazedonian.Option, ai_stat: AI_GameStatus) -> bool:
         """Idea: slightly decrease scouting in early game"""
@@ -150,7 +159,7 @@ def setup_weights(self) -> List[Tuple[Callable, float]]:
                     return True
             return False
 
-    w.append((w13, 2.7))
+    w.append((w13, 1.7))
 
     hint(f"AI has found {len(w)} weight functions.")
     return w
@@ -194,6 +203,16 @@ def setup_movement_weights(self: AI_Mazedonian) -> List[Tuple[Callable, float]]:
         return False
 
     aw.append((aw4, -2))
+
+    def aw5(elem: AI_Mazedonian.AttackTarget, ai_stat: AI_GameStatus) -> bool:
+        """Idea: Move in for the kill if the opp is weaker"""
+        if type(elem.target) == AI_Building:
+            if elem.target.owner in self.hostile_player:
+                if self.opponent_strength[elem.target.owner] == AI_Mazedonian.Strength.WEAKER:
+                    return True
+        return False
+
+    aw.append((aw5, 2))
 
     hint(f"AI has found {len(aw)} movement weight functions.")
     return aw

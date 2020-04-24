@@ -10,7 +10,8 @@ from src.ai.AI_GameStatus import AI_GameStatus, AI_Move
 from src.ai.AI_MapRepresentation import Tile, AI_Army, AI_Building
 from src.ai.ai_blueprint import AI, WaitOption, BuildOption, RecruitmentOption, ScoutingOption, Weight, Option
 
-from src.misc.game_constants import DiploEventType, hint, BuildingType, error, debug, UnitType, Priority, MoveType
+from src.misc.game_constants import DiploEventType, hint, BuildingType, error, debug, UnitType, Priority, MoveType, \
+    PlayerType
 
 DETAILED_DEBUG = False
 
@@ -74,6 +75,7 @@ class AI_Mazedonian(AI):
         self.opponent_strength: Dict[int, AI_Mazedonian.Strength] = {}
         self.claimed_tiles: Set[Tile] = set()
         self.is_loosing_food: bool = False
+        self.inactive_huts: int = 0
 
         # state variables
         self.previous_army_population: int = -1
@@ -94,11 +96,11 @@ class AI_Mazedonian(AI):
         self.equal_strength_defencive: bool = False
         self.unknown_strength_defencive: bool = False
         self.tend_to_be_defencive: bool = False
-        bo_early_game: List[Tuple[BuildingType, int]] = [(BuildingType.FARM, 2), (BuildingType.HUT, 3),
+        bo_early_game: List[Tuple[BuildingType, int]] = [(BuildingType.FARM, 3), (BuildingType.HUT, 3),
                                                          (BuildingType.BARRACKS, 2)]
         bo_mid_game: List[Tuple[BuildingType, int]] = [(BuildingType.FARM, 6), (BuildingType.HUT, 5),
                                                        (BuildingType.BARRACKS, 4)]
-        bo_late_game: List[Tuple[BuildingType, int]] = [(BuildingType.FARM, 7), (BuildingType.HUT, 9),
+        bo_late_game: List[Tuple[BuildingType, int]] = [(BuildingType.FARM, 10), (BuildingType.HUT, 9),
                                                         (BuildingType.BARRACKS, 10)]
         self.ac_passive: AI_Mazedonian.ArmyConstellation = AI_Mazedonian.ArmyConstellation("passive", (0.5, 0.5))
         self.ac_aggressive: AI_Mazedonian.ArmyConstellation = AI_Mazedonian.ArmyConstellation("aggressive", (0.8, 0.2))
@@ -106,10 +108,10 @@ class AI_Mazedonian(AI):
         self.build_orders: List[AI_Mazedonian.BuildOrder] = []
         self.build_orders.append(AI_Mazedonian.BuildOrder("early game", bo_early_game, 5))
         self.build_orders.append(AI_Mazedonian.BuildOrder("mid game", bo_mid_game, 10))
-        self.build_orders.append(AI_Mazedonian.BuildOrder("late game", bo_late_game, 15))
+        self.build_orders.append(AI_Mazedonian.BuildOrder("late game", bo_late_game, 30))
         self.food_lower_limit: int = 15
         self.w_scouting_smooth_border: float = 1
-        self.w_scouting_resource: float = 1
+        self.w_scouting_resource: float = 3
         self.w_scouting_claimed: float = 1
 
         self.weights: List[Weight] = []
@@ -187,7 +189,7 @@ class AI_Mazedonian(AI):
         elif self.state == AI_Mazedonian.AI_State.DEFENSIVE or self.state == AI_Mazedonian.AI_State.AGGRESSIVE:
             if len(self.priolist_targets) > 0:
                 if self.threshold_target_value <= self.priolist_targets[0].score:
-                    hint("on warpath: {} {}".format(self.threshold_target_value, self.priolist_targets[0].score))
+                    # hint("on warpath: {} {}".format(self.threshold_target_value, self.priolist_targets[0].score))
                     # attack
                     start_tile = ai_stat.map.army_list[0].base_tile
                     target_tile = self.priolist_targets[0].target.base_tile
@@ -206,6 +208,7 @@ class AI_Mazedonian(AI):
         if self.previous_food > ai_stat.me.food:
             hint("AI detected that it is loosing food")
             self.is_loosing_food = True
+            self.inactive_huts = self.__count_inactive_huts(ai_stat)
 
     def reset_vars(self):
         self.is_loosing_food = False
@@ -264,15 +267,18 @@ class AI_Mazedonian(AI):
             strength: AI_Mazedonian.Strength = AI_Mazedonian.Strength.UNKNOWN
             for e_a in ai_stat.map.opp_army_list:
                 if e_a.owner == other_p_id:
+                    factor = 1.0
+                    for opp in ai_stat.opponents:
+                        if opp.id == other_p_id:
+                            if opp.type == PlayerType.BARBARIC:
+                                factor = 0.7
+                    opp_army_pop = e_a.population * factor
                     t_equal = self.threshold_considered_equal
-                    if abs(e_a.population - ai_stat.map.army_list[0].population) < t_equal:
-                        # self.__update_estimated_strength(other_p_id, AI_Mazedonian.EQUAL)
+                    if abs(opp_army_pop - ai_stat.map.army_list[0].population) < t_equal:
                         strength = AI_Mazedonian.Strength.EQUAL
-                    elif e_a.population - ai_stat.map.army_list[0].population:
-                        # self.__update_estimated_strength(other_p_id, AI_Mazedonian.STRONGER)
+                    elif opp_army_pop > ai_stat.map.army_list[0].population:
                         strength = AI_Mazedonian.Strength.STRONGER
-                    elif e_a.population < ai_stat.map.army_list[0].population:
-                        # self.__update_estimated_strength(other_p_id, AI_Mazedonian.WEAKER)
+                    elif opp_army_pop < ai_stat.map.army_list[0].population:
                         strength = AI_Mazedonian.Strength.WEAKER
             self.opponent_strength[other_p_id] = strength
 
@@ -384,6 +390,7 @@ class AI_Mazedonian(AI):
             move.str_rep_of_action = "scouting at" + str(move.loc)
         elif type(best_option) == AI_Mazedonian.RaiseArmyOption:
             move.move_type = MoveType.DO_RAISE_ARMY
+            move.loc = self.get_army_spawn_loc(ai_stat)
             move.str_rep_of_action = "raising new army at"
         else:
             error("unexpected type")
@@ -427,6 +434,7 @@ class AI_Mazedonian(AI):
                     elif t == BuildingType.HUT:
                         value_hut, site_hut = self.__best_building_site_hut(ai_stat)
                         hut_opt = BuildOption(BuildingType.HUT, site_hut, [], normalize(value_hut))
+                        v = v + self.inactive_huts
                         if v >= 2:
                             if hut_opt.score.value > 0:  # not Priority.P_NO
                                 hut_opt.score = Priority.increase(hut_opt.score)
@@ -547,16 +555,19 @@ class AI_Mazedonian(AI):
             prio_knight = Priority.decrease(prio_knight)
         # compare to desired army composition:
         army = ai_stat.map.army_list[0]
-        percentage_merc_wanted = self.army_comp.ac[0] / (self.army_comp.ac[0] + self.army_comp.ac[0])
-        percentage_merc_actual = army.mercenaries / (army.mercenaries + army.knights)
-        percentage_knig_wanted = self.army_comp.ac[1] / (self.army_comp.ac[0] + self.army_comp.ac[0])
-        percentage_knig_actual = army.knights / (army.mercenaries + army.knights)
-        hint(
-            f"merc: {percentage_merc_wanted} - {percentage_merc_actual} | knight: {percentage_knig_wanted} - {percentage_knig_actual}")
-        if (percentage_knig_wanted - percentage_knig_actual) < (percentage_merc_wanted - percentage_merc_actual):
-            prio_merc = Priority.increase(prio_merc)
-        else:
+        if army.population > 0:
+            percentage_merc_wanted = self.army_comp.ac[0] / (self.army_comp.ac[0] + self.army_comp.ac[0])
+            percentage_merc_actual = army.mercenaries / (army.mercenaries + army.knights)
+            percentage_knig_wanted = self.army_comp.ac[1] / (self.army_comp.ac[0] + self.army_comp.ac[0])
+            percentage_knig_actual = army.knights / (army.mercenaries + army.knights)
+            hint(f"merc: {percentage_merc_wanted} - {percentage_merc_actual} | knight: {percentage_knig_wanted} - {percentage_knig_actual}")
+            if (percentage_knig_wanted - percentage_knig_actual) < (percentage_merc_wanted - percentage_merc_actual):
+                prio_merc = Priority.increase(prio_merc)
+            else:
+                prio_knight = Priority.increase(prio_knight)
+        else:   # in case the population is 0, we cannot compute the above. Just increase the priority
             prio_knight = Priority.increase(prio_knight)
+            prio_merc = Priority.increase(prio_merc)
         # mercenary
         if ai_stat.me.population + ai_stat.costUnitMe.population <= ai_stat.me.population_limit:
             if ai_stat.me.resources >= ai_stat.costUnitMe.resources:
@@ -615,7 +626,7 @@ class AI_Mazedonian(AI):
             # value = value + (len(dist1) * self.w_scouting_smooth_border)
 
             # Normalize
-            high = max(4 * self.w_scouting_resource, 4 * self.w_scouting_claimed, 4 * self.w_scouting_smooth_border)
+            high = max(2 * self.w_scouting_resource, 4 * self.w_scouting_claimed, 4 * self.w_scouting_smooth_border)
             # hint(f"scouting value: {value} (res nearby: {num_of_tiles_with_res},")
             # f" claimed_tiles near_by: {num_of_claimed_tiles} ) ")
             if value < 0.3 * high:
@@ -742,6 +753,25 @@ class AI_Mazedonian(AI):
              f", Pop: {ai_stat.me.population} / {ai_stat.me.population_limit}")
         for h in self.hostile_player:
             hint("hostile player: [ID:] {} estimated strength: {}".format(h, self.opponent_strength[h]))
+        #if self.inactive_huts > 0:
+        hint(f"Inactive huts: {self.inactive_huts}")
+
+    def get_army_spawn_loc(self, ai_stat: AI_GameStatus) -> Tuple[int, int]:
+        nei: List[Tile] = AI_Toolkit.get_neibours_on_set(ai_stat.map.building_list[0].base_tile, ai_stat.map.walkable_tiles)
+        idx = random.randint(0, len(nei)-1)
+        return nei[idx].offset_coordinates
+
+    def __count_inactive_huts(self, ai_stat) -> int:
+        count = 0
+        for b in ai_stat.map.building_list:
+            if b.type == BuildingType.HUT:
+                has_res = False
+                for n in AI_Toolkit.get_neibours_on_set(b.base_tile, ai_stat.map.discovered_tiles):
+                    if n.has_resource():
+                        has_res = True
+                if not has_res:
+                    count += 1
+        return count
 
     def get_state_as_str(self) -> str:
         s = "    STATE: "
