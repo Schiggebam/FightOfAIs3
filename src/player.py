@@ -36,7 +36,7 @@ class Player:
         if self.is_barbaric:
             return BuildingType.CAMP_1
         elif self.is_villager:
-            return BuildingType.VILLAGE
+            return BuildingType.VILLAGE_1
         return BuildingType.HUT
 
     def get_initial_unit_type(self):

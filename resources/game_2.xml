@@ -22,7 +22,7 @@
         <camp_2 code="c2" offsetX="5" offsetY="0" scale="1">../resources/objects/camp_2.png</camp_2>
         <camp_3 code="c3" offsetX="5" offsetY="0" scale="1">../resources/objects/camp_3.png</camp_3>
         <corn_field code="cf" offsetX="0" offsetY="0" scale="1">../resources/objects/corn_field.png</corn_field>
-        <construction_site code="cs" offsetX="0" offsetY="0" scale="1">../resources/objects/construction_site.png</construction_site>
+        <construction_site code="cs" offsetX="0" offsetY="-5 " scale="1">../resources/objects/construction_site.png</construction_site>
         <destruction_site code="ds" offsetX="0" offsetY="5" scale="1">../resources/objects/destruction_site.png</destruction_site>
         <village_center code="v1" offsetX="10" offsetY="5" scale="1">../resources/objects/village/small_3.png</village_center>
         <village_church_e code="vk_e" offsetX="5" offsetY="10" scale="1">../resources/objects/village/village_church_e.png</village_church_e>
@@ -31,6 +31,11 @@
         <village_mountain code="vmountain" offsetX="-25" offsetY="20" scale="1">../resources/objects/village/village_mountain.png</village_mountain>
         <village_storage_e code="vs_e" offsetX="0" offsetY="0" scale="1">../resources/objects/village/village_storage_e.png</village_storage_e>
         <village_storage_sw code="vs_sw" offsetX="0" offsetY="0" scale="1">../resources/objects/village/village_storage_sw.png</village_storage_sw>
+        <village_lvl1 code="vl1" offsetX="0" offsetY="20" scale="1">../resources/objects/village/small_1.png</village_lvl1>
+        <village_lvl2 code="vl2" offsetX="0" offsetY="20" scale="1">../resources/objects/village/small_2.png</village_lvl2>
+        <village_lvl3 code="vl3" offsetX="0" offsetY="20" scale="1">../resources/objects/village/small_3.png</village_lvl3>
+        <village_lvl4 code="vl4" offsetX="0" offsetY="0" scale="1">../resources/objects/village/village_lvl4.png</village_lvl4>
+        <village_lvl5 code="vl5" offsetX="0" offsetY="0" scale="1">../resources/objects/village/village_lvl5.png</village_lvl5>
         <barracks code="br" offsetX="10" offsetY="5" scale="1">../resources/objects/barracks.png</barracks>
         <ocean code="ocean" offsetX="0" offsetY="0" scale="1">../resources/map/ocean_texture.png</ocean>
         <!-- forest -->
@@ -177,7 +182,7 @@
         <B2 code="s2" construction_cost="15" culture_per_turn="0" resource_per_field="2"
             resource_per_turn="0" sight_range="2" food_consumption="2" construction_time="3"
             defensive_value="2" flag_x="0" flag_y="50" grant_pop="0">description</B2>
-        <C1 code="c1" construction_cost="5" culture_per_turn="0" resource_per_field="0"
+        <C1 code="c1" construction_cost="7" culture_per_turn="0" resource_per_field="0"
             resource_per_turn="1" sight_range="3" food_consumption="0" construction_time="0"
             defensive_value="2" flag_x="0" flag_y="20" grant_pop="5">description</C1>
         <C2 code="c2" construction_cost="10" culture_per_turn="0" resource_per_field="0"
@@ -186,9 +191,15 @@
         <C3 code="c3" construction_cost="10" culture_per_turn="0" resource_per_field="0"
             resource_per_turn="1" sight_range="3" food_consumption="0" construction_time="0"
             defensive_value="10" flag_x="0" flag_y="20" grant_pop="10">description</C3>
-        <V1 code="v1" construction_cost="10" culture_per_turn="0" resource_per_field="0"
+        <V1 code="vl1" construction_cost="7" culture_per_turn="1" resource_per_field="0"
+            resource_per_turn="1" sight_range="3" food_consumption="5" construction_time="0"
+            defensive_value="10" flag_x="5" flag_y="65" grant_pop="5">description</V1>
+        <V2 code="vl2" construction_cost="10" culture_per_turn="1" resource_per_field="0"
             resource_per_turn="1" sight_range="3" food_consumption="0" construction_time="0"
-            defensive_value="10" flag_x="5" flag_y="65" grant_pop="0">description</V1>
+            defensive_value="12" flag_x="5" flag_y="65" grant_pop="10">description</V2>
+        <V3 code="vl3" construction_cost="12" culture_per_turn="2" resource_per_field="0"
+            resource_per_turn="2" sight_range="3" food_consumption="0" construction_time="0"
+            defensive_value="15" flag_x="5" flag_y="65" grant_pop="15">description</V3>
         <Racks code="br" construction_cost="25" culture_per_turn="0" resource_per_field="0"
                resource_per_turn="0" sight_range="2" food_consumption="0" construction_time="2"
                defensive_value="10" flag_x="20" flag_y="40" grant_pop="5">description</Racks>
@@ -207,11 +218,11 @@
         <!--<player2 colour="teal" spawn_x="14" spawn_y="6" ai="expansionist"
                  army_rel_to_spawn_x="0" army_rel_to_spawn_y="-1">peter pan</player2>-->
         <human colour="green" spawn_x="10" spawn_y="10" ai="human"
-               army_rel_to_spawn_x="+1" army_rel_to_spawn_y="+1">BLUBKOPF</human>
+               army_rel_to_spawn_x="-1" army_rel_to_spawn_y="0">BLUBKOPF</human>
         <barbar1 colour="yellow" spawn_x="5" spawn_y="9" ai="barbaric"
                  army_rel_to_spawn_x="+1" army_rel_to_spawn_y="-1">Barbaric 1</barbar1>
-        <!--<village colour="teal" spawn_x="10" spawn_y="14" ai="villager"
-                 army_rel_to_spawn_x="-1" army_rel_to_spawn_y="0">Barbaric 1</village>-->
+<!--        <village colour="teal" spawn_x="5" spawn_y="9" ai="villager"-->
+<!--                 army_rel_to_spawn_x="-1" army_rel_to_spawn_y="0">Barbaric 1</village>-->
 
     </players>
 </game>

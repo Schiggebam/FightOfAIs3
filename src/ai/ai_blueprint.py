@@ -94,7 +94,7 @@ class AI_Diplo:
                   player_name:str):
         # check if this exists already:
         for e in self.events:
-            if e.target_id == target_id and e.event == event and e.loc == loc:      #TODO armies move!
+            if e.target_id == target_id and e.event == event and e.loc == loc:
                 e.lifetime = e.lifetime_max
                 return
         # otherwise, if event does not exist, yet
@@ -107,6 +107,8 @@ class AI_Diplo:
             event_str = "Enemy building is located in claimed zone"
         elif event == DiploEventType.ENEMY_ARMY_INVADING_CLAIMED_ZONE:
             event_str = "Enemy army is invading claimed zone"
+        elif event == DiploEventType.ATTACKED_BY_FACTION:
+            event_str = "Attacked by Faction"
         else:
             error("Unknown event!")
         ai_event = AI_Diplo.AI_DiploEvent(target_id, rel_change, lifetime, event, event_str)

@@ -251,6 +251,7 @@ class AI_Mazedonian(AI):
         for d, s in heat_map:
             if d <= c_dist:
                 self.claimed_tiles.add(s)
+        print(self.claimed_tiles)
         # for t in ai_stat.map.walkable_tiles:
         #     x_val = AI_Toolkit.num_resources_on_adjacent(t)
         #     # x_val = len(AI_Toolkit.get_neighbours(t))

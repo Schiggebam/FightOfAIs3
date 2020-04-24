@@ -190,9 +190,11 @@ class BuildingType(Enum):
     CAMP_2 = 23
     CAMP_3 = 24
     VILLA = 25
-    VILLAGE = 26
-    BARRACKS = 27
-    OTHER_BUILDING = 29
+    VILLAGE_1 = 26
+    VILLAGE_2 = 27
+    VILLAGE_3 = 28
+    BARRACKS = 29
+    OTHER_BUILDING = 30
 
     @staticmethod
     def get_type_from_strcode(str_code: str) -> BuildingType:
@@ -208,8 +210,12 @@ class BuildingType(Enum):
             return BuildingType.CAMP_2
         elif str_code == "c3":
             return BuildingType.CAMP_3
-        elif str_code == "v1":
-            return BuildingType.VILLAGE
+        elif str_code == "vl1":
+            return BuildingType.VILLAGE_1
+        elif str_code == "vl2":
+            return BuildingType.VILLAGE_2
+        elif str_code == "vl3":
+            return BuildingType.VILLAGE_3
         elif str_code == "br":
             return BuildingType.BARRACKS
         return BuildingType.OTHER_BUILDING
@@ -237,6 +243,7 @@ class DiploEventType(Enum):
     TYPE_ENEMY_BUILDING_SCOUTED = 101
     ENEMY_BUILDING_IN_CLAIMED_ZONE = 102
     ENEMY_ARMY_INVADING_CLAIMED_ZONE = 103
+    ATTACKED_BY_FACTION = 104
 
 
 class UnitType(Enum):

@@ -1,10 +1,12 @@
 import queue
+# from dataclasses import dataclass
 from math import ceil
 from typing import Tuple
 
 from src.game_accessoires import Army
+
 from src.misc.building import Building
-from src.misc.game_constants import BuildingType, BuildingState, LogType, DiploEventType, UnitType, hint, error
+from src.misc.game_constants import BuildingType, BuildingState, LogType, DiploEventType, UnitType, error
 from src.player import Player
 
 
@@ -53,6 +55,20 @@ class IncomeCalculator:
             if building.building_state == BuildingState.ACTIVE:
                 c = c + building.culture_per_turn
         return c
+
+    @staticmethod
+    def building_food_influence(building: Building):
+        if building.building_type == BuildingType.FARM:
+            return len(building.associated_tiles)
+        return building.food_consumption
+
+    @staticmethod
+    def building_population_influence(building: Building):
+        return building.grant_pop
+
+    @staticmethod
+    def building_culture_influce(building: Building):
+        return building.culture_per_turn
 
 
 class FightCalculator:
