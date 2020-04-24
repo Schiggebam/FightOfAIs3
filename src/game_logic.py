@@ -10,7 +10,7 @@ from src.game_file_reader import GameFileReader
 from src.hex_map import HexMap, MapStyle, Hexagon
 from src.texture_store import TextureStore
 from src.misc.game_logic_misc import *
-from typing import Optional, List, Set
+from typing import Optional, List, Set, Dict
 
 
 class GameLogic:
@@ -137,7 +137,7 @@ class GameLogic:
                 self.add_resource(r)
 
         for player in self.player_list:
-            other_players_ids = [int]
+            other_players_ids: List[int] = []
             for p in self.player_list:
                 if p != player:
                     other_players_ids.append(p.id)
@@ -242,15 +242,17 @@ class GameLogic:
             if b.building_state == BuildingState.DESTROYED:
                 self.del_building(b, player)
 
-        if player.has_lost:
-            for army in player.armies:
-                self.del_army(army, player)
-            return None
-
         player.income = self.income_calc.calculate_income(player)
         player.amount_of_resources = player.amount_of_resources + player.income
         player.food = player.food + self.income_calc.calculate_food(player)
         player.culture = player.culture + self.income_calc.calculate_culture(player)
+
+        if player.has_lost:
+            for army in player.armies:
+                self.del_army(army, player)
+            for b in player.buildings:
+                self.del_building(b, player)
+            return None
 
         # gather data for ai
         scoutable_tiles = self.get_scoutable_tiles(player)
@@ -315,15 +317,23 @@ class GameLogic:
         #else:
         costs['knight'] = Unit.get_unit_cost(UnitType.KNIGHT)
         costs['mercenary'] = Unit.get_unit_cost(UnitType.MERCENARY)
-        # print('costs: ', end="")
-        # print(costs)
+        # modern cost
+        b_costs: Dict[BuildingType, int] = {}
+        for t_b in BuildingType:
+            if t_b != BuildingType.OTHER_BUILDING:
+                b_costs[t_b] = Building.get_construction_cost(t_b)
+        u_costs: Dict[UnitType, UnitCost] = {}
+        for t_u in UnitType:
+            u_costs[t_u] = Unit.get_unit_cost(t_u)
+
+
 
         # ask the AI of each player to do a move
         ai_status = AI_GameStatus()
         ai_move = AI_Move()
 
-        self.ai_interface.create_ai_status(ai_status, self.turn_nr, costs,
-                                           ai_map, me, opponents)
+        AI_GameInterface.create_ai_status(ai_status, self.turn_nr, costs,
+                                           ai_map, me, opponents, b_costs, u_costs)
         player.attacked_set.clear()
         if player.player_type == PlayerType.HUMAN:
             self.hi.request_move(ai_status, ai_move, player.id)
@@ -395,12 +405,6 @@ class GameLogic:
             s = s + ai_move.str_rep_of_action
             debug(s)
 
-        if ai_move.doMoveArmy:
-            if len(player.armies) == 1:             #FIXME has support for only 1 army here
-                self.move_army(player.armies[0], player, ai_move.move_army_to)
-            else:
-                print("No army available")
-
         if ai_move.move_type == MoveType.DO_RAISE_ARMY:
             if len(player.armies) == 0:
                 hint(f"spawning army at {ai_move.loc}")
@@ -412,33 +416,20 @@ class GameLogic:
 
         if ai_move.move_type == MoveType.DO_RECRUIT_UNIT:
             if len(player.armies) == 1:             #FIXME has support for only 1 army here
-                if player.is_barbaric:
-                    cost_bs = Unit.get_unit_cost(UnitType.BABARIC_SOLDIER).resources
-                    if player.amount_of_resources >= cost_bs:
-                        player.amount_of_resources = player.amount_of_resources - cost_bs
-                        u: Unit = Unit(UnitType.BABARIC_SOLDIER)
-                        player.armies[0].add_unit(u)
-                        hint("new unit recruited for barbric army")
-                    else:
-                        error("Not enough resources to upgrade the (barbaric) army")
+                t_u = ai_move.type
+                cost = Unit.get_unit_cost(t_u)
+                if player.amount_of_resources < cost.resources:
+                    error("Not enough resources to recruit unit: " + str(t_u))
+                elif player.culture < cost.culture:
+                    error("Not enough culture to recruit unit: " + str(t_u))
+                elif player.get_population_limit() < player.get_population() + cost.population:
+                    error("Not enough free population to recruit " + str(t_u))
                 else:
-                    if ai_move.type == UnitType.KNIGHT or ai_move.type == UnitType.MERCENARY:
-                        type = ai_move.type
-                        cost = Unit.get_unit_cost(type)
-                        if player.amount_of_resources < cost.resources:
-                            error("Not enough resources to recruit unit: " + str(type))
-                        elif player.culture < cost.culture:
-                            error("Not enough culture to recruit unit: " + str(type))
-                        elif player.get_population_limit() < player.get_population() + cost.population:
-                            error("Not enough free population to recruit " + str(type))
-                        else:
-                            player.amount_of_resources = player.amount_of_resources - cost.resources
-                            player.culture = player.culture - cost.culture
-                            u: Unit = Unit(type)
-                            player.armies[0].add_unit(u)
-                            hint("new unit recruited - type: " + str(type))
-                    else:
-                        error("unknown unit type.")
+                    player.amount_of_resources = player.amount_of_resources - cost.resources
+                    player.culture = player.culture - cost.culture
+                    u: Unit = Unit(t_u)
+                    player.armies[0].add_unit(u)
+                    hint("new unit recruited - type: " + str(type))
             else:
                 error("No army. Recruit new army first!")
 
@@ -486,19 +477,33 @@ class GameLogic:
             if not b_old:
                 print("Exec AI Move: No building found at location to upgrade!")
                 return
-            b_type = 0
-            # self.__add_aux_sprite(b_old.tile, 1, "ou")
-            if b_old.building_type == BuildingType.CAMP_1:
-                b_type = BuildingType.CAMP_2
-            elif b_old.building_type == BuildingType.CAMP_2:
-                b_type = BuildingType.CAMP_3
-            player.amount_of_resources = player.amount_of_resources - Building.get_construction_cost(b_type)
-            self.del_building(b_old, player)
-            base_hex = self.hex_map.get_hex_by_offset(ai_move.loc)
-            b_new = Building(base_hex, b_type, player.id)
-            # print(b_new.tex_code)
-            self.add_building(b_new, player)
+            b_type = ai_move.type
+            if player.amount_of_resources >= Building.get_construction_cost(b_type):
+                player.amount_of_resources = player.amount_of_resources - Building.get_construction_cost(b_type)
+                self.del_building(b_old, player)
+                base_hex = self.hex_map.get_hex_by_offset(ai_move.loc)
+                b_new = Building(base_hex, b_type, player.id)
+                # print(b_new.tex_code)
+                self.add_building(b_new, player)
+            else:
+                error(f"Exec AI Move: Not enough resources to upgrade type{b_old.building_type} to {b_type}")
 
+        if ai_move.doMoveArmy:
+            if len(player.armies) == 1:             #FIXME has support for only 1 army here
+                if self.hex_map.get_hex_by_offset(ai_move.move_army_to) is not None:
+                    #if self.hex_map.get_hex_by_offset(ai_move.move_army_to).ground.walkable:
+                    ok = True
+                    for b in player.buildings:
+                        if b.tile.offset_coordinates == ai_move.move_army_to:
+                            ok = False
+                    if ok:
+                        self.move_army(player.armies[0], player, ai_move.move_army_to)
+                    else:
+                        error("Cannot move army, it appears a building has been built on this tile")
+                else:
+                    error(f"Invalid target for army movement: {ai_move.move_army_to}")
+            else:
+                error("No army available")
         hint("                          SUCCESSFULLY PLAYED TURN")
 
     def __check_validity(self, ai_move: AI_Move):
@@ -695,7 +700,11 @@ class GameLogic:
         if building.building_type == BuildingType.FARM:
             for a in building.associated_tiles:
                 self.extend_building(building, a, "cf")
-
+        if building.building_type == BuildingType.VILLAGE_1:
+            for n in self.hex_map.get_neighbours(building.tile):
+                building.associated_tiles.append(n)
+        building.tile.ground.walkable = False
+        building.tile.ground.buildable = False
         self.toggle_fog_of_war_lw(player.discovered_tiles)
         self.__reorder_spritelist(self.z_levels[Z_GAME_OBJ])
 

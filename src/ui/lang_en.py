@@ -1,6 +1,15 @@
 from src.misc.game_constants import *
 
 
+def resource_type_conversion(rt: ResourceType) -> str:
+    if rt == ResourceType.FOREST:
+        return "forest"
+    if rt == ResourceType.GOLD:
+        return "gold"
+    if rt == ResourceType.ROCK:
+        return "rock"
+    return "unkown resource"
+
 def unit_type_conversion(ut: UnitType) -> str:
     if ut == UnitType.MERCENARY:
         return "mercenary"

@@ -21,8 +21,7 @@ class Building(Drawable):
         self.__idx_texture_construction: int = -1
         self.__idx_texture_destruction: int = -1
         self.flag: Optional[Flag] = None
-        # for b_info in Building.building_info:
-        #     if b_info[0] == bui_type:
+        # values from xml file
         self.tex_code = Building.building_info[bui_type]['tex_code']
         self.construction_cost = Building.building_info[bui_type]['construction_cost']
         self.culture_per_turn = Building.building_info[bui_type]['culture_per_turn']
@@ -51,14 +50,15 @@ class Building(Drawable):
         self.__idx_texture_destruction = self.tex_counter
 
     def set_state_construction(self):
+        """set the state of the building to 'construction', also changes its texture"""
         self.building_state = BuildingState.UNDER_CONSTRUCTION
         if self.has_texture_construction():
             super().set_active_texture(self.__idx_texture_construction)
-            # hint("Construction texture at: " + str(self.__idx_texture_construction))
         else:
             error("Building does not have a construction texture!")
 
     def set_state_destruction(self):
+        """set the state of the building to 'destruction', also changes its texture"""
         self.building_state = BuildingState.DESTROYED
         if self.has_texture_destruction():
             super().set_active_texture(self.__idx_texture_destruction)
@@ -66,12 +66,12 @@ class Building(Drawable):
             error("Building does not have a destruction texture!")
 
     def set_state_active(self):
+        """set the state of the building to 'active', also changes its texture"""
         self.building_state = BuildingState.ACTIVE
         super().set_active_texture(0)
 
     @staticmethod
     def get_construction_cost(bui_type: BuildingType):
         """in case we want to know the construction cost before the building is instance"""
-        # for Building.building_info in Building.building_info:
-        #     if Building.building_info[0] == bui_type:
         return Building.building_info[bui_type]['construction_cost']
+

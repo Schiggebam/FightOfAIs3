@@ -300,8 +300,7 @@ class UI:
             from src.game_accessoires import Resource
             from src.game_accessoires import Army
             if a_class == Building:
-                b_panel = PanelBuilding(x, y + 200 if y < self.screen_height/2 else y - 200,
-                                        a.building_type, a.owner_id, a.building_state)
+                b_panel = PanelBuilding(x, y + 200 if y < self.screen_height/2 else y - 200, a)
                 self.show_volatile_panel(b_panel)
             elif a_class == Resource:
                 r_panel = PanelResource(x, y + 200 if y < self.screen_height / 2 else y - 200,
