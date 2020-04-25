@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 from src.ai.AI_MapRepresentation import Map
 from src.game_accessoires import Unit
 from src.misc.building import Building
-from src.misc.game_constants import UnitType
+from src.misc.game_constants import UnitType, BuildingType
 
 
 class ScoreSpentResources:
@@ -18,6 +18,11 @@ class ScoreSpentResources:
         used_resources = 0
         for b in map.building_list:
             # ! if a building is upgraded, count also its lower levels
+            if b.type == BuildingType.CAMP_3:
+                used_resources += Building.get_construction_cost(BuildingType.CAMP_2)
+                used_resources += Building.get_construction_cost(BuildingType.CAMP_1)
+            if b.type == BuildingType.CAMP_2:
+                used_resources += Building.get_construction_cost(BuildingType.CAMP_1)
             used_resources += Building.get_construction_cost(b.type)
 
         for a in map.army_list:

@@ -1,0 +1,83 @@
+## Game DOC ##
+[pre alpha]
+
+################
+### COMMANDS ###
+################
+
+1. Show commands
+    Run 'help' in the console, this will print a list of all available commands and their arguments
+2. Add a command
+    In console.py:
+        append a new command in the '__init__' method of the class Console
+        The list takes an object of type 'ConsoleCommand'
+
+
+###################
+### INTERACTION ###
+###################
+[SPACE] -> triggers the 'next turn' button
+[mouse] -> left click for selection, right click for deselection in general
+
+
+
+################
+### THE GAME ###
+################
+Most of the rules and parameters of the game are defined in the '.xml' file under '[root]/resources'
+The parameters for buildings, units etc are defined there.
+
+
+#########################
+### GAME LOGIC <-> AI ###
+#########################
+The game loop is located in game_logic.py in class GameLogic. The name of the method is 'update(...)'
+The program flow looks a bit like this
+   GameLogic                                            AI_Interface                                AI
+
+   -- player wan't to play a turn --
+   update(...)
+   play_players_turn(...)
+   [gather all information for the player]
+   [send this wrapped information to the interface]
+   --calls create_ai_status(information) in AI_Interface----->
+                                                 creates an Object of type [GameInterface]
+                                                 -> called ai_status
+   [create a ai_move oject of type AI_Move]
+   [will be filled by AI and contains info about the move]
+   -- calls do_a_move(ai_status, ai_move) ---------------->
+                                                  GL requested move
+                                                  [forward request to AI] -------------------> do_move(..)
+                                                                                               [all AI calculations]
+                                                                                               [wrap info about the move]
+                                                                                               [in ai_move]
+   [upon termination, ai_move obj is filled]  <--------------------------------------------------
+   calls exec_ai_move(ai_move)
+   [will test move obj for validity]
+   if valid -> update the map accordingly (add unit, build building, calc fight etc)
+   update_map()
+   -> [after each player, the routine update_map()
+   makes sure the map stays consistent]
+   -- end of turn---
+
+
+
+####################################
+### CODE - HOW TO ADD A BUILDING ###
+####################################
+XML
+1. Add texture to ./resources/objects/
+2. Add texture settings to game.xml. Make sure that the "code"- tag is unique and the path to the texture correct
+3. Add the buildings properties to the buildings section of game.xml.
+    Make sure, that the "code"- tag matches the texture code
+PYTHON
+4. in src/misc/game_constants.py: Extend the enum 'BuildingType' by the type of the building
+4.1 in the enum: extend the routine: 'get_type_from_strcode'. It must return your 'BuildingType' when given the xml code
+5. in src/ui/lang_en.py: extend the routine: 'building_type_conversion' This is not necessary, but the output is nicer
+That's it!
+
+################################
+### CODE - HOW TO ADD A UNIT ###
+################################
+Similar to "how to add a building" - but units don't require a texture
+However, the army panel might need adjustment

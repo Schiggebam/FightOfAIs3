@@ -8,8 +8,7 @@ class ConsoleCommand:
         self.name = name
         self.num_ops = num_ops
         self.description = description
-        if num_ops > 5:
-            print("Console command cannot handle more than 5 operands. Sorry")
+
 
 
 class Console:
@@ -60,23 +59,27 @@ class Console:
                 print(c.name + " [" + str(c.num_ops) + " operands] : " + c.description)
         else:
             for c in self.list_of_commands:
-                if c.name == s_split[0]:                   # dirty
+                if c.name == s_split[0]:
                     if c.num_ops + 1 != len(s_split):
                         print("expect " + str(c.num_ops) + " args! command not executed")
-                    else:                                   # hacky, but I don't know how to set the length of tuple at runtime
-                                                            # TODO: tranform to list
-                        if c.num_ops == 0:
-                            li.append((s_split[0], "0"))  # because we want to return a tuple in any case
-                        elif c.num_ops == 1:
-                            li.append((s_split[0], s_split[1]))
-                        elif c.num_ops == 2:
-                            li.append((s_split[0], s_split[1], s_split[2]))
-                        elif c.num_ops == 3:
-                            li.append((s_split[0], s_split[1], s_split[2], s_split[3]))
-                        elif c.num_ops == 4:
-                            li.append((s_split[0], s_split[1], s_split[2], s_split[3], s_split[4]))
-                        elif c.num_ops == 5:
-                            li.append((s_split[0], s_split[1], s_split[2], s_split[3], s_split[4], s_split[5]))
+                    else:
+                        cmd = [s_split[0]]
+                        for i in range(c.num_ops):
+                            cmd.append(s_split[1 + i])
+                        li.append(tuple(cmd))
+                        #
+                        # if c.num_ops == 0:
+                        #     li.append((s_split[0], "0"))  # because we want to return a tuple in any case
+                        # elif c.num_ops == 1:
+                        #     li.append((s_split[0], s_split[1]))
+                        # elif c.num_ops == 2:
+                        #     li.append((s_split[0], s_split[1], s_split[2]))
+                        # elif c.num_ops == 3:
+                        #     li.append((s_split[0], s_split[1], s_split[2], s_split[3]))
+                        # elif c.num_ops == 4:
+                        #     li.append((s_split[0], s_split[1], s_split[2], s_split[3], s_split[4]))
+                        # elif c.num_ops == 5:
+                        #     li.append((s_split[0], s_split[1], s_split[2], s_split[3], s_split[4], s_split[5]))
 
     def add_input(self):
         while True:
