@@ -233,7 +233,6 @@ class AI_Mazedonian(AI):
         #     move.info_at_tile.append((s.offset_coordinates, 's'))
 
     def update_diplo_events(self, ai_stat: AI_GameStatus):
-        # for ai_stat.aggressions:
 
         for e_b in ai_stat.map.opp_building_list:
             if e_b.visible:

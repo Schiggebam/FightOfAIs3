@@ -37,8 +37,6 @@ class Animator:
         return len(self.move_animations) > 0
 
     def stop_animation(self, drawable: Union[Army]):
-        # TODO try to fix the animator problem
-        print("stopping animations")
         for s in self.move_animations:
             s.valid = False
         tbr = None

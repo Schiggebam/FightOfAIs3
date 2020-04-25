@@ -69,8 +69,6 @@ class AI_GameStatus:
         self.cost_building_construction: Dict[BuildingType, int] = {}
         """holds the unitcost of all unit types in a Dict"""
         self.cost_unit_recruitment: Dict[UnitType, UnitCost] = {}
-        #FIXME currently broken (at least the type hints are off)
-        self.aggressions: Set[int] = set()
         """contains an object from type Map. This hold all information about the current map-view:
          buildings, armies, scouted tiles, scoutable tiles, buildable tiles etc.
          in easy-to-access lists"""

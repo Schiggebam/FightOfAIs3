@@ -1,4 +1,4 @@
-from src.game_accessoires import Army, Unit
+from src.game_accessoires import Army, Unit, Resource
 from src.misc.building import Building
 from src.misc.game_logic_misc import Logger, IncomeCalculator
 from src.player import Player
@@ -10,17 +10,18 @@ ls = "    "
 ts = "  "
 
 class PanelAI(SimplePanel):
-    def __init__(self, center_x, center_y, header: str):
+    def __init__(self, center_x, center_y, header: str, gl):
         super().__init__(center_x, center_y, header)
         self.text = ""
+        self.gl = gl
 
 
-    def update(self, gl):
+    def update(self):
         self.text = ""
-        for p in gl.player_list:
+        for p in self.gl.player_list:
             if p.player_type != PlayerType.HUMAN:
                 self.text = self.text + p.name + ": \n"
-                self.text = self.text + gl.ai_interface.query_ai('state', None, p.id) + "\n"
+                self.text = self.text + self.gl.ai_interface.query_ai('state', None, p.id) + "\n"
 
     def draw(self):
         super().draw()
@@ -33,28 +34,34 @@ class PanelDiplo(SimplePanel):
     def __init__(self, center_x, center_y, header: str, gl):
         super().__init__(center_x, center_y, header)
         self.gl = gl
+        self.text = ""
+
+    def update(self):
+        self.text = ""
+        for p in self.gl.player_list:
+            self.text += ls + ls + str(p.id)
+        self.text += "\n \n"
+        for i in range(len(self.gl.player_list)):
+            self.text += str(self.gl.player_list[i].id) + ls
+            for j in range(len(self.gl.player_list)):
+                if i == j:
+                    self.text += '---' + ls + ts
+                else:
+                    if not self.gl.player_list[i].player_type == PlayerType.HUMAN:
+                        self.text += str(self.gl.ai_interface.query_ai("diplo", j, i)) + ls + ts
+                    else:
+                        self.text += '---' + ls + ts
+            self.text += "\n \n"
+
 
     def draw(self):
         super().draw()
         x_offset = 50
         y_offset = 30
         it = 0
-        #FIXME way to much logic in the draw thread UHGG
-        for p in self.gl.player_list:
-            it = it + 1
-            arcade.draw_text(str(p.id), self.text_box_x + it * x_offset, self.text_box_y, arcade.color.WHITE, font_size=14, font_name='verdana')
-        it = 0
-        for p in self.gl.player_list:
-            it = it + 1
-            arcade.draw_text(str(p.id), self.text_box_x, self.text_box_y - it * y_offset, arcade.color.WHITE, font_size=14, font_name='verdana')
-        for i in range(len(self.gl.player_list)):
-            for j in range(len(self.gl.player_list)):
-                diplo_value = "---"
-                if (j != i):
-                    if not self.gl.player_list[i].player_type == PlayerType.HUMAN:
-                        diplo_value = str(self.gl.ai_interface.query_ai("diplo", j, i))
-                arcade.draw_text(diplo_value, self.text_box_x + x_offset * (j+1), self.text_box_y - y_offset * (i+1),
-                                 arcade.color.WHITE, font_size=14, font_name='verdana')
+        if len(self.text) > 0:
+            arcade.draw_text(self.text, self.text_box_x, self.text_box_y - 180,
+                             arcade.color.WHITE, font_size=14, font_name='verdana')
 
 
 class PanelArmy(SimplePanel):
@@ -77,34 +84,44 @@ class PanelArmy(SimplePanel):
 class PanelBuilding(SimplePanel):
     def __init__(self, center_x, center_y, building: Building):
         super().__init__(center_x, center_y, "Building", scale=1)
-        self.text = building_type_conversion(building.building_type) + "\n"
-        self.text += "State: " + building_state_conversion(building.building_state) + "\n"
-        if IncomeCalculator.building_population_influence(building) != 0:
-            self.text += "Population: " + str(IncomeCalculator.building_population_influence(building)) + "\n"
-        if IncomeCalculator.building_food_influence(building) != 0:
-            self.text += "Food: " + str(IncomeCalculator.building_food_influence(building))+ "\n"
-        if IncomeCalculator.building_culture_influce(building) != 0:
-            self.text += "Culture: " + str(IncomeCalculator.building_culture_influce(building)) + "\n"
-        self.text += "Defence: " + str(building.defensive_value) + "\n"
-        if building.building_type == BuildingType.HUT:
-            self.text += "Resource per adjacent field: " + str(building.resource_per_field)
+        self.building = building
+        self.text = ""
+
+    def update(self):
+        self.text = building_type_conversion(self.building.building_type) + "\n"
+        self.text += "State: " + building_state_conversion(self.building.building_state) + "\n"
+        if IncomeCalculator.building_population_influence(self.building) != 0:
+            self.text += "Population: " + str(IncomeCalculator.building_population_influence(self.building)) + "\n"
+        if IncomeCalculator.building_food_influence(self.building) != 0:
+            self.text += "Food: " + str(IncomeCalculator.building_food_influence(self.building)) + "\n"
+        if IncomeCalculator.building_culture_influce(self.building) != 0:
+            self.text += "Culture: " + str(IncomeCalculator.building_culture_influce(self.building)) + "\n"
+        self.text += "Defence: " + str(self.building.defensive_value) + "\n"
+        if self.building.building_type == BuildingType.HUT:
+            self.text += "Resource per adjacent field: " + str(self.building.resource_per_field)
 
     def draw(self):
         super().draw()
-        arcade.draw_text(self.text, self.text_box_x, self.text_box_y-100,
-                         arcade.color.WHITE, font_size=14, font_name='verdana')
+        if len(self.text) > 0:
+            arcade.draw_text(self.text, self.text_box_x, self.text_box_y-100,
+                             arcade.color.WHITE, font_size=14, font_name='verdana')
 
 
 class PanelResource(SimplePanel):
-    def __init__(self, center_x, center_y, resource_type, resource_amount):
+    def __init__(self, center_x, center_y, resource: Resource):
         super().__init__(center_x, center_y, "Resource", scale=1)
-        self.text = resource_type_conversion(resource_type) + "\n"
-        self.text += "Resources remaining: " + str(resource_amount)
+        self.test = ""
+        self.resource = resource
+
+    def update(self):
+        self.text = resource_type_conversion(self.resource.resource_type) + "\n"
+        self.text += "Resources remaining: " + str(self.resource.remaining_amount)
 
     def draw(self):
         super().draw()
-        arcade.draw_text(self.text, self.text_box_x, self.text_box_y-20,
-                         arcade.color.WHITE, font_size=14, font_name='verdana')
+        if len(self.text) > 0:
+            arcade.draw_text(self.text, self.text_box_x, self.text_box_y-20,
+                             arcade.color.WHITE, font_size=14, font_name='verdana')
 
 class PanelLogBattle(SimplePanel):
     def __init__(self, center_x, center_y, log: Logger.BattleLog):
