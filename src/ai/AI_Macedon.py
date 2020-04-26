@@ -16,6 +16,7 @@ from src.misc.game_constants import DiploEventType, hint, BuildingType, error, d
 
 DETAILED_DEBUG = False
 BASIC_DEBUG = False
+DUMP = True
 
 
 class AI_Mazedonian(AI):
@@ -128,6 +129,7 @@ class AI_Mazedonian(AI):
             self.m_weights.append(Weight(c, v))
 
     def do_move(self, ai_stat: AI_GameStatus, move: AI_Move):
+        self.dump = ""
         t1 = timeit.default_timer()
         hint("------ {} -------".format(self.name))
         self.set_vars(ai_stat)
@@ -135,7 +137,7 @@ class AI_Mazedonian(AI):
         self.update_diplo_events(ai_stat)
         self.diplomacy.calc_round()
         t1_1 = timeit.default_timer()
-        self.evaluate_hostile_players()
+        self.evaluate_hostile_players(ai_stat)
         self.estimate_opponent_strength(ai_stat)
         self.__get_attack_target(ai_stat)
         t1_2 = timeit.default_timer()
@@ -171,7 +173,6 @@ class AI_Mazedonian(AI):
         # debug(f"Timings {t1_1 - t1}, {t1_2 - t1_1}, {t2 - t1_2}")
         # debug(f"Detailled timing: {t_test_2 - t_test_1}")
         # clear out some data:
-
         self.reset_vars()
 
     def evaluate_army_movement(self, ai_stat: AI_GameStatus, move: AI_Move):
@@ -285,7 +286,7 @@ class AI_Mazedonian(AI):
                 self.diplomacy.add_event(e_a.owner, e_a.offset_coordinates,
                                          DiploEventType.ENEMY_ARMY_INVADING_CLAIMED_ZONE, -2, 3, self.name)
 
-    def evaluate_hostile_players(self):
+    def evaluate_hostile_players(self, ai_stat: AI_GameStatus):
         for other_p_id in self.other_players:
             if self.diplomacy.get_diplomatic_value_of_player(other_p_id) <= self.threshold_considered_hostile:
                 if other_p_id not in self.hostile_player:
@@ -297,6 +298,9 @@ class AI_Mazedonian(AI):
                     if BASIC_DEBUG:
                         hint("Player id: {} got removed from hostile players.".format(other_p_id))
                     self.hostile_player.remove(other_p_id)
+        for opp in ai_stat.opponents:
+            if opp.has_lost and opp.id in self.hostile_player:
+                self.hostile_player.remove(opp.id)
 
     def estimate_opponent_strength(self, ai_stat: AI_GameStatus):
         """AI tries to estimate opponent's strength. Currently solely based on army population"""
@@ -367,8 +371,8 @@ class AI_Mazedonian(AI):
                     self.state = AI_Mazedonian.AI_State.AGGRESSIVE
             if len(self.hostile_player) == 0:
                 self.state = AI_Mazedonian.AI_State.PASSIVE
-        if BASIC_DEBUG:
-            hint(f"State: {old_state} -> {self.state}")
+        if DUMP:
+            super()._dump(f"State: {old_state} -> {self.state}")
 
     def weight_options(self, options: List[Option], ai_stat: AI_GameStatus, move: AI_Move):
         for opt in options:
@@ -390,8 +394,8 @@ class AI_Mazedonian(AI):
 
         options.sort(key=lambda x: x.weighted_score, reverse=True)
         self.priolist_targets.sort(key=lambda x: x.weighted_score, reverse=True)
-        if BASIC_DEBUG:
-            hint("---")
+        if DUMP:
+            self._dump("---")
             for opt in options:
                 s = f"\tOption of type: {type(opt)}, score: {opt.weighted_score}"
                 if type(opt) == RecruitmentOption or type(opt) == BuildOption:
@@ -399,10 +403,10 @@ class AI_Mazedonian(AI):
                 if type(opt) == ScoutingOption:
                     s = s + f", site: {opt.site}"
                 s = s + f", former priority: {opt.score}"
-                hint(s)
+                self._dump(s)
             for m in self.priolist_targets:
                 s = f"\tAttack Target : {'army' if type(m.target) is AI_Army else 'building'}, score: {m.weighted_score}"
-                hint(s)
+                self._dump(s)
 
         # translate this into move
         best_option: Option = options[0]
@@ -434,6 +438,8 @@ class AI_Mazedonian(AI):
         else:
             error("unexpected type")
         hint(f"DECISION: {move.str_rep_of_action}")
+        if DUMP:
+            self._dump(f"DECISION: {move.str_rep_of_action}")
 
     def evaluate_move_building(self, ai_stat: AI_GameStatus) -> List[BuildOption]:
         def normalize(value: int) -> Priority:

@@ -75,12 +75,14 @@ class AI_Player:
     population_limit: int
 
 
+
 @dataclass
 class AI_Opponent:
     id: int
     name: str
     type: PlayerType
     has_attacked: bool = False
+    has_lost: bool = False
     # attack_loc: List[Tuple[int, Tuple[int, int]]]    # aggressor's id and location of attack
 
 

@@ -259,3 +259,8 @@ class AI:
         """upon completion of this method, the AI should have decided on its move"""
         raise NotImplementedError("Please Implement this method")
 
+    def get_state_as_str(self) -> str:
+        pass
+
+    def _dump(self, d: str):
+        self.dump += d + "\n"

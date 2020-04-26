@@ -149,7 +149,7 @@ class AI_NPC(AI):
                 move.move_type = MoveType.DO_UPGRADE_BUILDING
                 move.loc = best_option.site
                 move.type = best_option.type
-                move.str_rep_of_action = f"upgrading building to {move.tpye}"
+                move.str_rep_of_action = f"upgrading building to {move.type}"
             elif type(best_option) == RecruitmentOption:
                 move.move_type = MoveType.DO_RECRUIT_UNIT
                 move.type = best_option.type

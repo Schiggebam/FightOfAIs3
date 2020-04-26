@@ -1,4 +1,4 @@
-from typing import Any, List
+from typing import Any, List, Optional
 
 import os
 from os import sys, path
@@ -12,12 +12,13 @@ from src.console import Console
 from src.game_logic import GameLogic
 from src.misc.game_constants import *
 from src.ui.ui import UI
+from src.ui.extern.extern_ai_display import AIControl
 
 SCREEN_WIDTH = 1280
 SCREEN_HEIGHT = 720
-SCREEN_TITLE = "Fight of AIs"
+SCREEN_TITLE = "Fight of AIs [PRE-ALPHA]"
 
-
+SHOW_AI_CTRL = True
 
 
 GAME_XML_FILE = "../resources/game_2.xml"
@@ -48,9 +49,6 @@ class ZlvlRenderer:
         self.ui.draw()
 
     def update_camera(self, rel_x, rel_y):
-        #self.rel_x = rel_x
-        #self.rel_y = rel_y
-        #self.camera_has_moved = True
         pass
 
     def update(self, delta_t: float):
@@ -118,6 +116,8 @@ class Game(arcade.Window):
         self.fps_colour = arcade.color.WHITE
         self.draw_time_colour = arcade.color.WHITE
         self.wall_clock_time = .0
+        if SHOW_AI_CTRL:
+            self.ai_ctrl: Optional[AIControl] = None
 
     def setup(self):
         # arcade.set_background_color(arcade.color.DARK_BLUE)
@@ -126,11 +126,22 @@ class Game(arcade.Window):
         self.game_logic.setup()
         self.ui.setup()
         self.game_logic.hi = self.hi
+        if SHOW_AI_CTRL:
+            ids = []
+            for p in self.game_logic.player_list:
+                if p.player_type != PlayerType.HUMAN:
+                    ids.append(p.id)
+            self.ai_ctrl = AIControl(ids)
+            self.ai_ctrl.start()
+        self.game_logic.set_ai_ctrl_frame(self.ai_ctrl)
 
     def on_close(self):
-        from src.ai.performance import PerformanceLogger
-        PerformanceLogger.show()
+        if SHOW_AI_CTRL:
+            self.ai_ctrl.close()
+        # from src.ai.performance import PerformanceLogger
+        # PerformanceLogger.show()
         super().on_close()
+
 
     def on_update(self, delta_time):
         # pr.enable()

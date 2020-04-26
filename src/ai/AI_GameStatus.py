@@ -1,6 +1,7 @@
 from typing import Set, Tuple, Optional, Union, List, Any, Dict
 
 from src.ai.AI_MapRepresentation import Map, AI_Player, AI_Opponent
+from src.ai.ai_blueprint import AI
 from src.misc.game_constants import error, UnitType, BuildingType, MoveType, UnitCost
 
 
@@ -84,7 +85,7 @@ class AI_GameStatus:
 
 class AI_GameInterface:
     def __init__(self):
-        self.dict_of_ais = {}
+        self.dict_of_ais: Dict[int, AI] = {}
         print("AI Game interface has been initialized")
 
     def launch_AI(self, id: int, ai_str: str, other_players: [int]):
@@ -136,8 +137,11 @@ class AI_GameInterface:
 
     def query_ai(self, query, arg, player_id) -> str:
         if query == "diplo":
-            return self.dict_of_ais[player_id].diplomacy.get_diplomatic_value_of_player(arg)
+            return str(self.dict_of_ais[player_id].diplomacy.get_diplomatic_value_of_player(arg))
         elif query == "state":
             return self.dict_of_ais[player_id].get_state_as_str()
         else:
             error("WRONG QUERY")
+
+    def get_dump(self, player_id) -> str:
+        return self.dict_of_ais[player_id].dump

@@ -12,6 +12,8 @@ from src.texture_store import TextureStore
 from src.misc.game_logic_misc import *
 from typing import Optional, List, Set, Dict
 
+from src.ui.extern.extern_ai_display import AIControl
+
 
 class GameLogic:
     def __init__(self, game_xml_file: str, z_levels: [arcade.SpriteList]):
@@ -80,6 +82,8 @@ class GameLogic:
         self.animator_time = 0
         self.wait_for_human = False
         self.has_human_player = False
+
+        self.ai_ctrl_frame: Optional[AIControl] = None
 
     def setup(self):
         """ load the game """
@@ -174,6 +178,8 @@ class GameLogic:
 
     elapsed = float(0)      # TODO make this a member
 
+    def set_ai_ctrl_frame(self, ai_ctrl_frame: Optional[AIControl]):
+        self.ai_ctrl_frame = ai_ctrl_frame
 
     def update(self, delta_time: float, commands :[], wall_clock_time: float):
         timestamp_start = timeit.default_timer()
@@ -218,6 +224,10 @@ class GameLogic:
                         self.playNextTurn = True    # smoother gameplay
                     else:
                         self.playNextTurn = False
+                # dump AI output
+                if player.player_type != PlayerType.HUMAN:
+                    dump = self.ai_interface.get_dump(player.id)
+                    self.ai_ctrl_frame.update(dump, player.id)
             else:                                   # this is in case of no players
                 self.playNextTurn = False
         else:
@@ -261,6 +271,10 @@ class GameLogic:
                 self.del_army(army, player)
             for b in player.buildings:
                 self.del_building(b, player)
+            # still log its performance
+            # (also to keep the arrays in the logger of equal length which helps for drawing the diagram)
+            from src.ai.performance import PerformanceLogger
+            PerformanceLogger.log_performance_file(self.turn_nr, player.id, 0)
             return None
 
         # gather data for ai
@@ -312,6 +326,7 @@ class GameLogic:
         for p in self.player_list:
             if p.id != player.id:
                 tmp = AI_Opponent(p.id, p.name, p.player_type)
+                tmp.has_lost = p.has_lost
                 opponents.append(tmp)
                 for pid, loc in player.attacked_set:
                     if pid == p.id:
