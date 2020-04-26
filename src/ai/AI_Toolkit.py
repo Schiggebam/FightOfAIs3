@@ -63,15 +63,15 @@ def dijkstra_pq(start, target, domain: List[Tile]) -> List[Tile]:
     # path.append(start)
     path.reverse()
     # check validity of path.
-    problem = False
-    for i in range(len(path) - 1):
-        if getDistance(path[i].offset_coordinates, path[i+1].offset_coordinates) != 1:
-            error("Problem in pathfinding")
-            problem = True
-    if problem:
-        for p in path:
-            print(p.offset_coordinates, end=" ")
-        print("")
+    # problem = False
+    # for i in range(len(path) - 1):
+    #     if getDistance(path[i].offset_coordinates, path[i+1].offset_coordinates) != 1:
+    #         error("Problem in pathfinding")
+    #         problem = True
+    # if problem:
+    #     for p in path:
+    #         print(p.offset_coordinates, end=" ")
+    #     print("")
     if start == path[0] and target == path[len(path) - 1]:
         return path
     else:

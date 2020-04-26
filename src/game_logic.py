@@ -264,6 +264,7 @@ class GameLogic:
             return None
 
         # gather data for ai
+        t1 = timeit.default_timer()
         scoutable_tiles = self.get_scoutable_tiles(player)
         buildable_tiles = self.get_buildable_tiles(player)
         known_resources = self.get_known_resources(player)
@@ -344,6 +345,8 @@ class GameLogic:
         AI_GameInterface.create_ai_status(ai_status, self.turn_nr, costs,
                                            ai_map, me, opponents, b_costs, u_costs)
         player.attacked_set.clear()
+        t2 = timeit.default_timer()
+        debug(f"time to gather ai_stat: {t2-t1}")
         if player.player_type == PlayerType.HUMAN:
             self.hi.request_move(ai_status, ai_move, player.id)
             self.wait_for_human = True
@@ -452,7 +455,7 @@ class GameLogic:
             else:
                 b_type = ai_move.type
             if Building.get_construction_cost(b_type) <= player.amount_of_resources:
-                hint("building: @" + str(ai_move.loc))
+                # hint("building: @" + str(ai_move.loc))
                 base_hex = self.hex_map.get_hex_by_offset(ai_move.loc)
                 b = Building(base_hex, b_type, player.id)
                 if not player.is_barbaric:
@@ -569,7 +572,7 @@ class GameLogic:
         for hex in player.discovered_tiles:
             if hex.ground.walkable:
                 b_set.add(hex)
-        for p in self.player_list:          # enemy buildings are walkable (to attack them) if they are scouted
+        for p in self.player_list:      # enemy buildings are walkable (to attack them) if they are scouted
             if p.id != player.id:
                 for b in p.buildings:
                     if b.tile in player.discovered_tiles:

@@ -66,7 +66,7 @@ def setup_movement_weights(self: AI_NPC) -> List[Tuple[Callable, float]]:
     w.append((w1, -2))
 
     def w2(elem: ArmyMovementOption, ai_stat: AI_GameStatus) -> bool:
-        """only strong armies schould attack a barracks"""
+        """only strong armies should attack a barracks"""
         if type(elem.target) is AI_Building:
             if elem.target.type is BuildingType.BARRACKS:
                 if ai_stat.map.army_list[0].population < 20:

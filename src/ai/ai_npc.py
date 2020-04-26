@@ -11,6 +11,7 @@ from src.ai.ai_blueprint import AI, Weight, BuildOption, RecruitmentOption, Rais
     WaitOption, UpgradeOption
 from src.misc.game_constants import DiploEventType, hint, BuildingType, error, MoveType, Priority, UnitType
 
+DETAILED_DEBUG = False
 
 class AI_NPC(AI):
     class AI_State(Enum):
@@ -148,6 +149,7 @@ class AI_NPC(AI):
                 move.move_type = MoveType.DO_UPGRADE_BUILDING
                 move.loc = best_option.site
                 move.type = best_option.type
+                move.str_rep_of_action = f"upgrading building to {move.tpye}"
             elif type(best_option) == RecruitmentOption:
                 move.move_type = MoveType.DO_RECRUIT_UNIT
                 move.type = best_option.type
@@ -164,16 +166,17 @@ class AI_NPC(AI):
                 move.move_army_to = best_m_option.next_step
                 move.doMoveArmy = True
 
-        for opt in all_options:
-            s = f"Option of type {type(opt)}, score: {opt.weighted_score} ({opt.score})"
-            if not (type(opt) == WaitOption or type(opt) == RaiseArmyOption):
-                s = s + f" -> Type: {opt.type}"
-            hint(s)
-        for m_opt in movement_options:
-            stmp = 'army' if type(m_opt.target) is AI_Army else ''
-            stmp = 'building' if type(m_opt.target) is AI_Building else ''
-            s = f"M-Option target: {type(m_opt)} target({stmp}), score: {m_opt.weighted_score} ({m_opt.score})"
-            hint(s)
+        if DETAILED_DEBUG:
+            for opt in all_options:
+                s = f"Option of type {type(opt)}, score: {opt.weighted_score} ({opt.score})"
+                if not (type(opt) == WaitOption or type(opt) == RaiseArmyOption):
+                    s = s + f" -> Type: {opt.type}"
+                hint(s)
+            for m_opt in movement_options:
+                stmp = 'army' if type(m_opt.target) is AI_Army else ''
+                stmp = 'building' if type(m_opt.target) is AI_Building else ''
+                s = f"M-Option target: {type(m_opt)} target({stmp}), score: {m_opt.weighted_score} ({m_opt.score})"
+                hint(s)
 
         s = f"DECISION: {move.str_rep_of_action}"
         if move.doMoveArmy:
@@ -325,7 +328,7 @@ class AI_NPC(AI):
                                          -3.0, 3, self.name)
 
         for other_p_id in self.other_players:
-            hint(f"diplomatic value to {other_p_id}: {self.diplomacy.get_diplomatic_value_of_player(other_p_id)}")
+            # hint(f"diplomatic value to {other_p_id}: {self.diplomacy.get_diplomatic_value_of_player(other_p_id)}")
             if self.diplomacy.get_diplomatic_value_of_player(other_p_id) < self.properties['diplo_aggressive_threshold']:
                 if other_p_id not in self.hostile_player:
                     hint("Barbaric AI: Player id: " + str(other_p_id) + " got added to hostile players." )

@@ -6,6 +6,7 @@ import timeit
 
 sys.path.append(path.dirname(path.dirname(path.abspath(__file__))))
 # print(os.getcwd())
+
 from src.ui.human import HumanInteraction
 from src.console import Console
 from src.game_logic import GameLogic

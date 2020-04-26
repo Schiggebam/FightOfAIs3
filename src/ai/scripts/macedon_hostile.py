@@ -185,21 +185,21 @@ def setup_movement_weights(self: AI_Mazedonian) -> List[Tuple[Callable, float]]:
     aw.append((aw2, 1))
 
     def aw3(elem: AI_Mazedonian.AttackTarget, ai_stat: AI_GameStatus) -> bool:
-        """Idea: reduce aggressifness in opponant is equal or stronger"""
+        """Idea: reduce aggressifness in opponant is stronger"""
         if type(elem.target) == AI_Army:
             if elem.target.owner in self.hostile_player:
-                if self.opponent_strength[elem.target.owner] == AI_Mazedonian.Strength.STRONGER or \
-                        self.opponent_strength[elem.target.owner] == AI_Mazedonian.Strength.EQUAL:
+                if self.opponent_strength[elem.target.owner] == AI_Mazedonian.Strength.STRONGER:
                     return True
         return False
 
     aw.append((aw3, -1))
 
     def aw4(elem: AI_Mazedonian.AttackTarget, ai_stat: AI_GameStatus) -> bool:
-        """Idea: Reduce will to attack in early game"""
+        """Idea: Reduce will to attack in early game, but defend"""
         if type(elem.target) == AI_Army:
             if self.protocol == AI_Mazedonian.Protocol.EARLY_GAME:
-                return True
+                if len(self.hostile_player) == 0:
+                    return True
         return False
 
     aw.append((aw4, -2))
@@ -213,6 +213,18 @@ def setup_movement_weights(self: AI_Mazedonian) -> List[Tuple[Callable, float]]:
         return False
 
     aw.append((aw5, 2))
+
+    def aw6(elem: AI_Mazedonian.AttackTarget, ai_stat: AI_GameStatus) -> bool:
+        """Idea: Defend if attacked by opponent"""
+        if type(elem.target) == AI_Army:
+            if elem.target.owner in self.hostile_player:
+                for opp in ai_stat.opponents:
+                    if opp.id == elem.target.owner:
+                        if opp.has_attacked:
+                            return True
+        return False
+
+    aw.append((aw6, 1))
 
     hint(f"AI has found {len(aw)} movement weight functions.")
     return aw

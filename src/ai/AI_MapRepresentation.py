@@ -33,6 +33,9 @@ class Tile:
         self.pre: Optional[Tile] = None
         self.dist: int = 0
 
+    # def opp_visible_buildings(self) -> List[AI_Building]:
+
+
     def has_resource(self):
         return self.resource is not None
 

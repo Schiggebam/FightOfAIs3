@@ -188,7 +188,7 @@
             grant_pop: the building gives x amount of free population (this value can be negative)
         -->
         <B1 code="s1" construction_cost="15" culture_per_turn="1" resource_per_field="1"
-            resource_per_turn="0" sight_range="2" food_consumption="1" construction_time="2"
+            resource_per_turn="0" sight_range="3" food_consumption="1" construction_time="2"
             defensive_value="5" flag_x="30" flag_y="25" grant_pop="0">description</B1>
         <FA code="fa" construction_cost="15" culture_per_turn="0" resource_per_field="0"
             resource_per_turn="0" sight_range="2" food_consumption="0" construction_time="2"
@@ -215,7 +215,7 @@
             resource_per_turn="2" sight_range="3" food_consumption="0" construction_time="0"
             defensive_value="15" flag_x="5" flag_y="65" grant_pop="15">description</V3>
         <Racks code="br" construction_cost="25" culture_per_turn="0" resource_per_field="0"
-               resource_per_turn="0" sight_range="2" food_consumption="0" construction_time="2"
+               resource_per_turn="0" sight_range="3" food_consumption="0" construction_time="2"
                defensive_value="10" flag_x="20" flag_y="40" grant_pop="5">description</Racks>
     </buildings>
     <units>

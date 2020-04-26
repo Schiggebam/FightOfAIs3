@@ -120,21 +120,21 @@ class Priority(Enum):
 
     @staticmethod
     def increase(p: Priority):
-        if p == Priority.P_NO:
+        if p is Priority.P_NO:
             return Priority.P_LOW
-        elif p == Priority.P_LOW:
+        elif p is Priority.P_LOW:
             return Priority.P_MEDIUM
-        elif p == Priority.P_MEDIUM:
+        elif p is Priority.P_MEDIUM:
             return Priority.P_HIGH
         return Priority.P_CRITICAL
 
     @staticmethod
     def decrease(p: Priority):
-        if p == Priority.P_CRITICAL:
+        if p is Priority.P_CRITICAL:
             return Priority.P_HIGH
-        elif p == Priority.P_HIGH:
+        elif p is Priority.P_HIGH:
             return Priority.P_MEDIUM
-        elif p == Priority.P_MEDIUM:
+        elif p is Priority.P_MEDIUM:
             return Priority.P_LOW
         return Priority.P_NO
 
