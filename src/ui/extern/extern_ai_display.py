@@ -6,44 +6,24 @@ import wx.html as html
 import wx
 from wx import App
 
-# class MainPanel(wx.Panel):
-#     """Create a panel class to contain screen widgets."""
-#     def __init__(self, frame):
-#         """Initialise the class."""
-#         wx.Panel.__init__(self, frame)
-#         html_sizer = self._create_html_control(frame)
-#         main_sizer = wx.BoxSizer(wx.HORIZONTAL)
-#         main_sizer.Add(html_sizer, flag=wx.ALL, border=10)
-#         self.SetSizerAndFit(main_sizer)
-#
-#     def _create_html_control(self, frame):
-#         txt_style = wx.VSCROLL|wx.HSCROLL|wx.BORDER_SIMPLE
-#         frame.html_display = html.HtmlWindow(self, -1,
-#                                                 size=(400, 200),
-#                                                 style=txt_style)
-#         sizer = wx.BoxSizer(wx.HORIZONTAL)
-#         sizer.Add(frame.html_display)
-#         return sizer
 
 
 class SelfUpdatePanel(wx.Panel):
-    def __init__(self, parent, interval, ai_ctrl):
+    def __init__(self, parent, interval, ai_ctrl, pid: int):
         wx.Panel.__init__(self, parent)
         self.updateMsg = ""
         self.textCtrl = None
         self.interval = interval
         self.ai_ctrl = ai_ctrl
+        self.pid = pid
         self.halt = False
-        # html_sizer = self.html_window(parent)
-        # main_sizer = wx.BoxSizer(wx.HORIZONTAL)
-        # main_sizer.Add(html_sizer, flag=wx.ALL, border=10)
-
-    # def html_window(self, parent):
-    #     txt_style = wx.VSCROLL | wx.HSCROLL | wx.BORDER_SIMPLE
-    #     parent.html_display = html.HtmlWindow(self, -1, size=(400, 200), style=txt_style)
-    #     sizer = wx.BoxSizer(wx.HORIZONTAL)
-    #     sizer.Add(parent.html_display)
-    #     return sizer
+        # txt_style = wx.VSCROLL | wx.HSCROLL | wx.TE_READONLY | wx.BORDER_SIMPLE
+        # self.html = html.HtmlWindow(self, -1, size=(300, 150), style=txt_style)
+        # self.html.SetPage(
+        #     "Here is some <b>formatted</b>"
+        #     "<i><u>text</u></i> "
+        #     "loaded from a "
+        #     "<font color=\"red\">string</font>.")
 
     def set_text_ctrl(self, text):
         self.textCtrl = text
@@ -57,7 +37,7 @@ class SelfUpdatePanel(wx.Panel):
             if self.halt:
                 break
             time.sleep(self.interval)
-            self.updateMsg = self.ai_ctrl.get_dump(0)
+            self.updateMsg = self.ai_ctrl.get_dump(self.pid)
             self.update_panel()
 
     def run(self):
@@ -68,14 +48,14 @@ class SelfUpdatePanel(wx.Panel):
 class ExternAIFrame(wx.Frame):
 
     def __init__(self, parent, ai_ctrl, ids_of_ais):
-        wx.Frame.__init__(self, parent, size=wx.Size(500, 500))
+        wx.Frame.__init__(self, parent, size=wx.Size(1500, 500))
         self.Bind(wx.EVT_CLOSE, self.OnCloseWindow)
         self.main_panel = wx.Panel(self)
         self.nb = wx.Notebook(self.main_panel)
 
         self.ai_tab: Dict[int, SelfUpdatePanel] = {}
         for pid in ids_of_ais:
-            p_temp = SelfUpdatePanel(self.nb, .5, ai_ctrl)
+            p_temp = SelfUpdatePanel(self.nb, .5, ai_ctrl, pid)
             txt = wx.StaticText(p_temp, pos=wx.Point(20, 10))
             p_temp.set_text_ctrl(txt)
             p_temp.run()
@@ -125,7 +105,7 @@ class AIControl(Thread):
     def get_dump(self, pid: int):
         if pid in self.dump:
             return self.dump[pid]
-        return "no data"
+        return "no data for pid " + str(pid)
 
     def close(self):
         self.frame.halt()

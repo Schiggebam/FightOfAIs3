@@ -223,7 +223,9 @@ class AI_Mazedonian(AI):
             if DETAILED_DEBUG:
                 hint("AI detected that it is loosing food")
             self.is_loosing_food = True
-            self.inactive_huts = self.__count_inactive_huts(ai_stat)
+        self.inactive_huts = self.__count_inactive_huts(ai_stat)
+        if DUMP:
+            self._dump(f"Inactive huts: {self.inactive_huts}, loosing food: {self.is_loosing_food}")
 
     def reset_vars(self):
         self.is_loosing_food = False
@@ -290,17 +292,15 @@ class AI_Mazedonian(AI):
         for other_p_id in self.other_players:
             if self.diplomacy.get_diplomatic_value_of_player(other_p_id) <= self.threshold_considered_hostile:
                 if other_p_id not in self.hostile_player:
-                    if BASIC_DEBUG:
-                        hint("Player id: {} got added to hostile players.".format(other_p_id))
                     self.hostile_player.add(other_p_id)
             if self.diplomacy.get_diplomatic_value_of_player(other_p_id) >= self.threshold_considered_neutral:
                 if other_p_id in self.hostile_player:
-                    if BASIC_DEBUG:
-                        hint("Player id: {} got removed from hostile players.".format(other_p_id))
                     self.hostile_player.remove(other_p_id)
         for opp in ai_stat.opponents:
             if opp.has_lost and opp.id in self.hostile_player:
                 self.hostile_player.remove(opp.id)
+        if DUMP:
+            self._dump(f"hostile players: {str(self.hostile_player)}")
 
     def estimate_opponent_strength(self, ai_stat: AI_GameStatus):
         """AI tries to estimate opponent's strength. Currently solely based on army population"""
@@ -740,8 +740,8 @@ class AI_Mazedonian(AI):
             self.army_comp = self.ac_defencive
         if self.state == AI_Mazedonian.AI_State.AGGRESSIVE:
             self.army_comp = self.ac_aggressive
-        if BASIC_DEBUG:
-            hint(f"Active protocol: {self.protocol}, build order: {self.build_order.name}, army comp: {self.army_comp.name}")
+        if DUMP:
+            self._dump(f"Active protocol: {self.protocol}, build order: {self.build_order.name}, army comp: {self.army_comp.name}")
 
     def __compare_to_bo(self, bo: BuildOrder, ai_stat: AI_GameStatus):
         """this will return a list of tuples, comparing every b type the with desired value according to the bo
@@ -784,8 +784,8 @@ class AI_Mazedonian(AI):
         for e_b in ai_stat.map.opp_building_list:
             if e_b.visible:
                 targets.add((e_b, False))
-        if BASIC_DEBUG:
-            hint(f"Found {len(targets)} target(s) for our army")
+        if DUMP:
+            self._dump(f"Found {len(targets)} target(s) for our army")
         for target, is_army in targets:
             value = 0
             if target.owner in self.hostile_player:
@@ -801,26 +801,26 @@ class AI_Mazedonian(AI):
             self.priolist_targets.append(AI_Mazedonian.AttackTarget(target, value))
         if len(self.priolist_targets) > 0:
             self.priolist_targets.sort(key=lambda x: x.score, reverse=True)
-            if BASIC_DEBUG:
-                hint("Best attack target: {} ({}) value:{}".format(str(self.priolist_targets[0].target.offset_coordinates),
-                                                                   'army' if type(
+            if DUMP:
+                self._dump("Best attack target: {} ({}) value:{}".format(str(self.priolist_targets[0].target.offset_coordinates),
+                                                                         'army' if type(
                                                                        self.priolist_targets[0].target) else 'building',
                                                                    self.priolist_targets[0].score))
         else:
             hint("No Targets found")
 
     def __print_situation(self, ai_stat: AI_GameStatus):
-        if BASIC_DEBUG:
-            hint(f"Res: {ai_stat.me.resources}, Cul: {ai_stat.me.culture}, Food: {ai_stat.me.food}"
-                 f", Pop: {ai_stat.me.population} / {ai_stat.me.population_limit}")
+        if DUMP:
+            self._dump(f"Res: {ai_stat.me.resources}, Cul: {ai_stat.me.culture}, Food: {ai_stat.me.food}"
+                       f", Pop: {ai_stat.me.population} / {ai_stat.me.population_limit}")
             for h in self.hostile_player:
-                hint("hostile player: [ID:] {} estimated strength: {}".format(h, self.opponent_strength[h]))
+                self._dump("hostile player: [ID:] {} estimated strength: {}".format(h, self.opponent_strength[h]))
             #if self.inactive_huts > 0:
             hint(f"Inactive huts: {self.inactive_huts}")
             s_tmp = ""
             for key, value in self.compass.book.items():
                 s_tmp += f"{key} -> {value.value}, "
-            hint(s_tmp)
+            self._dump(s_tmp)
         hint(f"Free tiles: {self.num_free_tiles} ({self.num_free_tiles/len(ai_stat.map.discovered_tiles)} %)")
         # hint(f"N: {self.compass.}, E: {self.compass.east}, S: {self.compass.south}, W: {self.compass.west}")
 

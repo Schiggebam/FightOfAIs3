@@ -64,6 +64,7 @@ class AI_NPC(AI):
             self.m_weights.append(Weight(c, v))
 
     def do_move(self, ai_stat: AI_GameStatus, move: AI_Move):
+        self.dump = f"no data, turn {ai_stat.turn_nr}"
         self.update_diplo_events(ai_stat)
         self.diplomacy.calc_round()
         self.evaluate_state(ai_stat)
