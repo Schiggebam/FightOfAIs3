@@ -128,7 +128,7 @@ Optionally, one can add a AI script under src/ai/scripts
     The code would look like this:
 
     best_score = -1
-    best_tile = (-1, -1)
+    best_tile = None
     if ai_stat.me.resources >= ai_stat.costBuildS1:                     # Do we have enough resources to build a hut?
         for ai_t in ai_stat.map.buildable_tiles:                        # for all tiles in the list: ai_stat.map.buildable_tiles
             score = AI_Toolkit.num_resources_on_adjacent(ai_t)          # Let's get the number of adjacent resources
@@ -142,11 +142,11 @@ Optionally, one can add a AI script under src/ai/scripts
                 if best_score < score:                                  # finding the maximum (if this score is better, safe it, continue searching)
                     best_score = score                                  # if we found a tile
                     best_tile = ai_t                                    # store this tile, as the best option
-
-    ai_move.move_type = MoveType.DO_BUILD                               # set the move object, the case this is the move we would like to do! Easy
-    ai_move.type = BuildingType.HUT
-    ai_move.loc = best_tile.offset_coordinates
-    ai_move.str_rep_of_action = "build hut at: " + str(ai_move.loc)
+    if best_tile != None:                                               # Did we find a valid site?
+        ai_move.move_type = MoveType.DO_BUILD                           # set the move object, the case this is the move we would like to do! Easy
+        ai_move.type = BuildingType.HUT
+        ai_move.loc = best_tile.offset_coordinates
+        ai_move.str_rep_of_action = "build hut at: " + str(ai_move.loc)
 
 
 ####################################
