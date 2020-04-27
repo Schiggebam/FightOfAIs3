@@ -1,8 +1,10 @@
+import time
 from typing import Any, List, Optional
 
 import os
 from os import sys, path
 import timeit
+
 
 sys.path.append(path.dirname(path.dirname(path.abspath(__file__))))
 # print(os.getcwd())
@@ -13,12 +15,13 @@ from src.game_logic import GameLogic
 from src.misc.game_constants import *
 from src.ui.ui import UI
 from src.ui.extern.extern_ai_display import AIControl
+from src.ui.extern.extern_startup_display import StartUp, DecisionType, Decision
 
 SCREEN_WIDTH = 1280
 SCREEN_HEIGHT = 720
 SCREEN_TITLE = "Fight of AIs [PRE-ALPHA]"
 
-SHOW_AI_CTRL = True
+
 
 
 GAME_XML_FILE = "../resources/game_2.xml"
@@ -116,30 +119,32 @@ class Game(arcade.Window):
         self.fps_colour = arcade.color.WHITE
         self.draw_time_colour = arcade.color.WHITE
         self.wall_clock_time = .0
-        if SHOW_AI_CTRL:
+        if Definitions.SHOW_AI_CTRL:
             self.ai_ctrl: Optional[AIControl] = None
 
     def setup(self):
+
         # arcade.set_background_color(arcade.color.DARK_BLUE)
         arcade.set_background_color(arcade.color.BLACK)
         self.commands.extend(self.console.initial_commands(SETUP_COMMANDS))
         self.game_logic.setup()
         self.ui.setup()
         self.game_logic.hi = self.hi
-        if SHOW_AI_CTRL:
+        if Definitions.SHOW_AI_CTRL:
             ids = []
             for p in self.game_logic.player_list:
                 if p.player_type != PlayerType.HUMAN:
                     ids.append(p.id)
             self.ai_ctrl = AIControl(ids)
-            self.ai_ctrl.start()
-        self.game_logic.set_ai_ctrl_frame(self.ai_ctrl)
+            self.ai_ctrl.start()                    # start thread
+            self.game_logic.set_ai_ctrl_frame(self.ai_ctrl)
 
     def on_close(self):
-        if SHOW_AI_CTRL:
+        if Definitions.SHOW_AI_CTRL:
             self.ai_ctrl.close()
-        from src.ai.performance import PerformanceLogger
-        PerformanceLogger.show()
+        if Definitions.SHOW_STATS_ON_EXIT:
+            from src.ai.performance import PerformanceLogger
+            PerformanceLogger.show()
         super().on_close()
 
 
@@ -238,7 +243,28 @@ class Game(arcade.Window):
         # pass
         self.hi.handle_mouse_motin(int(x), int(y))
 
+
 def main():
+    dcn: Optional[Decision] = None
+    if Definitions.SHOW_STARTUP_CTRL:
+        startup_ctrl = StartUp("../resources/")
+        startup_ctrl.start()  # start thread
+        while True:
+            time.sleep(.5)
+            dcn = startup_ctrl.has_decision()
+            if dcn is not None:
+                if dcn.decision == DecisionType.DCN_START_GAME:
+                    break
+                elif dcn.decision == DecisionType.DCN_EXIT_GAME:
+                    exit()
+                elif dcn.decision == DecisionType.DCN_READ_DOCUMENTATION:
+                    pass
+    if dcn:
+        Definitions.SHOW_AI_CTRL = dcn.show_ai_control
+        Definitions.SHOW_STATS_ON_EXIT = dcn.show_stats_on_exit
+        Definitions.ALLOW_CONSOLE_CMDS = dcn.allow_command_line_input
+        Definitions.DEBUG_MODE = dcn.enable_debug_mode
+
     window = Game(SCREEN_WIDTH, SCREEN_HEIGHT, SCREEN_TITLE)
     window.setup()
     window.set_update_rate(1/60)

@@ -30,6 +30,15 @@ ENABLE_KEYFRAME_ANIMATIONS = False
 MAP_HACK_ENABLE_AT_STARTUP = True
 GAME_LOGIC_CLK_SPEED = 0.75
 
+
+class Definitions:
+    SHOW_AI_CTRL = True
+    SHOW_STARTUP_CTRL = True
+    SHOW_STATS_ON_EXIT = True
+    DEBUG_MODE = True
+    ALLOW_CONSOLE_CMDS = True
+
+
 class bcolors:
     HEADER = '\033[95m'
     OKBLUE = '\033[94m'

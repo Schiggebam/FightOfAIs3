@@ -23,7 +23,7 @@ class GameFileReader:
             map_list.append(row.split())
 
     def read_map_obj(self, map_obj_list: [(str, int, int)]):
-        """fills the list with the strcode, as well as the postition in offset coordinates"""
+        """fills the list with the strcode, as well as the position in offset coordinates"""
         raw: str = self.xml_parser.game.map_obj.cdata
         row_wise: [str] = raw.strip().splitlines()
         row_wise.reverse()

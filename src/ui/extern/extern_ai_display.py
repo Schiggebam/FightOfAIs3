@@ -46,7 +46,6 @@ class SelfUpdatePanel(wx.Panel):
 
 
 class ExternAIFrame(wx.Frame):
-
     def __init__(self, parent, ai_ctrl, ids_of_ais):
         wx.Frame.__init__(self, parent, size=wx.Size(1500, 500))
         self.Bind(wx.EVT_CLOSE, self.OnCloseWindow)
@@ -66,7 +65,6 @@ class ExternAIFrame(wx.Frame):
         sizer.Add(self.nb, 1, wx.EXPAND)
         self.main_panel.SetSizer(sizer)
 
-
     def halt(self):
         for key, panel in self.ai_tab.items():
             panel.halt = True
@@ -76,12 +74,12 @@ class ExternAIFrame(wx.Frame):
         time.sleep(.75)  # make sure the thread had time to halt.
         self.Destroy()
 
-    @staticmethod
-    def raw_html():
-        html = ('<p><font color="#4C4C4C", size=2>What do we want: '
-                '<font color="#FF0000">all</font>'
-                '</p>')
-        return html
+    # @staticmethod
+    # def raw_html():
+    #     html = ('<p><font color="#4C4C4C", size=2>What do we want: '
+    #             '<font color="#FF0000">all</font>'
+    #             '</p>')
+    #     return html
 
 
 class AIControl(Thread):

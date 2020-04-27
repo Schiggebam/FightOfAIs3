@@ -173,7 +173,7 @@
 
     <!-- make sure to add all buildings in the Buildings.BuildingType section-->
     <buildings>
-        <!-- Documentation:
+        Documentation:
             code: unique identifier. Has to match the code of its texture
             construction_cost: construction cost in resources
             culture_per_turn: the player will gain x culture per turn for this building
@@ -186,37 +186,36 @@
             defensive_value: if attacked, the defencive strength is this value
             flag_x, flag_y: offset in pixels to the center of the building where to place the flag
             grant_pop: the building gives x amount of free population (this value can be negative)
-        -->
-        <B1 code="s1" construction_cost="15" culture_per_turn="1" resource_per_field="1"
+        <Hut code="s1" construction_cost="15" culture_per_turn="1" resource_per_field="1"
             resource_per_turn="0" sight_range="3" food_consumption="1" construction_time="2"
-            defensive_value="5" flag_x="30" flag_y="25" grant_pop="0">description</B1>
-        <FA code="fa" construction_cost="15" culture_per_turn="0" resource_per_field="0"
+            defensive_value="5" flag_x="30" flag_y="25" grant_pop="0">description</Hut>
+        <Farm code="fa" construction_cost="15" culture_per_turn="0" resource_per_field="0"
             resource_per_turn="0" sight_range="2" food_consumption="0" construction_time="2"
-            defensive_value="2" flag_x="-5" flag_y="33" grant_pop="0">description</FA>
+            defensive_value="2" flag_x="-5" flag_y="33" grant_pop="0">description</Farm>
         <B2 code="s2" construction_cost="15" culture_per_turn="0" resource_per_field="2"
             resource_per_turn="0" sight_range="2" food_consumption="2" construction_time="3"
             defensive_value="2" flag_x="0" flag_y="50" grant_pop="0">description</B2>
-        <C1 code="c1" construction_cost="7" culture_per_turn="0" resource_per_field="0"
+        <Camp1 code="c1" construction_cost="7" culture_per_turn="0" resource_per_field="0"
             resource_per_turn="1" sight_range="3" food_consumption="0" construction_time="0"
-            defensive_value="2" flag_x="0" flag_y="20" grant_pop="7">description</C1>
-        <C2 code="c2" construction_cost="10" culture_per_turn="0" resource_per_field="0"
+            defensive_value="2" flag_x="0" flag_y="20" grant_pop="7">description</Camp1>
+        <Camp2 code="c2" construction_cost="10" culture_per_turn="0" resource_per_field="0"
             resource_per_turn="1" sight_range="3" food_consumption="0" construction_time="0"
-            defensive_value="6" flag_x="0" flag_y="20" grant_pop="10">description</C2>
-        <C3 code="c3" construction_cost="10" culture_per_turn="0" resource_per_field="0"
+            defensive_value="6" flag_x="0" flag_y="20" grant_pop="10">description</Camp2>
+        <Camp3 code="c3" construction_cost="10" culture_per_turn="0" resource_per_field="0"
             resource_per_turn="1" sight_range="3" food_consumption="0" construction_time="0"
-            defensive_value="10" flag_x="0" flag_y="20" grant_pop="14">description</C3>
-        <V1 code="vl1" construction_cost="7" culture_per_turn="1" resource_per_field="0"
+            defensive_value="10" flag_x="0" flag_y="20" grant_pop="14">description</Camp3>
+        <Village1 code="vl1" construction_cost="7" culture_per_turn="1" resource_per_field="0"
             resource_per_turn="1" sight_range="3" food_consumption="5" construction_time="0"
-            defensive_value="10" flag_x="5" flag_y="65" grant_pop="5">description</V1>
-        <V2 code="vl2" construction_cost="10" culture_per_turn="1" resource_per_field="0"
+            defensive_value="10" flag_x="5" flag_y="65" grant_pop="5">description</Village1>
+        <Village2 code="vl2" construction_cost="10" culture_per_turn="1" resource_per_field="0"
             resource_per_turn="1" sight_range="3" food_consumption="0" construction_time="0"
-            defensive_value="12" flag_x="5" flag_y="65" grant_pop="10">description</V2>
-        <V3 code="vl3" construction_cost="12" culture_per_turn="2" resource_per_field="0"
+            defensive_value="12" flag_x="5" flag_y="65" grant_pop="10">description</Village2>
+        <Village3 code="vl3" construction_cost="12" culture_per_turn="2" resource_per_field="0"
             resource_per_turn="2" sight_range="3" food_consumption="0" construction_time="0"
-            defensive_value="15" flag_x="5" flag_y="65" grant_pop="15">description</V3>
-        <Racks code="br" construction_cost="25" culture_per_turn="0" resource_per_field="0"
+            defensive_value="15" flag_x="5" flag_y="65" grant_pop="15">description</Village3>
+        <Barracks code="br" construction_cost="25" culture_per_turn="0" resource_per_field="0"
                resource_per_turn="0" sight_range="3" food_consumption="0" construction_time="2"
-               defensive_value="10" flag_x="20" flag_y="40" grant_pop="5">description</Racks>
+               defensive_value="10" flag_x="20" flag_y="40" grant_pop="5">description</Barracks>
     </buildings>
     <units>
         <!--Documentation:
