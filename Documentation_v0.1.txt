@@ -18,6 +18,7 @@
 ###################
 [SPACE] -> triggers the 'next turn' button
 [mouse] -> left click for selection, right click for deselection in general
+[arrow keys] -> scroll map
 
 
 
