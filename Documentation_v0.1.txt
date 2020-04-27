@@ -104,6 +104,22 @@ Optionally, one can add a AI script under src/ai/scripts
         Have a look at MoveType in src/misc/game_constants.py for additional information on valid move and on which fields have to be set
     Once, the do_move(...) method has terminated, the game_logic in retaking the execution the move obj, if valid, will be executed
 
+--- 5. Dump information
+    Naturally, the AI will generate a lot of output to follow its decision making. There are 3 options to broadcast this information:
+    5.1: Print to console:
+        + Simply use the hint() or debug() function from src/misc/game_constants.py or the built-in python print()
+        + The drawback is, that this slows done the AI and thus the update thread of the game
+        + This type of print() should be considered to be very expensive, because it is done by the update_thread() and has to be sync'ed to the main thread
+    5.2: Override the get_state_as_str() method in AI
+        + by overriding this function, the UI of the game will pick up the str given by this function and will print this to the small AI window in the game
+        + Unfortunately, this can only be used for a small amount of text, since the window is small
+        + Also, rendering text in-game is relatively expensive
+    5.3 Use the _dump(...) method in AI
+        + at the start of the do_move(..) function, reset the dump via 'self.dump = ""'
+        + then, you can use the _dump(..) method the same way you use the print(..)
+        + the function will stash all output and on termination of the do_move(..) function the string_buffer will be dumped to the external window
+        + The external window is handled by wxpython and uses native os-accelerated operations to display the text, this is the fastest option (!)
+        + Additionally, one has the advantage, that you can but the to windows side-by-side and observe the game and the output simultaneously 
 
 
 
