@@ -62,6 +62,51 @@ The program flow looks a bit like this
    -- end of turn---
 
 
+####################################
+### HOW TO WRITE OWN AI - BASICS ###
+####################################
+In this section a brief overview on how an AI is written, is provided:
+
+--- 1. Make new file: in src/ai/AI_<<name>>.py with the name of the AI
+
+--- 2. In 'src/ai/AI_<<name>>.py':
+    As the whole game is written object orientated, the AI should be wrapped by a class
+    The AI should be a subclass from AI in src/ai/ai_blueprint.py
+    -> The signature of the new AI should look like this: class AI_<<Name>>(AI)
+Optionally, one can add a AI script under src/ai/scripts
+(!) The AI must override the do_move(...) method from class AI
+
+--- 3. Basic Logic
+    A very simple AI could be written like this:
+        1. gather all valid game moves
+        2. select one of these moves by random
+        3. set the move object accordingly. done.
+
+--- 4. Information
+    All information, which is available to the AI in one point in time, is wrapped in the AI_GameStatus object
+    It is located in src/ai/AI_GameStatus.py
+    Most importantly, have a look at the 'map' field, which contains list of e.g.:
+        - building_list: A list of all own buildings
+        - opp_building_list: A list with all opponent buildings
+        - resource_list: A list with all discovered tiles
+        - tiles_scoutable: A list with all tile, which can be scouted
+        - etc. (more information in the comments in the code)
+    The game logic expects the AI to fill the 'move' object. It is of type: AI_Move
+        - see comments in code for more information, here is just an example.
+        - Let's imagine, the AI would like to build a Hut on tile with the offset coordinates 10, 10.
+        - The AI made sure, that the tile is in ai_stat.map.tiles_buildable (thus, the tile 10 10 is buildable)
+        - The move object should look like this:
+            + AI_move.move_type = MoveType.DO_BUILD         <-- the move_type
+            + AI_move.loc = (10, 10)                        <-- the location of the action
+            + AI_move.type = BuildingType.HUT               <-- type to specify the action further
+            + AI_move.info = []                             <-- emtpy list, for the HUT, we don't need further information
+            + AI_move.str_rep_of_action = "building hut"    <-- for debug and UI only, not important to the game logic, but it is nice to specify the action in words
+        Have a look at MoveType in src/misc/game_constants.py for additional information on valid move and on which fields have to be set
+    Once, the do_move(...) method has terminated, the game_logic in retaking the execution the move obj, if valid, will be executed
+
+
+
+
 
 ####################################
 ### CODE - HOW TO ADD A BUILDING ###

@@ -21,8 +21,6 @@ class CardinalDirection(Enum):
 
 
 
-
-
 @dataclass
 class WaitOption:
     score: Priority

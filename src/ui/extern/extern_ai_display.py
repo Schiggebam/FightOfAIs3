@@ -1,7 +1,7 @@
 import time
 from threading import Thread
 from typing import Optional, Dict, List
-import wx.html as html
+#import wx.html as html
 
 import wx
 from wx import App
