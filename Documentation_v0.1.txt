@@ -119,9 +119,34 @@ Optionally, one can add a AI script under src/ai/scripts
         + then, you can use the _dump(..) method the same way you use the print(..)
         + the function will stash all output and on termination of the do_move(..) function the string_buffer will be dumped to the external window
         + The external window is handled by wxpython and uses native os-accelerated operations to display the text, this is the fastest option (!)
-        + Additionally, one has the advantage, that you can but the to windows side-by-side and observe the game and the output simultaneously 
+        + Additionally, one has the advantage, that you can but the to windows side-by-side and observe the game and the output simultaneously
 
+--- 6. Common patterns
+    A simple example should illustrate, how to develop basic decision-making in the AI
+    Let's imagine, we would like to build the hut. Finding the best site for the hut, one has to maximize the number of surrounding tiles with a resource
+    Additionally, we would like to make sure, the army can reach the hut (for whatever reason)
+    The code would look like this:
 
+    best_score = -1
+    best_tile = (-1, -1)
+    if ai_stat.me.resources >= ai_stat.costBuildS1:                     # Do we have enough resources to build a hut?
+        for ai_t in ai_stat.map.buildable_tiles:                        # for all tiles in the list: ai_stat.map.buildable_tiles
+            score = AI_Toolkit.num_resources_on_adjacent(ai_t)          # Let's get the number of adjacent resources
+            start_tile = ai_stat.map.army_list[0].base_tile             # tile of the army. The army is stored in a list, but for now there is only one -> idx 0
+            target_tile = ai_t                                          # target tile is the current tile we test for building a hut
+            path = AI_Toolkit.dijkstra_pq(start_tile, target_tile, ai_stat.map.walkable_tiles)
+                                                                        # call the pathfinding algorithm ->
+                                                                             # it requires a start, a target and a list of tiles on which to search (in this case this are all walkable tiles)
+            if len(path) > 1:                                           # if the len of the path is greater than 1, it is a valid path (otherwise it only contains the start_tile)
+                                                                        # note: If the army is right next to the tile, the length of the path would be 2 (the start and the target tile)
+                if best_score < score:                                  # finding the maximum (if this score is better, safe it, continue searching)
+                    best_score = score                                  # if we found a tile
+                    best_tile = ai_t                                    # store this tile, as the best option
+
+    ai_move.move_type = MoveType.DO_BUILD                               # set the move object, the case this is the move we would like to do! Easy
+    ai_move.type = BuildingType.HUT
+    ai_move.loc = best_tile.offset_coordinates
+    ai_move.str_rep_of_action = "build hut at: " + str(ai_move.loc)
 
 
 ####################################
