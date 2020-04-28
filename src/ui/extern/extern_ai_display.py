@@ -17,13 +17,6 @@ class SelfUpdatePanel(wx.Panel):
         self.ai_ctrl = ai_ctrl
         self.pid = pid
         self.halt = False
-        # txt_style = wx.VSCROLL | wx.HSCROLL | wx.TE_READONLY | wx.BORDER_SIMPLE
-        # self.html = html.HtmlWindow(self, -1, size=(300, 150), style=txt_style)
-        # self.html.SetPage(
-        #     "Here is some <b>formatted</b>"
-        #     "<i><u>text</u></i> "
-        #     "loaded from a "
-        #     "<font color=\"red\">string</font>.")
 
     def set_text_ctrl(self, text):
         self.textCtrl = text
@@ -68,18 +61,13 @@ class ExternAIFrame(wx.Frame):
     def halt(self):
         for key, panel in self.ai_tab.items():
             panel.halt = True
+        time.sleep(.75)  # make sure the thread had time to halt.
+        self.Destroy()
 
     def OnCloseWindow(self, event):
         self.halt()
         time.sleep(.75)  # make sure the thread had time to halt.
         self.Destroy()
-
-    # @staticmethod
-    # def raw_html():
-    #     html = ('<p><font color="#4C4C4C", size=2>What do we want: '
-    #             '<font color="#FF0000">all</font>'
-    #             '</p>')
-    #     return html
 
 
 class AIControl(Thread):
@@ -107,5 +95,5 @@ class AIControl(Thread):
 
     def close(self):
         self.frame.halt()
-        time.sleep(.75)  # make sure the thread had time to halt.
-        self.app.Destroy()
+
+        # self.app.Destroy()

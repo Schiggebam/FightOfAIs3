@@ -5,8 +5,9 @@ from typing import Callable, Tuple, List, Union, Optional, Dict
 from enum import Enum
 
 from src.ai import AI_Toolkit
+from src.ai.AI_GameStatus import AI_GameStatus, AI_Move
 from src.ai.AI_MapRepresentation import AI_Building, AI_Army, Tile
-from src.misc.game_constants import DiploEventType, error, Priority, UnitType, BuildingType, debug
+from src.misc.game_constants import DiploEventType, error, Priority, UnitType, BuildingType, debug, hint, Definitions
 from src.misc.game_logic_misc import Logger
 
 
@@ -20,11 +21,11 @@ class CardinalDirection(Enum):
     NorthWest = 5
 
 
-
 @dataclass
 class WaitOption:
     score: Priority
     weighted_score: float = 0
+
 
 @dataclass
 class UpgradeOption:
@@ -62,7 +63,7 @@ class RaiseArmyOption:
 @dataclass
 class ScoutingOption:
     site: Tuple[int, int]
-    score: Priority             # Caution changed this to Priority!!
+    score: Priority  # Caution changed this to Priority!!
     weighted_score: float = 0
 
 
@@ -152,6 +153,7 @@ class Compass:
             ret.append(CardinalDirection.NorthWest)
         return ret
 
+
 # a = AI_Toolkit.offset_to_cube_xy(7, 10)
 # b = AI_Toolkit.offset_to_cube_xy(10, 10)
 # compass = Compass(None)
@@ -165,14 +167,13 @@ class Weight:
     condition: Callable[..., bool]
     weight: float
 
-class AI_Diplo:
 
+class AI_Diplo:
     DIPLO_BASE_VALUE = float(5)
     LOGGED_EVENTS = (DiploEventType.ENEMY_BUILDING_IN_CLAIMED_ZONE,
                      DiploEventType.ENEMY_ARMY_INVADING_CLAIMED_ZONE)
 
     class AI_DiploEvent:
-
 
         def __init__(self, target_id: int, rel_change: float, lifetime: int, event: DiploEventType, description: str):
             self.rel_change = rel_change
@@ -193,7 +194,7 @@ class AI_Diplo:
             self.diplomacy.append([o_p, float(AI_Diplo.DIPLO_BASE_VALUE)])
 
     def add_event(self, target_id: int, loc: (int, int), event: DiploEventType, rel_change: float, lifetime: int,
-                  player_name:str):
+                  player_name: str):
         # check if this exists already:
         for e in self.events:
             if e.target_id == target_id and e.event == event and e.loc == loc:
@@ -250,15 +251,32 @@ class AI:
         self.diplomacy: AI_Diplo = AI_Diplo(other_players_ids)
         """this is used for development.
         instead of printing all AI info to the console, one can use the dump to display stats in-game"""
-        self.dump: str = ""
+        self.__dump: str = ""
         debug("AI (" + str(name) + ") is running")
 
-    def do_move(self, ai_state, move):
+    def do_move(self, ai_state: AI_GameStatus, move: AI_Move):
         """upon completion of this method, the AI should have decided on its move"""
         raise NotImplementedError("Please Implement this method")
 
     def get_state_as_str(self) -> str:
+        """used by the UI to display some basic information which is displayed in-game. For complex output, use _dump"""
         pass
 
     def _dump(self, d: str):
-        self.dump += d + "\n"
+        """Depending on the game settings, this will either dump the output to:
+        - [if SHOW_AI_CTRL]the external AI ctrl window
+        - [if DEBUG_MODE]the console (should not be the first choice, very slow)
+        - [else]nowhere."""
+        if Definitions.SHOW_AI_CTRL:
+            self.__dump += d + "\n"
+        elif Definitions.DEBUG_MODE:
+            hint(d)
+        else:
+            pass
+
+    def _reset_dump(self):
+        """most likely, the AI should call this upon being called each turn. It will reset the string buffer"""
+        self.__dump = ""
+
+    def get_dump(self):
+        return self.__dump

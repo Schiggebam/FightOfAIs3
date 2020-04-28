@@ -1,7 +1,6 @@
 from typing import Set, Tuple, Optional, Union, List, Any, Dict
 
 from src.ai.AI_MapRepresentation import Map, AI_Player, AI_Opponent
-from src.ai.ai_blueprint import AI
 from src.misc.game_constants import error, UnitType, BuildingType, MoveType, UnitCost
 
 
@@ -85,6 +84,7 @@ class AI_GameStatus:
 
 class AI_GameInterface:
     def __init__(self):
+        from src.ai.ai_blueprint import AI
         self.dict_of_ais: Dict[int, AI] = {}
         print("AI Game interface has been initialized")
 
@@ -144,4 +144,4 @@ class AI_GameInterface:
             error("WRONG QUERY")
 
     def get_dump(self, player_id) -> str:
-        return self.dict_of_ais[player_id].dump
+        return self.dict_of_ais[player_id].get_dump()

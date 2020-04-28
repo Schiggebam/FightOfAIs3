@@ -142,6 +142,7 @@ class Game(arcade.Window):
     def on_close(self):
         if Definitions.SHOW_AI_CTRL:
             self.ai_ctrl.close()
+
         if Definitions.SHOW_STATS_ON_EXIT:
             from src.ai.performance import PerformanceLogger
             PerformanceLogger.show()

@@ -12,6 +12,7 @@ from wx import App
 
 import untangle
 
+
 class DecisionType(Enum):
     DCN_READ_DOCUMENTATION = 0
     DCN_START_GAME = 1
@@ -28,12 +29,20 @@ class Decision:
     enable_debug_mode: bool = False
 
 
+class Hint:
+    HINT_GAME_INTEND = "Originally, the game was intended to be played by AIs only. \n" \
+                       "One would play the game by writing an AI which competes amongst multiple agents.\n" \
+                       "However, players can be controlled and played, mostly to test-play the AI. Please keep this in mind :-)"
+
 
 class StartupFrame(wx.Frame):
+    """Class which controlles the startup frame.
+     some of the code is generated, to not modify in between the Start-End sequences"""
+
     def __init__(self, resource_dir: str, *args, **kwds):
         kwds["style"] = kwds.get("style", 0) | wx.DEFAULT_FRAME_STYLE
         wx.Frame.__init__(self, *args, **kwds)
-        #---------------------- START ---------------------------
+        # ---------------------- START ---------------------------
         self.SetSize((700, 800))
         self.panel_1 = wx.Panel(self, wx.ID_ANY)
         self.panel_9 = wx.Panel(self.panel_1, wx.ID_ANY)
@@ -71,6 +80,7 @@ class StartupFrame(wx.Frame):
         self.__bind_callback_functions()
 
     def __set_properties(self):
+        # ---------------------- START ---------------------------
         self.SetTitle("Welcome Frame")
         _icon = wx.NullIcon
         _icon.CopyFromBitmap(wx.Bitmap("..\\resources\\objects\\flag_red.png", wx.BITMAP_TYPE_ANY))
@@ -82,6 +92,7 @@ class StartupFrame(wx.Frame):
         self.checkbox_show_stats.SetValue(1)
         self.checkbox_allow_cmd_input.SetValue(1)
         self.checkbox_enable_debug.SetValue(1)
+        # ---------------------- END ---------------------------
 
     def __do_layout(self):
         # ---------------------- START ---------------------------
@@ -162,7 +173,7 @@ class StartupFrame(wx.Frame):
         self.SetSizer(sizer_3)
         self.Layout()
         # ---------------------- END ---------------------------
-        font = wx.Font(10, wx.DECORATIVE, wx.NORMAL, wx.BOLD)
+        font = wx.Font(10, wx.DECORATIVE, wx.NORMAL, wx.BOLD)           # if this throws a warning, ignore
         InfoText.SetFont(font)
 
     def __bind_callback_functions(self):
@@ -202,11 +213,12 @@ class StartupFrame(wx.Frame):
 
         # check for human controlled player
         has_human = False
-        for elem in self.xml_parser.game.players:
+        for elem in self.xml_parser.game.players.children:
             if elem.get_attribute('ai') == "human":
                 has_human = True
         if has_human:
-            self.text_information.SetLabel("At least one player found, which is controlled by a human player")
+            self.text_information.SetLabel("At least one player found, which is controlled by a human player\n" +
+                                           Hint.HINT_GAME_INTEND)
         else:
             self.text_information.SetLabel("All players are controlled by AIs. No 'human' player found in xml data")
             self.text_information.SetForegroundColour(wx.RED)
@@ -244,9 +256,9 @@ class StartupFrame(wx.Frame):
                     cur = c
                     break
         s_buf = ""
-        for key, value in cur._attributes.items():
-            s_buf += f"{key} -> {value} \n"
-        s_buf += cur.cdata
+        for attr, value in cur._attributes.items():
+            s_buf += f"{attr} -> {value} \n"
+        s_buf += '\n' + cur.cdata
         self.text_details.SetLabel(s_buf)
 
 

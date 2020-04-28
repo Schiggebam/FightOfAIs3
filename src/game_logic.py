@@ -888,6 +888,8 @@ class GameLogic:
         self.z_levels[Z_AUX].remove(sprite)
 
     def __exec_command(self, c_list):
+        if not Definitions.ALLOW_CONSOLE_CMDS:
+            return
         for c in c_list:
             cmd = c[0]
             if cmd == "mark_tile":

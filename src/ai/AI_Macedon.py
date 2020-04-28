@@ -15,8 +15,7 @@ from src.misc.game_constants import DiploEventType, hint, BuildingType, error, d
     PlayerType
 
 DETAILED_DEBUG = False
-BASIC_DEBUG = False
-DUMP = True
+BASIC_DEBUG = True
 
 
 class AI_Mazedonian(AI):
@@ -129,9 +128,9 @@ class AI_Mazedonian(AI):
             self.m_weights.append(Weight(c, v))
 
     def do_move(self, ai_stat: AI_GameStatus, move: AI_Move):
-        self.dump = ""
+        self._reset_dump()
         t1 = timeit.default_timer()
-        hint("------ {} -------".format(self.name))
+        # hint("------ {} -------".format(self.name))
         self.set_vars(ai_stat)
         self.create_heat_maps(ai_stat, move)
         self.update_diplo_events(ai_stat)
@@ -212,20 +211,19 @@ class AI_Mazedonian(AI):
                         move.move_army_to = path[1].offset_coordinates
                         move.doMoveArmy = True
                         if DETAILED_DEBUG:
-                            hint('moving to: {} from {} to {}'.format(str(move.move_army_to),
+                            self._dump('moving to: {} from {} to {}'.format(str(move.move_army_to),
                                                                       start_tile.offset_coordinates,
                                                                       target_tile.offset_coordinates))
                 else:
-                    hint("targets value to low. Will not attack")
+                    self._dump("targets value to low. Will not attack")
 
     def set_vars(self, ai_stat: AI_GameStatus):
         if self.previous_food > ai_stat.me.food:
             if DETAILED_DEBUG:
-                hint("AI detected that it is loosing food")
+                self._dump("AI detected that it is loosing food")
             self.is_loosing_food = True
         self.inactive_huts = self.__count_inactive_huts(ai_stat)
-        if DUMP:
-            self._dump(f"Inactive huts: {self.inactive_huts}, loosing food: {self.is_loosing_food}")
+        self._dump(f"Inactive huts: {self.inactive_huts}, loosing food: {self.is_loosing_food}")
 
     def reset_vars(self):
         self.is_loosing_food = False
@@ -256,7 +254,7 @@ class AI_Mazedonian(AI):
                     max = d
                     tile_max = s
             if BASIC_DEBUG:
-                hint("Center is located @ " + str(tile_max.offset_coordinates))
+                self._dump("Center is located @ " + str(tile_max.offset_coordinates))
             self.center_tile = tile_max
         ## get heatmap for danger zone ->
         heat_map_3 = AI_Toolkit.simple_heat_map(ai_stat.map.opp_building_list, ai_stat.map.discovered_tiles,
@@ -299,8 +297,7 @@ class AI_Mazedonian(AI):
         for opp in ai_stat.opponents:
             if opp.has_lost and opp.id in self.hostile_player:
                 self.hostile_player.remove(opp.id)
-        if DUMP:
-            self._dump(f"hostile players: {str(self.hostile_player)}")
+        self._dump(f"hostile players: {str(self.hostile_player)}")
 
     def estimate_opponent_strength(self, ai_stat: AI_GameStatus):
         """AI tries to estimate opponent's strength. Currently solely based on army population"""
@@ -366,13 +363,13 @@ class AI_Mazedonian(AI):
         elif self.state == AI_Mazedonian.AI_State.DEFENSIVE:
             if len(ai_stat.map.building_list) < self.previous_amount_of_buildings:  # we got attacked
                 if len(self.hostile_player) == 0:
-                    hint("Problem with AI, we got attacked but no hostile players?!")
+                    debug("Problem with AI, we got attacked but no hostile players?!")
                 else:
                     self.state = AI_Mazedonian.AI_State.AGGRESSIVE
             if len(self.hostile_player) == 0:
                 self.state = AI_Mazedonian.AI_State.PASSIVE
-        if DUMP:
-            super()._dump(f"State: {old_state} -> {self.state}")
+
+        self._dump(f"State: {old_state} -> {self.state}")
 
     def weight_options(self, options: List[Option], ai_stat: AI_GameStatus, move: AI_Move):
         for opt in options:
@@ -382,7 +379,7 @@ class AI_Mazedonian(AI):
             for w in self.weights:
                 if w.condition(opt, ai_stat):
                     if DETAILED_DEBUG:
-                        hint(f"Weight w: {w.weight} applied on score: {opt.weighted_score} of {type(opt)} ")
+                        self._dump(f"Weight w: {w.weight} applied on score: {opt.weighted_score} of {type(opt)} ")
                     opt.weighted_score = opt.weighted_score + w.weight
 
         for m in self.priolist_targets:
@@ -394,19 +391,19 @@ class AI_Mazedonian(AI):
 
         options.sort(key=lambda x: x.weighted_score, reverse=True)
         self.priolist_targets.sort(key=lambda x: x.weighted_score, reverse=True)
-        if DUMP:
-            self._dump("---")
-            for opt in options:
-                s = f"\tOption of type: {type(opt)}, score: {opt.weighted_score}"
-                if type(opt) == RecruitmentOption or type(opt) == BuildOption:
-                    s = s + f", type {opt.type}"
-                if type(opt) == ScoutingOption:
-                    s = s + f", site: {opt.site}"
-                s = s + f", former priority: {opt.score}"
-                self._dump(s)
-            for m in self.priolist_targets:
-                s = f"\tAttack Target : {'army' if type(m.target) is AI_Army else 'building'}, score: {m.weighted_score}"
-                self._dump(s)
+
+        self._dump("---")
+        for opt in options:
+            s = f"\tOption of type: {type(opt)}, score: {opt.weighted_score}"
+            if type(opt) == RecruitmentOption or type(opt) == BuildOption:
+                s = s + f", type {opt.type}"
+            if type(opt) == ScoutingOption:
+                s = s + f", site: {opt.site}"
+            s = s + f", former priority: {opt.score}"
+            self._dump(s)
+        for m in self.priolist_targets:
+            s = f"\tAttack Target : {'army' if type(m.target) is AI_Army else 'building'}, score: {m.weighted_score}"
+            self._dump(s)
 
         # translate this into move
         best_option: Option = options[0]
@@ -437,9 +434,9 @@ class AI_Mazedonian(AI):
             move.str_rep_of_action = "raising new army at"
         else:
             error("unexpected type")
-        hint(f"DECISION: {move.str_rep_of_action}")
-        if DUMP:
-            self._dump(f"DECISION: {move.str_rep_of_action}")
+        # hint(f"DECISION: {move.str_rep_of_action}")
+
+        self._dump(f"DECISION: {move.str_rep_of_action}")
 
     def evaluate_move_building(self, ai_stat: AI_GameStatus) -> List[BuildOption]:
         def normalize(value: int) -> Priority:
@@ -490,7 +487,7 @@ class AI_Mazedonian(AI):
                             if prio_racks.value > 0:  # not Priority.P_NO
                                 racks_opt.score = Priority.increase(racks_opt.score)
                     else:
-                        hint("Build order contains unknown building type -> " + str(t))
+                        debug("Build order contains unknown building type -> " + str(t))
             if ai_stat.me.food < self.food_lower_limit:
                 if farm_opt is None:  # we force to look for a site even if the BO does not allow for it
                     farm_opt = value_farm, site_farm = self.__best_building_site_farm(ai_stat)
@@ -500,7 +497,7 @@ class AI_Mazedonian(AI):
 
             return [farm_opt, hut_opt, racks_opt]
         else:
-            hint("No building order found. This is not supported so far. Need guidance!")
+            debug("No building order found. This is not supported so far. Need guidance!")
             return []
 
     def __best_building_site_farm(self, ai_stat: AI_GameStatus) -> BuildOption:
@@ -539,7 +536,7 @@ class AI_Mazedonian(AI):
                         fields.append(s.offset_coordinates)
 
         if is_next_to_res:
-            hint("The farm will be next to a resource (apparently there is no better spot)")
+            debug("The farm will be next to a resource (apparently there is no better spot)")
 
         # translate score to priority (normalization step)
         if len(fields) >= 3:
@@ -579,7 +576,7 @@ class AI_Mazedonian(AI):
                     if c not in self.danger_zone:
                         candidates.append(c)
             if DETAILED_DEBUG:
-                hint(f"possible candidates for a barracks: {len(candidates)}")
+                debug(f"possible candidates for a barracks: {len(candidates)}")
             if len(candidates) > 0:
                 idx = random.randint(0, len(candidates) - 1)
                 c = 0
@@ -614,7 +611,7 @@ class AI_Mazedonian(AI):
             percentage_knig_wanted = self.army_comp.ac[1] / (self.army_comp.ac[0] + self.army_comp.ac[0])
             percentage_knig_actual = army.knights / (army.mercenaries + army.knights)
             if DETAILED_DEBUG:
-                hint(f"merc: {percentage_merc_wanted} - {percentage_merc_actual} | knight: {percentage_knig_wanted} - {percentage_knig_actual}")
+                debug(f"merc: {percentage_merc_wanted} - {percentage_merc_actual} | knight: {percentage_knig_wanted} - {percentage_knig_actual}")
             if (percentage_knig_wanted - percentage_knig_actual) < (percentage_merc_wanted - percentage_merc_actual):
                 prio_merc = Priority.increase(prio_merc)
             else:
@@ -740,8 +737,8 @@ class AI_Mazedonian(AI):
             self.army_comp = self.ac_defencive
         if self.state == AI_Mazedonian.AI_State.AGGRESSIVE:
             self.army_comp = self.ac_aggressive
-        if DUMP:
-            self._dump(f"Active protocol: {self.protocol}, build order: {self.build_order.name}, army comp: {self.army_comp.name}")
+
+        self._dump(f"Active protocol: {self.protocol}, build order: {self.build_order.name}, army comp: {self.army_comp.name}")
 
     def __compare_to_bo(self, bo: BuildOrder, ai_stat: AI_GameStatus):
         """this will return a list of tuples, comparing every b type the with desired value according to the bo
@@ -784,8 +781,8 @@ class AI_Mazedonian(AI):
         for e_b in ai_stat.map.opp_building_list:
             if e_b.visible:
                 targets.add((e_b, False))
-        if DUMP:
-            self._dump(f"Found {len(targets)} target(s) for our army")
+
+        self._dump(f"Found {len(targets)} target(s) for our army")
         for target, is_army in targets:
             value = 0
             if target.owner in self.hostile_player:
@@ -795,33 +792,33 @@ class AI_Mazedonian(AI):
                     value = 5 if is_army else 4
                 else:  # opp has unknown strength or equal
                     value = 3 if is_army else 2
-            if DETAILED_DEBUG:
-                hint(f"Target @ {str(target.offset_coordinates)} ({'army' if is_army else 'building'}) has value {value}")
+            if BASIC_DEBUG:
+                self._dump(f"Target @ {str(target.offset_coordinates)} ({'army' if is_army else 'building'}) has value {value}")
             # self.priolist_targets.append((value, target, is_army))
             self.priolist_targets.append(AI_Mazedonian.AttackTarget(target, value))
         if len(self.priolist_targets) > 0:
             self.priolist_targets.sort(key=lambda x: x.score, reverse=True)
-            if DUMP:
-                self._dump("Best attack target: {} ({}) value:{}".format(str(self.priolist_targets[0].target.offset_coordinates),
+
+            self._dump("Best attack target: {} ({}) value:{}".format(str(self.priolist_targets[0].target.offset_coordinates),
                                                                          'army' if type(
                                                                        self.priolist_targets[0].target) else 'building',
                                                                    self.priolist_targets[0].score))
         else:
-            hint("No Targets found")
+            self._dump("No Targets found")
 
     def __print_situation(self, ai_stat: AI_GameStatus):
-        if DUMP:
-            self._dump(f"Res: {ai_stat.me.resources}, Cul: {ai_stat.me.culture}, Food: {ai_stat.me.food}"
-                       f", Pop: {ai_stat.me.population} / {ai_stat.me.population_limit}")
-            for h in self.hostile_player:
-                self._dump("hostile player: [ID:] {} estimated strength: {}".format(h, self.opponent_strength[h]))
-            #if self.inactive_huts > 0:
-            hint(f"Inactive huts: {self.inactive_huts}")
-            s_tmp = ""
-            for key, value in self.compass.book.items():
-                s_tmp += f"{key} -> {value.value}, "
-            self._dump(s_tmp)
-        hint(f"Free tiles: {self.num_free_tiles} ({self.num_free_tiles/len(ai_stat.map.discovered_tiles)} %)")
+
+        self._dump(f"Res: {ai_stat.me.resources}, Cul: {ai_stat.me.culture}, Food: {ai_stat.me.food}"
+                   f", Pop: {ai_stat.me.population} / {ai_stat.me.population_limit}")
+        for h in self.hostile_player:
+            self._dump("hostile player: [ID:] {} estimated strength: {}".format(h, self.opponent_strength[h]))
+        #if self.inactive_huts > 0:
+        self._dump(f"Inactive huts: {self.inactive_huts}")
+        s_tmp = ""
+        for key, value in self.compass.book.items():
+            s_tmp += f"{key} -> {value.value}, "
+        self._dump(s_tmp)
+        self._dump(f"Free tiles: {self.num_free_tiles} ({self.num_free_tiles/len(ai_stat.map.discovered_tiles)} %)")
         # hint(f"N: {self.compass.}, E: {self.compass.east}, S: {self.compass.south}, W: {self.compass.west}")
 
     def get_army_spawn_loc(self, ai_stat: AI_GameStatus) -> Tuple[int, int]:
