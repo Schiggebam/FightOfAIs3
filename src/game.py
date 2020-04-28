@@ -19,7 +19,7 @@ from src.ui.extern.extern_startup_display import StartUp, DecisionType, Decision
 
 SCREEN_WIDTH = 1280
 SCREEN_HEIGHT = 720
-SCREEN_TITLE = "Fight of AIs [PRE-ALPHA]"
+SCREEN_TITLE = "Fight of AIs [PRE-ALPHA] - v" + Definitions.VERSION
 
 SETUP_COMMANDS = "../resources/initial_commands.txt"
 
@@ -120,7 +120,6 @@ class Game(arcade.Window):
             self.ai_ctrl: Optional[AIControl] = None
 
     def setup(self):
-
         # arcade.set_background_color(arcade.color.DARK_BLUE)
         arcade.set_background_color(arcade.color.BLACK)
         self.commands.extend(self.console.initial_commands(SETUP_COMMANDS))

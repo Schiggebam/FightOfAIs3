@@ -3,8 +3,7 @@ import timeit
 from typing import Set, Tuple, Optional, Union, List, Any, Dict
 
 from src.ai.AI_MapRepresentation import Map, AI_Player, AI_Opponent
-from src.misc.game_constants import error, UnitType, BuildingType, MoveType, UnitCost
-
+from src.misc.game_constants import error, UnitType, BuildingType, MoveType, UnitCost, debug
 
 """This file (together with AI_map_representation) handles the interaction between game and AI/HI"""
 
@@ -90,7 +89,7 @@ class AI_GameInterface:
     def __init__(self):
         from src.ai.ai_blueprint import AI
         self.dict_of_ais: Dict[int, AI] = {}
-        print("AI Game interface has been initialized")
+        debug("AI Game interface has been initialized")
         self.__has_finished = False     # protected variable to avoid modifying it, which would lead to RC
         self.ref_to_move: Optional[AI_Move] = None
         self.time_begin = 0

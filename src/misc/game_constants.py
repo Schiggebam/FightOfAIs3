@@ -32,6 +32,7 @@ GAME_LOGIC_CLK_SPEED = 0.75
 
 
 class Definitions:
+    VERSION: str = str(0.2)
     SHOW_AI_CTRL = True
     SHOW_STARTUP_CTRL = True
     SHOW_STATS_ON_EXIT = True

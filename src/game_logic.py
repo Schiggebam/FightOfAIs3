@@ -292,6 +292,8 @@ class GameLogic:
                     debug("AI took {} ms".format(self.ai_interface.get_ai_execution_time()))
                     if ai_move:  # player might have lost
                         self.exec_ai_move(ai_move, player)
+                    if Definitions.SHOW_AI_CTRL:
+                        self.ai_ctrl_frame.update(self.ai_interface.get_dump(player.id), player.id)
                     self.logic_state = GameLogicState.TURN_COMPLETE
 
         if self.logic_state is GameLogicState.TURN_COMPLETE:
