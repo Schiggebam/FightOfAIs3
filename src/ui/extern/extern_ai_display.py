@@ -44,6 +44,7 @@ class ExternAIFrame(wx.Frame):
         self.Bind(wx.EVT_CLOSE, self.OnCloseWindow)
         self.main_panel = wx.Panel(self)
         self.nb = wx.Notebook(self.main_panel)
+        self.is_running = True
 
         self.ai_tab: Dict[int, SelfUpdatePanel] = {}
         for pid in ids_of_ais:
@@ -59,12 +60,14 @@ class ExternAIFrame(wx.Frame):
         self.main_panel.SetSizer(sizer)
 
     def halt(self):
+        self.is_running = False
         for key, panel in self.ai_tab.items():
             panel.halt = True
         time.sleep(.75)  # make sure the thread had time to halt.
         self.Destroy()
 
     def OnCloseWindow(self, event):
+        self.is_running = False
         self.halt()
         time.sleep(.75)  # make sure the thread had time to halt.
         self.Destroy()
@@ -94,6 +97,6 @@ class AIControl(Thread):
         return "no data for pid " + str(pid)
 
     def close(self):
-        self.frame.halt()
+        if self.frame.is_running:
+            self.frame.halt()
 
-        # self.app.Destroy()

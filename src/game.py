@@ -21,10 +21,6 @@ SCREEN_WIDTH = 1280
 SCREEN_HEIGHT = 720
 SCREEN_TITLE = "Fight of AIs [PRE-ALPHA]"
 
-
-
-
-GAME_XML_FILE = "../resources/game_2.xml"
 SETUP_COMMANDS = "../resources/initial_commands.txt"
 
 
@@ -89,7 +85,7 @@ class ZlvlRenderer:
 
 
 class Game(arcade.Window):
-    def __init__(self, width, height, title):
+    def __init__(self, width, height, title, game_xml_file):
         super().__init__(width, height, title)
 
         file_path = os.path.dirname(os.path.abspath(__file__))
@@ -98,7 +94,7 @@ class Game(arcade.Window):
         #print(os.getcwd())
 
         self.z_level_renderer: ZlvlRenderer = ZlvlRenderer(NUM_Z_LEVELS)
-        self.game_logic: GameLogic = GameLogic(GAME_XML_FILE, self.z_level_renderer.z_levels)
+        self.game_logic: GameLogic = GameLogic(game_xml_file, self.z_level_renderer.z_levels)
         self.hi = HumanInteraction(self.game_logic, self.z_level_renderer.z_levels[2],
                                    self.z_level_renderer.z_levels[4])
         self.console: Console = Console()
@@ -260,13 +256,16 @@ def main():
                     exit()
                 elif dcn.decision == DecisionType.DCN_READ_DOCUMENTATION:
                     pass
+    game_xml_file = ""
     if dcn:
         Definitions.SHOW_AI_CTRL = dcn.show_ai_control
         Definitions.SHOW_STATS_ON_EXIT = dcn.show_stats_on_exit
         Definitions.ALLOW_CONSOLE_CMDS = dcn.allow_command_line_input
         Definitions.DEBUG_MODE = dcn.enable_debug_mode
+        game_xml_file = dcn.xml_file_location
+    print(f"Game XML file: {game_xml_file}")
 
-    window = Game(SCREEN_WIDTH, SCREEN_HEIGHT, SCREEN_TITLE)
+    window = Game(SCREEN_WIDTH, SCREEN_HEIGHT, SCREEN_TITLE, game_xml_file)
     window.setup()
     window.set_update_rate(1/60)
     arcade.finish_render()

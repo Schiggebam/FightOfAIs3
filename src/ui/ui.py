@@ -1,5 +1,5 @@
 from math import sqrt
-from typing import List, Optional, Tuple, Union
+from typing import List, Optional, Tuple, Union, Dict
 
 from src.ui.human import HumanInteraction
 from src.game_logic import GameLogic
@@ -17,7 +17,7 @@ class Notification:
 
 class NextTurnButton(TextButton):
     def __init__(self, center_x, center_y, action_function):
-        super().__init__(center_x, center_y, 100, 30, "Next Turn", 18, "Arial")
+        super().__init__(center_x, center_y, 100, 30, "Next Player", 16, "Arial")
         self.action_function = action_function
 
     def on_release(self):
@@ -27,7 +27,7 @@ class NextTurnButton(TextButton):
 
 class AutomaticButton(TextButton):
     def __init__(self, center_x, center_y, action_function):
-        super().__init__(center_x, center_y, 100, 30, "Play Auto", 18, "Arial")
+        super().__init__(center_x, center_y, 100, 30, "Play Auto", 16, "Arial")
         self.action_function = action_function
         self.active = False
 
@@ -76,10 +76,10 @@ class UI:
         self.panel_list: List[Panels] = []
         self.next_turn_button = NextTurnButton(screen_width - 150, 70, self.callBack1)
         self.ba = AutomaticButton(screen_width - 150, 30, self.callBack_automatic)
-        diplo_button = AutomaticIconButton(screen_width - 50, 150, self.callBack_diplo,
+        diplo_button = AutomaticIconButton(screen_width - 50, 200, self.callBack_diplo,
                                            "../resources/other/diplo_button_pressed.png",
                                            "../resources/other/diplo_button_unpressed.png")
-        ai_button = AutomaticIconButton(screen_width - 50, 225, self.callBack_ai,
+        ai_button = AutomaticIconButton(screen_width - 50, 265, self.callBack_ai,
                                         "../resources/other/ai_button_pressed.png",
                                         "../resources/other/ai_button_unpressed.png")
         self.ai_panel: Optional[PanelAI] = None
@@ -93,37 +93,53 @@ class UI:
         self.screen_width = screen_width
         self.screen_height = screen_height
         self.sprite_list = arcade.SpriteList()
+        # TODO: move ui elements in this dict! This class is a mess!
+        self.ui_elements: Dict[str, Union[AutomaticIconButton]] = {}
         self.playerinfo = {}
         self.volatile_panel = []
         self.win_screen_shown = False
         self.status_text = ""
         self.notifications_text = ""
         self.notifications: List[Tuple[Notification, float]] = []
-        x_offset = 20
+        x_offset = 40
         map_hack_button = AutomaticIconButton(self.screen_width - 50, 20, self.callBack_map_hack,
                                               "../resources/other/watch_button_pressed.png",
                                               "../resources/other/watch_button_unpressed.png", scale=0.75)
         # map_hack_button.on_press()
         self.buttonlist.append(map_hack_button)
         for p in self.gl.player_list:
-            watch_button = AutomaticIconButton(10 + x_offset, 90, self.callBack_watch,
+            watch_button = AutomaticIconButton(10 + x_offset, 100, self.callBack_watch,
                                                "../resources/other/watch_button_pressed.png",
                                                "../resources/other/watch_button_unpressed.png", scale=0.5)
             watch_button.args.append(p.id)
-            if p.player_type == PlayerType.HUMAN:
-                watch_button.on_press()
+            self.ui_elements[f"watch_id_{p.id}"] = watch_button
+            # if p.player_type == PlayerType.HUMAN:
+            #     watch_button.on_press()
             self.buttonlist.append(watch_button)
             x_offset = x_offset + 250
-        for b in self.buttonlist:
-            self.sprite_list.append(b.sprite)
-        # for p in self.panel_list:
-        #    self.sprite_list.append(p.sprite)
+
+        self.main_panel: arcade.Sprite = arcade.Sprite()
 
     def setup(self):
         self.ai_panel = PanelAI(self.screen_width - 280, 500, "AI panel", self.gl)
         self.diplo_panel = PanelDiplo(self.screen_width - 280, 250, "Diplo panel", self.gl)
         self.panel_list.append(self.ai_panel)
         self.panel_list.append(self.diplo_panel)
+        self.main_panel.append_texture(arcade.load_texture("../resources/objects/main_panel_1.png"))
+        self.main_panel.set_position(self.screen_width / 2, 102)
+        self.main_panel.set_texture(0)
+        self.sprite_list.append(self.main_panel)
+        for b in self.buttonlist:
+            self.sprite_list.append(b.sprite)
+
+        if not self.gl.has_human_player:
+            if len(self.gl.player_list) > 0:
+                pid = self.gl.player_list[0].id
+                self.ui_elements[f"watch_id_{pid}"].on_press()
+        else:
+            for p in self.gl.player_list:
+                if p.player_type == PlayerType.HUMAN:
+                    self.ui_elements[f"watch_id_{p.id}"].on_press()
 
     def draw(self):
         for hex in self.gl.hex_map.map:
@@ -132,18 +148,16 @@ class UI:
                 (x, y) = HexMap.offset_to_pixel_coords(hex.offset_coordinates)
                 arcade.draw_text(hex.debug_msg, x + self.camera_pos[0], y + self.camera_pos[1], arcade.color.BLACK)
 
-        # bottom pane
-        # FIXME: replace this by a sprite -> much faster
-        arcade.draw_rectangle_filled(self.screen_width / 2, 50, self.screen_width, 120,
-                                     arcade.color.BISTRE)
-        arcade.draw_rectangle_filled(self.screen_width / 2, 50, self.screen_width - 20, 110,
-                                     arcade.color.ANTIQUE_BRONZE)
+        self.sprite_list.draw()
 
         # draw turn number
         arcade.draw_text("Turn: " + str(self.gl.turn_nr), self.screen_width - 80, 65, arcade.color.WHITE, 14)
         arcade.draw_text("Map Hack", self.screen_width - 85, 35, arcade.color.WHITE, 14)
 
-        self.sprite_list.draw()
+        hl_x_off = self.gl.current_player * 250 + 140
+        hl_y_off = 65
+        arcade.draw_rectangle_filled(hl_x_off, hl_y_off, 120, 70, arcade.color.DARK_ORANGE)
+
         for p in self.panel_list:
             if p.show:
                 p.draw()
@@ -151,10 +165,10 @@ class UI:
             b.draw()
 
         # draw the player stats:
-        x_offset = 50
+        x_offset = 70
         for p in self.gl.player_list:
-            arcade.draw_text(str(p.name) + " [" + str(p.id) + "]", x_offset, 85, arcade.color.WHITE, 14)
-            arcade.draw_text(self.playerinfo[p.id][0], x_offset + 10, 15, self.playerinfo[p.id][1],
+            arcade.draw_text(str(p.name) + " [" + str(p.id) + "]", x_offset, 100, arcade.color.WHITE, 14)
+            arcade.draw_text(self.playerinfo[p.id][0], x_offset + 10, 30, self.playerinfo[p.id][1],
                              self.playerinfo[p.id][2])
             x_offset = x_offset + 250
 
@@ -199,7 +213,8 @@ class UI:
                 s = s + f"Culture: {player.culture} \n"
                 s = s + f"Food: {player.food} \n"
                 s = s + f"Population {player.get_population()} / {player.get_population_limit()}"
-                self.playerinfo[player.id] = (s, arcade.color.WHITE, 12)
+                cond = self.gl.current_player == player.id
+                self.playerinfo[player.id] = (s, arcade.color.BLACK if cond else arcade.color.WHITE, 12)
             else:
                 self.playerinfo[player.id] = ("LOST", arcade.color.RED, 18)
         if self.gl.winner and not self.win_screen_shown:

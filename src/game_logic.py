@@ -84,6 +84,7 @@ class GameLogic:
         self.has_human_player = False
 
         self.ai_ctrl_frame: Optional[AIControl] = None
+        self.show_key_frame_animation = ENABLE_KEYFRAME_ANIMATIONS
 
     def setup(self):
         """ load the game """
@@ -169,9 +170,7 @@ class GameLogic:
 
         self.__reorder_spritelist(self.z_levels[Z_GAME_OBJ])
         self.toggle_fog_of_war_lw(self.hex_map.map)
-        self.show_key_frame_animation = ENABLE_KEYFRAME_ANIMATIONS
-        #debug(f"Keyframes are {'enabled' if ENABLE_KEYFRAME_ANIMATIONS else 'disabled (enable by typing <switch_ka> in console)'}")
-        # HexMap.hex_distance(self.hex_map.get_hex_by_offset((0,0)), self.hex_map.get_hex_by_offset((2,2)))
+
         from src.ai.performance import PerformanceLogger
         PerformanceLogger.setup(player_ids)
 

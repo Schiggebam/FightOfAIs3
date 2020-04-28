@@ -189,7 +189,8 @@ class StartupFrame(wx.Frame):
         for c in choices:
             if c.endswith(".xml"):
                 self.combo_box_1.Append(c)
-        self.combo_box_1.SetValue("game_2.xml")
+        if self.combo_box_1.GetCount() > 0:
+            self.combo_box_1.SetValue(self.combo_box_1.GetString(0))
 
     def on_button_load_xml(self, event):
         xml_file = self.resource_dir + self.combo_box_1.GetValue()
@@ -219,9 +220,10 @@ class StartupFrame(wx.Frame):
         if has_human:
             self.text_information.SetLabel("At least one player found, which is controlled by a human player\n" +
                                            Hint.HINT_GAME_INTEND)
+            self.text_information.SetForegroundColour(wx.RED)
         else:
             self.text_information.SetLabel("All players are controlled by AIs. No 'human' player found in xml data")
-            self.text_information.SetForegroundColour(wx.RED)
+
         self.tree_ctrl_1.Expand(self.root)
 
 
