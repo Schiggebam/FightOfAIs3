@@ -7,15 +7,17 @@ from src.misc.game_constants import error, hint
 
 class Animator:
     class MoveAnimation:
-        def __init__(self, source: (int, int), destination: (int, int), time_ms, drawable: Drawable):
+        def __init__(self, source: (int, int), destination: (int, int), time_ms, drawable: Drawable,
+                     camera_pos: (int, int)):
             self.source = source
             self.destination = destination
             self.time_ms = time_ms
             self.start_time_ms = -1
             self.finished = False
             self.drawable = drawable
-            self.camera_pos = (0, 0)
+            self.camera_pos = camera_pos
             self.valid = True               # try to fix the Animator problem
+
 
         def update(self, time):
             tpl = Animator.bilinear_interpolation(self.source, self.destination, self.start_time_ms,
@@ -32,13 +34,12 @@ class Animator:
     def __init__(self):
         self.move_animations: List[Animator.MoveAnimation] = []
         self.key_frame_animations: List = []
+        self.camera_pos = (0, 0)
 
     def is_active(self):
         return len(self.move_animations) > 0
 
     def stop_animation(self, drawable: Union[Army]):
-        # TODO try to fix the animator problem
-        print("stopping animations")
         for s in self.move_animations:
             s.valid = False
         tbr = None
@@ -50,11 +51,15 @@ class Animator:
             print("removing drawable from animation")
             self.move_animations.remove(tbr)
 
+    def update_camera_pos(self, camera_pos):
+        self.camera_pos = camera_pos
+        for m_animation in self.move_animations:
+            m_animation.camera_pos = camera_pos
 
     def add_move_animation(self, obj: Union[Army], destination: (int, int), time_ms):
         start = HexMap.offset_to_pixel_coords(obj.tile.offset_coordinates)
         dest = HexMap.offset_to_pixel_coords(destination)
-        move = Animator.MoveAnimation(start, dest, time_ms, obj)
+        move = Animator.MoveAnimation(start, dest, time_ms, obj,  self.camera_pos)
         self.move_animations.append(move)
 
     def update(self, time):

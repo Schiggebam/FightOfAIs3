@@ -1,6 +1,6 @@
 from typing import Dict, Any, List, Tuple, Callable
 
-from src.ai.AI_MapRepresentation import AI_Building
+from src.ai.AI_MapRepresentation import AI_Building, AI_Army
 from src.ai.ai_npc import AI_NPC
 from src.ai.AI_GameStatus import AI_GameStatus
 from src.ai.ai_blueprint import ArmyMovementOption, Option, RaiseArmyOption, RecruitmentOption, WaitOption
@@ -66,11 +66,27 @@ def setup_movement_weights(self: AI_NPC) -> List[Tuple[Callable, float]]:
     w.append((w1, -2))
 
     def w2(elem: ArmyMovementOption, ai_stat: AI_GameStatus) -> bool:
-        """army should never attack a barracks"""
+        """only strong armies should attack a barracks"""
         if type(elem.target) is AI_Building:
             if elem.target.type is BuildingType.BARRACKS:
-                return True
+                if ai_stat.map.army_list[0].population < 20:
+                    return True
         return False
     w.append((w2, -3))
+
+    def w3(elem: ArmyMovementOption, ai_stat: AI_GameStatus) -> bool:
+        """don't move army if army has less than 3 supply"""
+        if ai_stat.me.population < 4:
+            return True
+        return False
+    w.append((w3, -2))
+
+    def w4(elem: ArmyMovementOption, ai_stat: AI_GameStatus) -> bool:
+        """discourage attacking a stronger army"""
+        if type(elem.target) is AI_Army:
+            if ai_stat.map.army_list[0].population < elem.target.population:
+                return True
+        return False
+    w.append((w4, -1))
 
     return w

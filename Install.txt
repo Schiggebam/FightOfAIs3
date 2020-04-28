@@ -9,6 +9,9 @@ and https://arcade.academy/installation.html
 [For me, this did't work. I installed python separately from PyCharm and told python in settings (ctrl + alt + s) to
 use my own installation (project interpreter).
 Previously, I install arcade via "pip install arcade" or "pip3 install arcade"]
+Additional requirements:
+ matplotlib (and maybe numpy) is required
+ wxpython
 
 You can checkout the git directly in PyCharm, if installed on windows.
 

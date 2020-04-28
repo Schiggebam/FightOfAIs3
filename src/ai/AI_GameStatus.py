@@ -1,3 +1,5 @@
+import threading
+import timeit
 from typing import Set, Tuple, Optional, Union, List, Any, Dict
 
 from src.ai.AI_MapRepresentation import Map, AI_Player, AI_Opponent
@@ -35,6 +37,8 @@ class AI_Move:
         self.str_rep_of_action: str = ""  # just for printing
         """Debug"""
         self.info_at_tile: List[Tuple[Tuple[int, int], str]] = []  # a list of tuples ((x, y), "str")
+        """"""
+        self.from_human_interaction = False
 
 
 
@@ -69,8 +73,6 @@ class AI_GameStatus:
         self.cost_building_construction: Dict[BuildingType, int] = {}
         """holds the unitcost of all unit types in a Dict"""
         self.cost_unit_recruitment: Dict[UnitType, UnitCost] = {}
-        #FIXME currently broken (at least the type hints are off)
-        self.aggressions: Set[int] = set()
         """contains an object from type Map. This hold all information about the current map-view:
          buildings, armies, scouted tiles, scoutable tiles, buildable tiles etc.
          in easy-to-access lists"""
@@ -86,8 +88,13 @@ class AI_GameStatus:
 
 class AI_GameInterface:
     def __init__(self):
-        self.dict_of_ais = {}
+        from src.ai.ai_blueprint import AI
+        self.dict_of_ais: Dict[int, AI] = {}
         print("AI Game interface has been initialized")
+        self.__has_finished = False     # protected variable to avoid modifying it, which would lead to RC
+        self.ref_to_move: Optional[AI_Move] = None
+        self.time_begin = 0
+        self.time_end = 0
 
     def launch_AI(self, id: int, ai_str: str, other_players: [int]):
         from src.ai.ai_npc import AI_NPC
@@ -127,14 +134,39 @@ class AI_GameInterface:
         ai_stat.cost_building_construction = building_costs
         ai_stat.cost_unit_recruitment = unit_cost
 
+    def run(self,  ai_stat: AI_GameStatus, move: AI_Move, player_id):
+        self.dict_of_ais[player_id].do_move(ai_stat, move)
+        # performance logging
+        from src.ai.performance import ScoreSpentResources
+        score = ScoreSpentResources.evaluate(ai_stat.map)
+        from src.ai.performance import PerformanceLogger
+        PerformanceLogger.log_performance_file(ai_stat.turn_nr, ai_stat.me.id, score)
+        self.__has_finished = True
+        self.time_end = timeit.default_timer()
 
     def do_a_move(self, ai_stat: AI_GameStatus, move: AI_Move, player_id):
-        self.dict_of_ais[player_id].do_move(ai_stat, move)
+        """spawns a new thread which does the AI calculations to reduce load/stalls in update thread"""
+        self.__has_finished = False
+        self.ref_to_move = move     # <-- keep reference on move, once __has_finished is true, the object is complete
+        self.time_begin = timeit.default_timer()
+        ai_worker = threading.Thread(target=self.run, args=(ai_stat, move, player_id))
+        ai_worker.start()
+
+
 
     def query_ai(self, query, arg, player_id) -> str:
         if query == "diplo":
-            return self.dict_of_ais[player_id].diplomacy.get_diplomatic_value_of_player(arg)
+            return str(self.dict_of_ais[player_id].diplomacy.get_diplomatic_value_of_player(arg))
         elif query == "state":
             return self.dict_of_ais[player_id].get_state_as_str()
         else:
             error("WRONG QUERY")
+
+    def get_dump(self, player_id) -> str:
+        return self.dict_of_ais[player_id].get_dump()
+
+    def has_finished(self):
+        return self.__has_finished
+
+    def get_ai_execution_time(self) -> float:
+        return self.time_end - self.time_begin

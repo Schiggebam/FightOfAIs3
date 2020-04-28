@@ -1,0 +1,170 @@
+## Game DOC ##
+[pre alpha]
+
+################
+### COMMANDS ###
+################
+
+1. Show commands
+    Run 'help' in the console, this will print a list of all available commands and their arguments
+2. Add a command
+    In console.py:
+        append a new command in the '__init__' method of the class Console
+        The list takes an object of type 'ConsoleCommand'
+
+
+###################
+### INTERACTION ###
+###################
+[SPACE] -> triggers the 'next turn' button
+[mouse] -> left click for selection, right click for deselection in general
+[arrow keys] -> scroll map
+
+
+
+################
+### THE GAME ###
+################
+Most of the rules and parameters of the game are defined in the '.xml' file under '[root]/resources'
+The parameters for buildings, units etc are defined there.
+
+
+#########################
+### GAME LOGIC <-> AI ###
+#########################
+The game loop is located in game_logic.py in class GameLogic. The name of the method is 'update(...)'
+The program flow looks a bit like this
+   GameLogic                                            AI_Interface                                AI
+
+   -- player wan't to play a turn --
+   update(...)
+   play_players_turn(...)
+   [gather all information for the player]
+   [send this wrapped information to the interface]
+   --calls create_ai_status(information) in AI_Interface----->
+                                                 creates an Object of type [GameInterface]
+                                                 -> called ai_status
+   [create a ai_move oject of type AI_Move]
+   [will be filled by AI and contains info about the move]
+   -- calls do_a_move(ai_status, ai_move) ---------------->
+                                                  GL requested move
+                                                  [forward request to AI] -------------------> do_move(..)
+                                                                                               [all AI calculations]
+                                                                                               [wrap info about the move]
+                                                                                               [in ai_move]
+   [upon termination, ai_move obj is filled]  <--------------------------------------------------
+   calls exec_ai_move(ai_move)
+   [will test move obj for validity]
+   if valid -> update the map accordingly (add unit, build building, calc fight etc)
+   update_map()
+   -> [after each player, the routine update_map()
+   makes sure the map stays consistent]
+   -- end of turn---
+
+
+####################################
+### HOW TO WRITE OWN AI - BASICS ###
+####################################
+In this section a brief overview on how an AI is written, is provided:
+
+--- 1. Make new file: in src/ai/AI_<<name>>.py with the name of the AI
+
+--- 2. In 'src/ai/AI_<<name>>.py':
+    As the whole game is written object orientated, the AI should be wrapped by a class
+    The AI should be a subclass from AI in src/ai/ai_blueprint.py
+    -> The signature of the new AI should look like this: class AI_<<Name>>(AI)
+Optionally, one can add a AI script under src/ai/scripts
+(!) The AI must override the do_move(...) method from class AI
+
+--- 3. Basic Logic
+    A very simple AI could be written like this:
+        1. gather all valid game moves
+        2. select one of these moves by random
+        3. set the move object accordingly. done.
+
+--- 4. Information
+    All information, which is available to the AI in one point in time, is wrapped in the AI_GameStatus object
+    It is located in src/ai/AI_GameStatus.py
+    Most importantly, have a look at the 'map' field, which contains list of e.g.:
+        - building_list: A list of all own buildings
+        - opp_building_list: A list with all opponent buildings
+        - resource_list: A list with all discovered tiles
+        - tiles_scoutable: A list with all tile, which can be scouted
+        - etc. (more information in the comments in the code)
+    The game logic expects the AI to fill the 'move' object. It is of type: AI_Move
+        - see comments in code for more information, here is just an example.
+        - Let's imagine, the AI would like to build a Hut on tile with the offset coordinates 10, 10.
+        - The AI made sure, that the tile is in ai_stat.map.tiles_buildable (thus, the tile 10 10 is buildable)
+        - The move object should look like this:
+            + AI_move.move_type = MoveType.DO_BUILD         <-- the move_type
+            + AI_move.loc = (10, 10)                        <-- the location of the action
+            + AI_move.type = BuildingType.HUT               <-- type to specify the action further
+            + AI_move.info = []                             <-- emtpy list, for the HUT, we don't need further information
+            + AI_move.str_rep_of_action = "building hut"    <-- for debug and UI only, not important to the game logic, but it is nice to specify the action in words
+        Have a look at MoveType in src/misc/game_constants.py for additional information on valid move and on which fields have to be set
+    Once, the do_move(...) method has terminated, the game_logic in retaking the execution the move obj, if valid, will be executed
+
+--- 5. Dump information
+    Naturally, the AI will generate a lot of output to follow its decision making. There are 3 options to broadcast this information:
+    5.1: Print to console:
+        + Simply use the hint() or debug() function from src/misc/game_constants.py or the built-in python print()
+        + The drawback is, that this slows done the AI and thus the update thread of the game
+        + This type of print() should be considered to be very expensive, because it is done by the update_thread() and has to be sync'ed to the main thread
+    5.2: Override the get_state_as_str() method in AI
+        + by overriding this function, the UI of the game will pick up the str given by this function and will print this to the small AI window in the game
+        + Unfortunately, this can only be used for a small amount of text, since the window is small
+        + Also, rendering text in-game is relatively expensive
+    5.3 Use the _dump(...) method in AI
+        + at the start of the do_move(..) function, reset the dump via 'self.dump = ""'
+        + then, you can use the _dump(..) method the same way you use the print(..)
+        + the function will stash all output and on termination of the do_move(..) function the string_buffer will be dumped to the external window
+        + The external window is handled by wxpython and uses native os-accelerated operations to display the text, this is the fastest option (!)
+        + Additionally, one has the advantage, that you can but the to windows side-by-side and observe the game and the output simultaneously
+
+--- 6. Common patterns
+    A simple example should illustrate, how to develop basic decision-making in the AI
+    Let's imagine, we would like to build the hut. Finding the best site for the hut, one has to maximize the number of surrounding tiles with a resource
+    Additionally, we would like to make sure, the army can reach the hut (for whatever reason)
+    The code would look like this:
+
+    best_score = -1
+    best_tile = None
+    if ai_stat.me.resources >= ai_stat.costBuildS1:                     # Do we have enough resources to build a hut?
+        for ai_t in ai_stat.map.buildable_tiles:                        # for all tiles in the list: ai_stat.map.buildable_tiles
+            score = AI_Toolkit.num_resources_on_adjacent(ai_t)          # Let's get the number of adjacent resources
+            start_tile = ai_stat.map.army_list[0].base_tile             # tile of the army. The army is stored in a list, but for now there is only one -> idx 0
+            target_tile = ai_t                                          # target tile is the current tile we test for building a hut
+            path = AI_Toolkit.dijkstra_pq(start_tile, target_tile, ai_stat.map.walkable_tiles)
+                                                                        # call the pathfinding algorithm ->
+                                                                             # it requires a start, a target and a list of tiles on which to search (in this case this are all walkable tiles)
+            if len(path) > 1:                                           # if the len of the path is greater than 1, it is a valid path (otherwise it only contains the start_tile)
+                                                                        # note: If the army is right next to the tile, the length of the path would be 2 (the start and the target tile)
+                if best_score < score:                                  # finding the maximum (if this score is better, safe it, continue searching)
+                    best_score = score                                  # if we found a tile
+                    best_tile = ai_t                                    # store this tile, as the best option
+    if best_tile != None:                                               # Did we find a valid site?
+        ai_move.move_type = MoveType.DO_BUILD                           # set the move object, the case this is the move we would like to do! Easy
+        ai_move.type = BuildingType.HUT
+        ai_move.loc = best_tile.offset_coordinates
+        ai_move.str_rep_of_action = "build hut at: " + str(ai_move.loc)
+
+
+####################################
+### CODE - HOW TO ADD A BUILDING ###
+####################################
+XML
+1. Add texture to ./resources/objects/
+2. Add texture settings to game.xml. Make sure that the "code"- tag is unique and the path to the texture correct
+3. Add the buildings properties to the buildings section of game.xml.
+    Make sure, that the "code"- tag matches the texture code
+PYTHON
+4. in src/misc/game_constants.py: Extend the enum 'BuildingType' by the type of the building
+4.1 in the enum: extend the routine: 'get_type_from_strcode'. It must return your 'BuildingType' when given the xml code
+5. in src/ui/lang_en.py: extend the routine: 'building_type_conversion' This is not necessary, but the output is nicer
+That's it!
+
+################################
+### CODE - HOW TO ADD A UNIT ###
+################################
+Similar to "how to add a building" - but units don't require a texture
+However, the army panel might need adjustment

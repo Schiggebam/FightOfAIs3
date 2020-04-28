@@ -26,7 +26,18 @@ Z_GAME_OBJ = 3
 ERRORS_ARE_FATAL = False
 DEBUG = True
 DETAILED_DEBUG_INFO = 1     # 0: no info, 1: includes calling class, 2: includes calling method
-ENABLE_KEYFRAME_ANIMATIONS = False
+ENABLE_KEYFRAME_ANIMATIONS = True
+MAP_HACK_ENABLE_AT_STARTUP = False
+GAME_LOGIC_CLK_SPEED = 0.75
+
+
+class Definitions:
+    SHOW_AI_CTRL = True
+    SHOW_STARTUP_CTRL = True
+    SHOW_STATS_ON_EXIT = True
+    DEBUG_MODE = True
+    ALLOW_CONSOLE_CMDS = True
+
 
 class bcolors:
     HEADER = '\033[95m'
@@ -118,21 +129,21 @@ class Priority(Enum):
 
     @staticmethod
     def increase(p: Priority):
-        if p == Priority.P_NO:
+        if p is Priority.P_NO:
             return Priority.P_LOW
-        elif p == Priority.P_LOW:
+        elif p is Priority.P_LOW:
             return Priority.P_MEDIUM
-        elif p == Priority.P_MEDIUM:
+        elif p is Priority.P_MEDIUM:
             return Priority.P_HIGH
         return Priority.P_CRITICAL
 
     @staticmethod
     def decrease(p: Priority):
-        if p == Priority.P_CRITICAL:
+        if p is Priority.P_CRITICAL:
             return Priority.P_HIGH
-        elif p == Priority.P_HIGH:
+        elif p is Priority.P_HIGH:
             return Priority.P_MEDIUM
-        elif p == Priority.P_MEDIUM:
+        elif p is Priority.P_MEDIUM:
             return Priority.P_LOW
         return Priority.P_NO
 
@@ -357,3 +368,10 @@ class BuildingState(Enum):
     UNDER_CONSTRUCTION = 30
     ACTIVE = 31
     DESTROYED = 32
+
+
+class GameLogicState(Enum):
+    NOT_READY = 0
+    READY_FOR_TURN = 2
+    WAITING_FOR_AGENT = 3
+    TURN_COMPLETE = 4

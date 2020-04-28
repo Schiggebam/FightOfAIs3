@@ -12,6 +12,8 @@ from src.texture_store import TextureStore
 from src.misc.game_logic_misc import *
 from typing import Optional, List, Set, Dict
 
+from src.ui.extern.extern_ai_display import AIControl
+
 
 class GameLogic:
     def __init__(self, game_xml_file: str, z_levels: [arcade.SpriteList]):
@@ -20,7 +22,7 @@ class GameLogic:
         self.z_levels: [arcade.SpriteList] = z_levels               # reference to the sprite lists
         self.hex_map: Optional[HexMap] = None
         from src.ui.human import HumanInteraction
-        self.hi: Optional[HumanInteraction] = None
+        self.human_interface: Optional[HumanInteraction] = None
         self.ai_interface: AI_GameInterface = AI_GameInterface()
         self.scenario: Scenario = Scenario()
         self.income_calc: IncomeCalculator = IncomeCalculator(self.hex_map, self.scenario)
@@ -34,8 +36,8 @@ class GameLogic:
 
         self.player_list: [Player] = []
         self.map_view: [bool] = []              # true if we show the players view, otherwise false
-        self.change_in_map_view = False
-        self.map_hack = False
+        self.change_in_map_view = MAP_HACK_ENABLE_AT_STARTUP
+        self.map_hack = MAP_HACK_ENABLE_AT_STARTUP
         self.winner: Optional[Player] = None
 
         # read game data
@@ -79,6 +81,12 @@ class GameLogic:
         self.total_time = 0
         self.animator_time = 0
         self.wait_for_human = False
+        self.has_human_player = False
+
+        self.ai_ctrl_frame: Optional[AIControl] = None
+        self.show_key_frame_animation = ENABLE_KEYFRAME_ANIMATIONS
+        self.logic_state: GameLogicState = GameLogicState.NOT_READY
+        self.nextPlayerButtonPressed = False
 
     def setup(self):
         """ load the game """
@@ -92,6 +100,7 @@ class GameLogic:
         self.income_calc.hex_map = self.hex_map         # TODO make sure to set the hex_map everywhere. Ugly!
 
         #TODO do this somewhere else
+
         # background: List[Drawable] = []
         # x_off = 213
         # y_off = 165
@@ -131,11 +140,11 @@ class GameLogic:
                 r.tex_code = "forest_3_var{}".format(var)
                 self.add_resource(r)
 
-            elif map_obj[0] == "r1" or map_obj[0] == "g1" or map_obj[0] == "f1":                            # TODO if resource
+            elif map_obj[0] == "r1" or map_obj[0] == "g1" or map_obj[0] == "f1":                    # TODO if resource
                 r: Resource = Resource(hex, ResourceType.get_type_from_strcode(map_obj[0]))
                 r.tex_code = map_obj[0]
                 self.add_resource(r)
-
+        player_ids: List[Tuple[int, str]] = []
         for player in self.player_list:
             other_players_ids: List[int] = []
             for p in self.player_list:
@@ -153,20 +162,31 @@ class GameLogic:
             b.set_state_active()
             tmp = self.hex_map.get_neighbours_dist(base_hex, b.sight_range)
             player.discovered_tiles.update(tmp)
+            if player.player_type is PlayerType.HUMAN:
+                self.has_human_player = True
             if not player.is_barbaric:
                 unit = Unit(player.get_initial_unit_type())
                 army = Army(self.hex_map.get_hex_by_offset(player.init_army_loc), player.id)
                 army.add_unit(unit)
                 self.add_army(army, player)
+            player_ids.append((player.id, player.colour_code))
 
         self.__reorder_spritelist(self.z_levels[Z_GAME_OBJ])
         self.toggle_fog_of_war_lw(self.hex_map.map)
-        self.show_key_frame_animation = ENABLE_KEYFRAME_ANIMATIONS
-        #debug(f"Keyframes are {'enabled' if ENABLE_KEYFRAME_ANIMATIONS else 'disabled (enable by typing <switch_ka> in console)'}")
-        # HexMap.hex_distance(self.hex_map.get_hex_by_offset((0,0)), self.hex_map.get_hex_by_offset((2,2)))
+
+        from src.ai.performance import PerformanceLogger
+        PerformanceLogger.setup(player_ids)
+        self.logic_state = GameLogicState.READY_FOR_TURN
+
+        if self.player_list[0].player_type is PlayerType.HUMAN:
+            # in case the first player is the human, we already gather his/her resources
+            self.playNextTurn = True
+            self.nextPlayerButtonPressed = True
 
     elapsed = float(0)      # TODO make this a member
 
+    def set_ai_ctrl_frame(self, ai_ctrl_frame: Optional[AIControl]):
+        self.ai_ctrl_frame = ai_ctrl_frame
 
     def update(self, delta_time: float, commands :[], wall_clock_time: float):
         timestamp_start = timeit.default_timer()
@@ -176,43 +196,50 @@ class GameLogic:
             for k_f in self.animator.key_frame_animations:
                 k_f.next_frame(delta_time)
         # self.animator_time = timestamp_start - timeit.default_timer()
-        if GameLogic.elapsed > float(0.8) and self.automatic:
+        if GameLogic.elapsed > float(GAME_LOGIC_CLK_SPEED if self.turn_nr < 80 else 1) and self.automatic:
             self.playNextTurn = True
             GameLogic.elapsed = float(0)
 
         if self.playNextTurn:                           # if ready ot play turn
             #if not self.ai_running:                     # State: Ready_to_play_turn -> PLAYING
-            if len(self.player_list) > 0:
-                player = self.player_list[self.current_player]
-                played_move = False
-                if player.player_type != PlayerType.HUMAN:
-                    ai_move = self.play_players_turn(player)
-                    if ai_move:     # player might have lost
-                        self.exec_ai_move(ai_move, player)
-                    played_move = True                      # State PLAYING -> TURN PLAYED
-                else:
-                    if not self.wait_for_human:
-                        self.play_players_turn(player)      # STATE: WAIT_FOR MOVE ->
-                        self.wait_for_human = True
-                        self.automatic = False
-                        self.playNextTurn = False
-                    else:
-                        self.exec_ai_move(self.hi.get_move(), player)
-                        self.wait_for_human = False
-                        played_move = True
-                        self.playNextTurn = True
-                if played_move:
-                    self.automatic = True
-                    if self.current_player == 0:  # next time player 0 plays -> new turn
-                        self.turn_nr = self.turn_nr + 1
-                    self.current_player = (self.current_player + 1) % len(self.player_list)
-                    if self.player_list[self.current_player].player_type == PlayerType.HUMAN:      # -> already gives the human player its resources
-                        self.playNextTurn = True    # smoother gameplay
-                    else:
-                        self.playNextTurn = False
-            else:                                   # this is in case of no players
-                self.playNextTurn = False
-        else:
+            # if len(self.player_list) > 0:
+            #     player = self.player_list[self.current_player]
+            #     played_move = False
+            #     if player.player_type != PlayerType.HUMAN:
+            #         ai_move = self.play_players_turn(player)
+            #         if ai_move:     # player might have lost
+            #             self.exec_ai_move(ai_move, player)
+            #         played_move = True                      # State PLAYING -> TURN PLAYED
+            #     else:
+            #         if not self.wait_for_human:
+            #             self.play_players_turn(player)      # STATE: WAIT_FOR MOVE ->
+            #             self.wait_for_human = True
+            #             self.automatic = False
+            #             self.playNextTurn = False
+            #         else:
+            #             self.exec_ai_move(self.hi.get_move(), player)
+            #             self.wait_for_human = False
+            #             played_move = True
+            #             self.playNextTurn = True
+            #     if played_move:
+            #         if self.has_human_player:
+            #             self.automatic = True
+            #         if self.current_player == 0:  # next time player 0 plays -> new turn
+            #             self.turn_nr = self.turn_nr + 1
+            #         self.current_player = (self.current_player + 1) % len(self.player_list)
+            #         if self.player_list[self.current_player].player_type == PlayerType.HUMAN:      # -> already gives the human player its resources
+            #             self.playNextTurn = True    # smoother gameplay
+            #         else:
+            #             self.playNextTurn = False
+            #     # dump AI output
+            #     if player.player_type != PlayerType.HUMAN:
+            #         dump = self.ai_interface.get_dump(player.id)
+            #         self.ai_ctrl_frame.update(dump, player.id)
+            # else:                                   # this is in case of no players
+            #     self.playNextTurn = False
+            self.handle_turn()
+
+        if self.show_key_frame_animation:
             for s in self.z_levels[Z_FLYING]:
                 s.update_animation()
 
@@ -223,15 +250,84 @@ class GameLogic:
         self.animator.update(wall_clock_time)
         self.total_time = timestamp_start - timeit.default_timer()
 
+    def handle_turn(self):
+        """handles the turn for a player (human, ai or npc), extends the main update loop"""
+        if self.logic_state is GameLogicState.NOT_READY:
+            error(f"game logic not ready, logic state: {self.logic_state}")
+            self.playNextTurn = False
+            return
 
-    def play_players_turn(self, player: Player) -> Optional[AI_Move]:
-        print("Play turn of: " + player.name)
+        if len(self.player_list) <= 0:
+            self.playNextTurn = False
+            return
+
+        player = self.player_list[self.current_player]
+
+        if player.player_type is PlayerType.HUMAN:
+
+            if self.logic_state is GameLogicState.READY_FOR_TURN:
+                self.play_players_turn(player)
+                self.logic_state = GameLogicState.WAITING_FOR_AGENT
+                self.nextPlayerButtonPressed = False
+
+            elif self.logic_state is GameLogicState.WAITING_FOR_AGENT:
+                h_move = self.human_interface.get_partial_move()
+                if h_move is not None:
+                    self.exec_ai_move(h_move, player)
+                    new_ai_stat = AI_GameStatus()
+                    self.construct_game_status(player, new_ai_stat)
+                    self.human_interface.update_game_status(new_ai_stat)
+
+                if self.human_interface.is_move_complete() or self.nextPlayerButtonPressed:
+                    self.logic_state = GameLogicState.TURN_COMPLETE
+        else:   # handle AI agent
+
+            if self.logic_state is GameLogicState.READY_FOR_TURN:
+                self.play_players_turn(player)
+                self.logic_state = GameLogicState.WAITING_FOR_AGENT
+
+            elif self.logic_state is GameLogicState.WAITING_FOR_AGENT:
+                if self.ai_interface.has_finished():
+                    ai_move = self.ai_interface.ref_to_move
+                    debug("AI took {} ms".format(self.ai_interface.get_ai_execution_time()))
+                    if ai_move:  # player might have lost
+                        self.exec_ai_move(ai_move, player)
+                    self.logic_state = GameLogicState.TURN_COMPLETE
+
+        if self.logic_state is GameLogicState.TURN_COMPLETE:
+            self.nextPlayerButtonPressed = False
+            if self.current_player == 0:  # next time player 0 plays -> new turn
+                self.turn_nr = self.turn_nr + 1
+            self.current_player = (self.current_player + 1) % len(self.player_list)
+            if self.player_list[self.current_player].player_type is PlayerType.HUMAN:
+                self.playNextTurn = True
+            else:
+                self.playNextTurn = False
+            hint("                              SUCCESSFULLY PLAYED TURN")
+            self.logic_state = GameLogicState.READY_FOR_TURN
+
+
+    def play_players_turn(self, player: Player):
+        """wrapper function, extends the main update loop"""
         self.updata_map()
-        # gather player data
         if self.check_win_condition(player):
             self.winner = player
+        self.update_player_properties(player)
         player.has_lost = self.check_lose_condition(player)
+        if player.has_lost:
+            self.destroy_player(player)
+            return
+        ai_game_status = AI_GameStatus()
+        self.construct_game_status(player, ai_game_status)
 
+        ai_move = AI_Move()
+        if player.player_type == PlayerType.HUMAN:
+            self.human_interface.request_move(ai_game_status, ai_move, player.id)
+        else:
+            self.ai_interface.do_a_move(ai_game_status, ai_move, player.id)
+
+    def update_player_properties(self, player):
+        """calculate income, new culture level, food, etc."""
         # continue build buildings
         for b in player.buildings:
             if b.building_state == BuildingState.UNDER_CONSTRUCTION:
@@ -247,22 +343,14 @@ class GameLogic:
         player.food = player.food + self.income_calc.calculate_food(player)
         player.culture = player.culture + self.income_calc.calculate_culture(player)
 
-        if player.has_lost:
-            for army in player.armies:
-                self.del_army(army, player)
-            for b in player.buildings:
-                self.del_building(b, player)
-            return None
-
-        # gather data for ai
+    def construct_game_status(self, player: Player, ai_game_status: AI_GameStatus):
+        """constructs an object, which holds the current view of the game out of a players perspective"""
         scoutable_tiles = self.get_scoutable_tiles(player)
         buildable_tiles = self.get_buildable_tiles(player)
         known_resources = self.get_known_resources(player)
         walkable_tiles = self.get_walkable_tiles(player)
         enemy_buildings = self.get_enemy_buildings(player, scoutable_tiles)  # tuple set((bld, owner_id))
         enemy_armies = self.get_enemy_armies(player)        # tuple set((army, owner_id))
-        player_population = player.get_population()
-        player_population_limit = player.get_population_limit()
 
         # build the map representation for the AI
         # all tiles is the union of scoutable and known tiles
@@ -302,6 +390,7 @@ class GameLogic:
         for p in self.player_list:
             if p.id != player.id:
                 tmp = AI_Opponent(p.id, p.name, p.player_type)
+                tmp.has_lost = p.has_lost
                 opponents.append(tmp)
                 for pid, loc in player.attacked_set:
                     if pid == p.id:
@@ -312,12 +401,11 @@ class GameLogic:
         for b_type in BuildingType:
             if b_type != BuildingType.OTHER_BUILDING:
                 costs[Building.building_info[b_type]['tex_code']] = Building.building_info[b_type]['construction_cost']
-        #if player.is_barbaric:
+
         costs['bs'] = Unit.get_unit_cost(UnitType.BABARIC_SOLDIER)
-        #else:
         costs['knight'] = Unit.get_unit_cost(UnitType.KNIGHT)
         costs['mercenary'] = Unit.get_unit_cost(UnitType.MERCENARY)
-        # modern cost
+        # modern cost # Fixme move away from cost 'as a field' -> cost 'as a dict' with CostType instead of str as key
         b_costs: Dict[BuildingType, int] = {}
         for t_b in BuildingType:
             if t_b != BuildingType.OTHER_BUILDING:
@@ -326,32 +414,25 @@ class GameLogic:
         for t_u in UnitType:
             u_costs[t_u] = Unit.get_unit_cost(t_u)
 
-
-
-        # ask the AI of each player to do a move
-        ai_status = AI_GameStatus()
-        ai_move = AI_Move()
-
-        AI_GameInterface.create_ai_status(ai_status, self.turn_nr, costs,
-                                           ai_map, me, opponents, b_costs, u_costs)
+        AI_GameInterface.create_ai_status(ai_game_status, self.turn_nr, costs,
+                                          ai_map, me, opponents, b_costs, u_costs)
         player.attacked_set.clear()
-        if player.player_type == PlayerType.HUMAN:
-            self.hi.request_move(ai_status, ai_move, player.id)
-            self.wait_for_human = True
-        else:
-            timestamp_start = timeit.default_timer()
-            self.ai_interface.do_a_move(ai_status, ai_move, player.id)
-            debug(f"AI took: {timeit.default_timer() - timestamp_start} s")
-
-        # self.exec_ai_move(ai_move, player, costs)
-        ai_status.clear()
-        del ai_status
-
-        # if not player.is_barbaric:
-        #     self.__add_aux_sprite(player.armies[0].tile, 1, "ou")
 
 
-        return ai_move
+        # debug(f"time to gather ai_stat: {t2-t1}")
+
+
+
+    def destroy_player(self, player):
+        """cleans up the board, if a player has lost"""
+        for army in player.armies:
+            self.del_army(army, player)
+        for b in player.buildings:
+            self.del_building(b, player)
+        # still log its performance
+        # (also to keep the arrays in the logger of equal length which helps for drawing the diagram)
+        from src.ai.performance import PerformanceLogger
+        PerformanceLogger.log_performance_file(self.turn_nr, player.id, 0)
 
     def updata_map(self):
         """this function makes sure that the map remains well defined"""
@@ -385,6 +466,12 @@ class GameLogic:
                 continue
             res.tile.ground.walkable = False
             res.tile.ground.buildable = False
+
+        for p in self.player_list:
+            for a in p.armies:
+                pix_loc = HexMap.offset_to_pixel_coords(a.tile.offset_coordinates)
+                print(self.__camera_pos)
+                a.set_sprite_pos(pix_loc, self.__camera_pos)
 
         # This is a bit of brute force approach and not really necessary. However, animations made it hard
         # to track when updates are necessary. # TODO handle this with more care
@@ -443,7 +530,7 @@ class GameLogic:
             else:
                 b_type = ai_move.type
             if Building.get_construction_cost(b_type) <= player.amount_of_resources:
-                hint("building: @" + str(ai_move.loc))
+                # hint("building: @" + str(ai_move.loc))
                 base_hex = self.hex_map.get_hex_by_offset(ai_move.loc)
                 b = Building(base_hex, b_type, player.id)
                 if not player.is_barbaric:
@@ -504,18 +591,23 @@ class GameLogic:
                     error(f"Invalid target for army movement: {ai_move.move_army_to}")
             else:
                 error("No army available")
-        hint("                          SUCCESSFULLY PLAYED TURN")
+
 
     def __check_validity(self, ai_move: AI_Move):
         """prints warning message if AI_Move object is faulty"""
-        if ai_move.move_type is None:
-            error("AI must specify type of move")
-        if ai_move.move_type is MoveType.DO_RAISE_ARMY:
-            if ai_move.loc == (-1, -1):
-                error("AI must specify location where to raise the army")
-        if ai_move.move_type == MoveType.DO_BUILD:
-            if ai_move.loc == (-1, -1):
-                error("AI must specify the location of the building site")
+        if not ai_move.from_human_interaction:
+            if ai_move.move_type is None:
+                error("AI must specify type of move")
+            if ai_move.move_type is MoveType.DO_RAISE_ARMY:
+                if ai_move.loc == (-1, -1):
+                    error("AI must specify location where to raise the army")
+            if ai_move.move_type == MoveType.DO_BUILD:
+                if ai_move.loc == (-1, -1):
+                    error("AI must specify the location of the building site")
+        else:
+            if ai_move.move_type is None:
+                if ai_move.doMoveArmy is False:
+                    error("The move object comes from human interaction and is faulty! This is a problem!")
 
     def check_win_condition(self, player: Player):
         for p in self.player_list:
@@ -560,7 +652,7 @@ class GameLogic:
         for hex in player.discovered_tiles:
             if hex.ground.walkable:
                 b_set.add(hex)
-        for p in self.player_list:          # enemy buildings are walkable (to attack them) if they are scouted
+        for p in self.player_list:      # enemy buildings are walkable (to attack them) if they are scouted
             if p.id != player.id:
                 for b in p.buildings:
                     if b.tile in player.discovered_tiles:
@@ -861,6 +953,8 @@ class GameLogic:
         self.z_levels[Z_AUX].remove(sprite)
 
     def __exec_command(self, c_list):
+        if not Definitions.ALLOW_CONSOLE_CMDS:
+            return
         for c in c_list:
             cmd = c[0]
             if cmd == "mark_tile":

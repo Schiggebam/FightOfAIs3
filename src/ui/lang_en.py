@@ -42,8 +42,12 @@ def building_type_conversion(bt: BuildingType) -> str:
         return "barbaric camp level 2"
     elif bt == BuildingType.CAMP_3:
         return "barbaric camp level 3"
-    elif bt == BuildingType.VILLAGE:
-        return "village"
+    elif bt == BuildingType.VILLAGE_1:
+        return "village level 1"
+    elif bt == BuildingType.VILLAGE_2:
+        return "village level 2"
+    elif bt == BuildingType.VILLAGE_3:
+        return "village level 3"
     elif bt == BuildingType.BARRACKS:
         return "barracks"
     return "unknown building"

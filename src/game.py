@@ -1,25 +1,26 @@
-from typing import Any, List
+import time
+from typing import Any, List, Optional
 
 import os
 from os import sys, path
 import timeit
 
+
 sys.path.append(path.dirname(path.dirname(path.abspath(__file__))))
 # print(os.getcwd())
+
 from src.ui.human import HumanInteraction
 from src.console import Console
 from src.game_logic import GameLogic
 from src.misc.game_constants import *
 from src.ui.ui import UI
+from src.ui.extern.extern_ai_display import AIControl
+from src.ui.extern.extern_startup_display import StartUp, DecisionType, Decision
 
 SCREEN_WIDTH = 1280
 SCREEN_HEIGHT = 720
-SCREEN_TITLE = "Fight of AIs"
+SCREEN_TITLE = "Fight of AIs [PRE-ALPHA]"
 
-
-
-
-GAME_XML_FILE = "../resources/game_2.xml"
 SETUP_COMMANDS = "../resources/initial_commands.txt"
 
 
@@ -47,9 +48,6 @@ class ZlvlRenderer:
         self.ui.draw()
 
     def update_camera(self, rel_x, rel_y):
-        #self.rel_x = rel_x
-        #self.rel_y = rel_y
-        #self.camera_has_moved = True
         pass
 
     def update(self, delta_t: float):
@@ -77,7 +75,8 @@ class ZlvlRenderer:
                     sp.center_x = sp.center_x + self.rel_x
                     sp.center_y = sp.center_y + self.rel_y
             self.gl.set_camera_pos(self.camera_x, self.camera_y)
-            self.gl.animator.camera_pos = (self.camera_x, self.camera_y)
+            self.gl.animator.update_camera_pos((self.camera_x, self.camera_y))
+            #self.gl.animator.camera_pos = (self.camera_x, self.camera_y)
             self.ui.camera_pos = (self.camera_x, self.camera_y)
             for listener in self.camera_event_listener:
                 listener.camera_pos = (self.camera_x, self.camera_y)
@@ -87,7 +86,7 @@ class ZlvlRenderer:
 
 
 class Game(arcade.Window):
-    def __init__(self, width, height, title):
+    def __init__(self, width, height, title, game_xml_file):
         super().__init__(width, height, title)
 
         file_path = os.path.dirname(os.path.abspath(__file__))
@@ -96,7 +95,7 @@ class Game(arcade.Window):
         #print(os.getcwd())
 
         self.z_level_renderer: ZlvlRenderer = ZlvlRenderer(NUM_Z_LEVELS)
-        self.game_logic: GameLogic = GameLogic(GAME_XML_FILE, self.z_level_renderer.z_levels)
+        self.game_logic: GameLogic = GameLogic(game_xml_file, self.z_level_renderer.z_levels)
         self.hi = HumanInteraction(self.game_logic, self.z_level_renderer.z_levels[2],
                                    self.z_level_renderer.z_levels[4])
         self.console: Console = Console()
@@ -117,14 +116,35 @@ class Game(arcade.Window):
         self.fps_colour = arcade.color.WHITE
         self.draw_time_colour = arcade.color.WHITE
         self.wall_clock_time = .0
+        if Definitions.SHOW_AI_CTRL:
+            self.ai_ctrl: Optional[AIControl] = None
 
     def setup(self):
+
         # arcade.set_background_color(arcade.color.DARK_BLUE)
         arcade.set_background_color(arcade.color.BLACK)
         self.commands.extend(self.console.initial_commands(SETUP_COMMANDS))
         self.game_logic.setup()
         self.ui.setup()
-        self.game_logic.hi = self.hi
+        self.game_logic.human_interface = self.hi
+        if Definitions.SHOW_AI_CTRL:
+            ids = []
+            for p in self.game_logic.player_list:
+                if p.player_type != PlayerType.HUMAN:
+                    ids.append(p.id)
+            self.ai_ctrl = AIControl(ids)
+            self.ai_ctrl.start()                    # start thread
+            self.game_logic.set_ai_ctrl_frame(self.ai_ctrl)
+
+    def on_close(self):
+        if Definitions.SHOW_AI_CTRL:
+            self.ai_ctrl.close()
+
+        if Definitions.SHOW_STATS_ON_EXIT:
+            from src.ai.performance import PerformanceLogger
+            PerformanceLogger.show()
+        super().on_close()
+
 
     def on_update(self, delta_time):
         # pr.enable()
@@ -221,8 +241,32 @@ class Game(arcade.Window):
         # pass
         self.hi.handle_mouse_motin(int(x), int(y))
 
+
 def main():
-    window = Game(SCREEN_WIDTH, SCREEN_HEIGHT, SCREEN_TITLE)
+    dcn: Optional[Decision] = None
+    if Definitions.SHOW_STARTUP_CTRL:
+        startup_ctrl = StartUp("../resources/")
+        startup_ctrl.start()  # start thread
+        while True:
+            time.sleep(.5)
+            dcn = startup_ctrl.has_decision()
+            if dcn is not None:
+                if dcn.decision == DecisionType.DCN_START_GAME:
+                    break
+                elif dcn.decision == DecisionType.DCN_EXIT_GAME:
+                    exit()
+                elif dcn.decision == DecisionType.DCN_READ_DOCUMENTATION:
+                    pass
+    game_xml_file = ""
+    if dcn:
+        Definitions.SHOW_AI_CTRL = dcn.show_ai_control
+        Definitions.SHOW_STATS_ON_EXIT = dcn.show_stats_on_exit
+        Definitions.ALLOW_CONSOLE_CMDS = dcn.allow_command_line_input
+        Definitions.DEBUG_MODE = dcn.enable_debug_mode
+        game_xml_file = dcn.xml_file_location
+    print(f"Game XML file: {game_xml_file}")
+
+    window = Game(SCREEN_WIDTH, SCREEN_HEIGHT, SCREEN_TITLE, game_xml_file)
     window.setup()
     window.set_update_rate(1/60)
     arcade.finish_render()

@@ -33,6 +33,9 @@ class Tile:
         self.pre: Optional[Tile] = None
         self.dist: int = 0
 
+    # def opp_visible_buildings(self) -> List[AI_Building]:
+
+
     def has_resource(self):
         return self.resource is not None
 
@@ -72,12 +75,14 @@ class AI_Player:
     population_limit: int
 
 
+
 @dataclass
 class AI_Opponent:
     id: int
     name: str
     type: PlayerType
     has_attacked: bool = False
+    has_lost: bool = False
     # attack_loc: List[Tuple[int, Tuple[int, int]]]    # aggressor's id and location of attack
 
 

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <game>
     <textures>
-        <fog_of_war code="fw" offsetX="0" offsetY="0" scale="1">../resources/map/fog_of_war.png</fog_of_war>
+        <fog_of_war code="fw" offsetX="0" offsetY="0" scale="1">../resources/map/fog_of_war_2.png</fog_of_war>
         <hex_grass_flat code="gr" offsetX="0" offsetY="0" scale="1">../resources/map/lg_var0.png</hex_grass_flat>
         <hex_grass_chopped code="gc" offsetX="0" offsetY="0" scale="1">../resources/map/dg_var0.png</hex_grass_chopped>
         <hex_stone code="st" offsetX="0" offsetY="0" scale="1">../resources/map/stone_var0.bmp</hex_stone>
@@ -173,47 +173,76 @@
 
     <!-- make sure to add all buildings in the Buildings.BuildingType section-->
     <buildings>
-        <B1 code="s1" construction_cost="15" culture_per_turn="1" resource_per_field="1"
-            resource_per_turn="0" sight_range="2" food_consumption="1" construction_time="2"
-            defensive_value="5" flag_x="30" flag_y="25" grant_pop="0">description</B1>
-        <FA code="fa" construction_cost="15" culture_per_turn="0" resource_per_field="0"
+        Documentation:
+            code: unique identifier. Has to match the code of its texture
+            construction_cost: construction cost in resources
+            culture_per_turn: the player will gain x culture per turn for this building
+            resource_per_field: for each adjacent field of resources, a maximum amount of x can be obtained
+            resource_per_turn: similar to culture_per_turn.
+                                The player will gain this without the need of adjacent resource fields
+            sight_range: Upon construction, every hexagon with this distance or less gets revealed
+            food_consumption: building consumes x food per turn
+            construction_time: it will take x turns to build this building, before its state is active
+            defensive_value: if attacked, the defencive strength is this value
+            flag_x, flag_y: offset in pixels to the center of the building where to place the flag
+            grant_pop: the building gives x amount of free population (this value can be negative)
+        <Hut code="s1" construction_cost="15" culture_per_turn="1" resource_per_field="1"
+            resource_per_turn="0" sight_range="3" food_consumption="1" construction_time="2"
+            defensive_value="5" flag_x="30" flag_y="25" grant_pop="0">description</Hut>
+        <Farm code="fa" construction_cost="15" culture_per_turn="0" resource_per_field="0"
             resource_per_turn="0" sight_range="2" food_consumption="0" construction_time="2"
-            defensive_value="2" flag_x="-5" flag_y="33" grant_pop="0">description</FA>
+            defensive_value="2" flag_x="-5" flag_y="33" grant_pop="0">description</Farm>
         <B2 code="s2" construction_cost="15" culture_per_turn="0" resource_per_field="2"
             resource_per_turn="0" sight_range="2" food_consumption="2" construction_time="3"
             defensive_value="2" flag_x="0" flag_y="50" grant_pop="0">description</B2>
-        <C1 code="c1" construction_cost="7" culture_per_turn="0" resource_per_field="0"
+        <Camp1 code="c1" construction_cost="7" culture_per_turn="0" resource_per_field="0"
             resource_per_turn="1" sight_range="3" food_consumption="0" construction_time="0"
-            defensive_value="2" flag_x="0" flag_y="20" grant_pop="5">description</C1>
-        <C2 code="c2" construction_cost="10" culture_per_turn="0" resource_per_field="0"
+            defensive_value="2" flag_x="0" flag_y="20" grant_pop="7">description</Camp1>
+        <Camp2 code="c2" construction_cost="10" culture_per_turn="0" resource_per_field="0"
             resource_per_turn="1" sight_range="3" food_consumption="0" construction_time="0"
-            defensive_value="6" flag_x="0" flag_y="20" grant_pop="7">description</C2>
-        <C3 code="c3" construction_cost="10" culture_per_turn="0" resource_per_field="0"
+            defensive_value="6" flag_x="0" flag_y="20" grant_pop="10">description</Camp2>
+        <Camp3 code="c3" construction_cost="10" culture_per_turn="0" resource_per_field="0"
             resource_per_turn="1" sight_range="3" food_consumption="0" construction_time="0"
-            defensive_value="10" flag_x="0" flag_y="20" grant_pop="10">description</C3>
-        <V1 code="vl1" construction_cost="7" culture_per_turn="1" resource_per_field="0"
+            defensive_value="10" flag_x="0" flag_y="20" grant_pop="14">description</Camp3>
+        <Village1 code="vl1" construction_cost="7" culture_per_turn="1" resource_per_field="0"
             resource_per_turn="1" sight_range="3" food_consumption="5" construction_time="0"
-            defensive_value="10" flag_x="5" flag_y="65" grant_pop="5">description</V1>
-        <V2 code="vl2" construction_cost="10" culture_per_turn="1" resource_per_field="0"
+            defensive_value="10" flag_x="5" flag_y="65" grant_pop="5">description</Village1>
+        <Village2 code="vl2" construction_cost="10" culture_per_turn="1" resource_per_field="0"
             resource_per_turn="1" sight_range="3" food_consumption="0" construction_time="0"
-            defensive_value="12" flag_x="5" flag_y="65" grant_pop="10">description</V2>
-        <V3 code="vl3" construction_cost="12" culture_per_turn="2" resource_per_field="0"
+            defensive_value="12" flag_x="5" flag_y="65" grant_pop="10">description</Village2>
+        <Village3 code="vl3" construction_cost="12" culture_per_turn="2" resource_per_field="0"
             resource_per_turn="2" sight_range="3" food_consumption="0" construction_time="0"
-            defensive_value="15" flag_x="5" flag_y="65" grant_pop="15">description</V3>
-        <Racks code="br" construction_cost="25" culture_per_turn="0" resource_per_field="0"
-               resource_per_turn="0" sight_range="2" food_consumption="0" construction_time="2"
-               defensive_value="10" flag_x="20" flag_y="40" grant_pop="5">description</Racks>
+            defensive_value="15" flag_x="5" flag_y="65" grant_pop="15">description</Village3>
+        <Barracks code="br" construction_cost="25" culture_per_turn="0" resource_per_field="0"
+               resource_per_turn="0" sight_range="3" food_consumption="0" construction_time="2"
+               defensive_value="10" flag_x="20" flag_y="40" grant_pop="5">description</Barracks>
     </buildings>
     <units>
+        <!--Documentation:
+            code: simply a unique identifier for the unit
+             name: the name of the unit
+             attack: the strength of the unit while attacking
+             defence: the strength of the unit while defending
+             population: required free population to build the unit
+             cost_resources, cost_culture: cost of the unit. These values will be deduced from players stock
+         -->
         <Mercenary code="unit_a" name="mercenary" attack="3" defence="1" population="1"
                    cost_resource="10" cost_culture="0">description</Mercenary>
         <Knight code="unit_b" name="knight" attack="2" defence="5" population="1"
                 cost_resource="10" cost_culture="10">description</Knight>
-        <Barbaric_Soldier code="unit_c" name="barbaric soldier" attack="2" defence="2" population="1"
-                          cost_resource="5" cost_culture="0">description</Barbaric_Soldier>
+        <Barbaric_Soldier code="unit_c" name="barbaric soldier" attack="1" defence="2" population="1"
+                          cost_resource="3" cost_culture="0">description</Barbaric_Soldier>
     </units>
     <players>
-<!--        <player1 colour="red" spawn_x="4" spawn_y="5" ai="expansionist"-->
+        <!-- Documentation:
+            colour: can be 'red', 'teal', 'yellow', 'blue', 'green' or 'pink'
+            spawn_x, spawn_y: spawn location of the players initial building
+                hint: the initial building is defined in player.py
+            ai: this can be: 'expansionist', 'barbaric', 'villager' or 'human'
+            army_rel_to_spawn_x, army_rel_to_spawn_y: defines the location of the initial army,
+                                                      relative to the initial building
+        -->
+<!--        <player1 colour="red" spawn_x="10" spawn_y="10" ai="expansionist"-->
 <!--                 army_rel_to_spawn_x="-1" army_rel_to_spawn_y="-1">peter pan</player1>-->
         <!--<player2 colour="teal" spawn_x="14" spawn_y="6" ai="expansionist"
                  army_rel_to_spawn_x="0" army_rel_to_spawn_y="-1">peter pan</player2>-->
@@ -221,6 +250,8 @@
                army_rel_to_spawn_x="-1" army_rel_to_spawn_y="0">BLUBKOPF</human>
         <barbar1 colour="yellow" spawn_x="5" spawn_y="9" ai="barbaric"
                  army_rel_to_spawn_x="+1" army_rel_to_spawn_y="-1">Barbaric 1</barbar1>
+        <barbar2 colour="blue" spawn_x="12" spawn_y="15" ai="barbaric"
+                 army_rel_to_spawn_x="+1" army_rel_to_spawn_y="-1">Barbaric 2</barbar2>
 <!--        <village colour="teal" spawn_x="5" spawn_y="9" ai="villager"-->
 <!--                 army_rel_to_spawn_x="-1" army_rel_to_spawn_y="0">Barbaric 1</village>-->
 

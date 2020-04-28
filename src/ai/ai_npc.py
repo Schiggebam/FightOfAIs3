@@ -1,6 +1,7 @@
 from enum import Enum
 import random
 import importlib
+import time
 
 from typing import Set, Optional, Union, List, Any, Dict, Tuple
 
@@ -13,6 +14,7 @@ from src.misc.game_constants import DiploEventType, hint, BuildingType, error, M
 
 
 class AI_NPC(AI):
+
     class AI_State(Enum):
         PASSIVE = 0
         AGGRESSIVE = 1
@@ -63,11 +65,13 @@ class AI_NPC(AI):
             self.m_weights.append(Weight(c, v))
 
     def do_move(self, ai_stat: AI_GameStatus, move: AI_Move):
+        self._reset_dump()
+        self._dump(f"Turn: {ai_stat.turn_nr}")
         self.update_diplo_events(ai_stat)
         self.diplomacy.calc_round()
         self.evaluate_state(ai_stat)
         self.calculate_heatmaps(ai_stat)
-        hint("Barbaric AI: hostile players: " + str(self.hostile_player))
+        self._dump("Barbaric AI: hostile players: " + str(self.hostile_player))
 
         # self.calculate_heatmaps()
         all_options = [self.evaluate_move_building(ai_stat),
@@ -91,27 +95,29 @@ class AI_NPC(AI):
         self.claimed_tiles.clear()
 
     def evaluate_state(self, ai_stat: AI_GameStatus):
+        s_buf = ""
         if self.state == AI_NPC.AI_State.PASSIVE:
             if len(self.hostile_player) > 0 and (len(ai_stat.map.opp_army_list) > 0 or len(ai_stat.map.opp_building_list) > 0):
-                hint("Barbaric AI: Passive -> Aggressive")
+                s_buf = "Barbaric AI: Passive -> Aggressive"
                 self.state = AI_NPC.AI_State.AGGRESSIVE
             if len(ai_stat.map.opp_army_list) > 0:
-                hint("Barbaric AI: Passive -> Defensive")
+                s_buf = "Barbaric AI: Passive -> Defensive"
                 self.state = AI_NPC.AI_State.DEFENSIVE
         elif self.state == AI_NPC.AI_State.DEFENSIVE:
             if len(ai_stat.map.opp_army_list) == 0:
-                hint("Barbaric AI: Defensive -> Passive")
+                s_buf = "Barbaric AI: Defensive -> Passive"
                 self.state = AI_NPC.AI_State.PASSIVE
             if self.has_been_attacked(ai_stat):
-                hint("Barbaric AI: Notices an attack! Defensive -> Aggressive")
+                s_buf = "Barbaric AI: Notices an attack! Defensive -> Aggressive"
                 self.state = AI_NPC.AI_State.AGGRESSIVE
         elif self.state == AI_NPC.AI_State.AGGRESSIVE:
             if len(self.hostile_player) == 0 or len(ai_stat.map.army_list) == 0:       # become defensive if army is lost or no more hostile players
-                hint("Barbaric AI: Aggressive -> Defensive")
+                s_buf = "Barbaric AI: Aggressive -> Defensive"
                 self.state = AI_NPC.AI_State.DEFENSIVE
             if len(ai_stat.map.opp_army_list) == 0 and len(ai_stat.map.opp_building_list) == 0:
-                hint("Barbaric AI: Aggressive -> Passive")
+                s_buf = "Barbaric AI: Aggressive -> Passive"
                 self.state = AI_NPC.AI_State.PASSIVE
+        self._dump(s_buf)
 
     def weight_options(self, ai_stat: AI_GameStatus, move: AI_Move,
                        all_options: List[Union[BuildOption, RecruitmentOption, RaiseArmyOption, WaitOption]],
@@ -148,6 +154,7 @@ class AI_NPC(AI):
                 move.move_type = MoveType.DO_UPGRADE_BUILDING
                 move.loc = best_option.site
                 move.type = best_option.type
+                move.str_rep_of_action = f"upgrading building to {move.type}"
             elif type(best_option) == RecruitmentOption:
                 move.move_type = MoveType.DO_RECRUIT_UNIT
                 move.type = best_option.type
@@ -164,21 +171,22 @@ class AI_NPC(AI):
                 move.move_army_to = best_m_option.next_step
                 move.doMoveArmy = True
 
+
         for opt in all_options:
             s = f"Option of type {type(opt)}, score: {opt.weighted_score} ({opt.score})"
             if not (type(opt) == WaitOption or type(opt) == RaiseArmyOption):
                 s = s + f" -> Type: {opt.type}"
-            hint(s)
+            self._dump(s)
         for m_opt in movement_options:
             stmp = 'army' if type(m_opt.target) is AI_Army else ''
             stmp = 'building' if type(m_opt.target) is AI_Building else ''
             s = f"M-Option target: {type(m_opt)} target({stmp}), score: {m_opt.weighted_score} ({m_opt.score})"
-            hint(s)
+            self._dump(s)
 
         s = f"DECISION: {move.str_rep_of_action}"
         if move.doMoveArmy:
             s += f" moving army to {move.move_army_to}"
-        hint(s)
+        self._dump(s)
 
     def calculate_heatmaps(self, ai_stat: AI_GameStatus):
         heat_map = AI_Toolkit.simple_heat_map(ai_stat.map.building_list, ai_stat.map.walkable_tiles,
@@ -218,7 +226,7 @@ class AI_NPC(AI):
     def evaluate_move_recruit_unit(self, ai_stat: AI_GameStatus) -> Union[None, RaiseArmyOption, RecruitmentOption]:
         if len(ai_stat.map.army_list) == 0:
             for b in ai_stat.map.building_list:
-                nei = AI_Toolkit.get_neibours_on_set(b, ai_stat.map.walkable_tiles)
+                nei = AI_Toolkit.get_neibours_on_set(b, ai_stat.map.buildable_tiles)  # buildable -> to avoid opp armies
                 if len(nei) == 0:
                     continue
                 x = random.sample(nei, 1)[0]
@@ -247,23 +255,29 @@ class AI_NPC(AI):
                 start_tile = ai_stat.map.army_list[0].base_tile
                 for target in targets:
                     target_tile = target.base_tile
-                    path = AI_Toolkit.dijkstra_pq(start_tile, target_tile, ai_stat.map.walkable_tiles)
+                    path = []
+                    if not (start_tile is None or target_tile is None):
+                        path = AI_Toolkit.dijkstra_pq(start_tile, target_tile, ai_stat.map.walkable_tiles)
+                    else:
+                        print(target_tile)
+                        print(start_tile)
+                        error("error in pathfinding of ai npc.")
                     # for p in path:
                     #     print(p.offset_coordinates, end=" ")
                     # print(" ")
                     if len(path) > 1:
                         movements.append(ArmyMovementOption(target, Priority.P_MEDIUM, path[1].offset_coordinates))
                     else:
-                        hint("no path found to " + str(target.offset_coordinates))
+                        self._dump("no path found to " + str(target.offset_coordinates))
             else:
                 """Defencive army movement"""
                 if len(ai_stat.map.opp_army_list) > 0:
-                    hint("AI Barbaric: evading enemy army")
+                    self._dump("AI Barbaric: evading enemy army")
                     longest_path: Tuple[int, Optional[Tile]] = (-1, None)
                     target_tile = ai_stat.map.opp_army_list[0].base_tile
                     dist_to_army = AI_Toolkit.get_distance(target_tile, ai_stat.map.army_list[0].base_tile)
                     if dist_to_army >= self.safety_dist_to_enemy_army:
-                        hint("AI Barbaric: Enemy army far enough away, no need to evade.")
+                        self._dump("AI Barbaric: Enemy army far enough away, no need to evade.")
                         return movements
                     neighbours = AI_Toolkit.get_neibours_on_set(ai_stat.map.army_list[0], ai_stat.map.walkable_tiles)
                     for nei in neighbours:
@@ -280,7 +294,7 @@ class AI_NPC(AI):
                         movements.append(ArmyMovementOption(longest_path[1], Priority.P_MEDIUM, longest_path[1].offset_coordinates))
         elif self.properties['army_movement'] == "villager":
             if len(ai_stat.map.opp_army_list) > 0:
-                hint("AI npc: moving between village and enemy army")
+                self._dump("AI npc: moving between village and enemy army")
                 shortest_path: Tuple[int, Optional[Tile]] = (100, None)
                 neighbours = AI_Toolkit.get_neibours_on_set(ai_stat.map.building_list[0], ai_stat.map.walkable_tiles)
                 target_tile = ai_stat.map.opp_army_list[0].base_tile
@@ -319,18 +333,19 @@ class AI_NPC(AI):
                                          -3.0, 3, self.name)
 
         for other_p_id in self.other_players:
-            hint(f"diplomatic value to {other_p_id}: {self.diplomacy.get_diplomatic_value_of_player(other_p_id)}")
+            # hint(f"diplomatic value to {other_p_id}: {self.diplomacy.get_diplomatic_value_of_player(other_p_id)}")
             if self.diplomacy.get_diplomatic_value_of_player(other_p_id) < self.properties['diplo_aggressive_threshold']:
                 if other_p_id not in self.hostile_player:
-                    hint("Barbaric AI: Player id: " + str(other_p_id) + " got added to hostile players." )
+                    # hint("Barbaric AI: Player id: " + str(other_p_id) + " got added to hostile players." )
                     self.hostile_player.add(other_p_id)
+        self._dump(f"hostile players: {str(self.hostile_player)}")
 
 
     def has_been_attacked(self, ai_stat: AI_GameStatus):
         for opp in ai_stat.opponents:
             if opp.has_attacked:
                 self.hostile_player.add(opp.id)
-                hint("Barbaric AI: aggression found!")
+                self._dump("Barbaric AI: aggression found!")
                 return True
         if self.previous_amount_of_buildings > len(ai_stat.map.building_list):
             return True         # lost a building
@@ -340,14 +355,17 @@ class AI_NPC(AI):
         #     return True         # army got attacked without commanding it
         return False
 
-    def get_army_spawn_loc(self, ai_stat: AI_GameStatus) -> (int, int):
-        building_tile = ai_stat.map.building_list[0]
-        nei = AI_Toolkit.get_neibours_on_set(building_tile, ai_stat.map.buildable_tiles)
-        if len(nei) == 0:           # this seems to be unlikely but avoids crashing just in case
-            hint("No suitable tile to spawn the army!")
-            return -1, -1
-        idx = random.randint(0, len(nei) - 1)
-        return nei[idx].offset_coordinates
+    # def get_army_spawn_loc(self, ai_stat: AI_GameStatus) -> (int, int):
+    #     building_tile = ai_stat.map.building_list[0]
+    #     nei = AI_Toolkit.get_neibours_on_set(building_tile, ai_stat.map.buildable_tiles)
+    #     if len(nei) == 0:           # this seems to be unlikely but avoids crashing just in case
+    #         hint("No suitable tile to spawn the army!")
+    #         return -1, -1
+    #     idx = random.randint(0, len(nei) - 1)
+    #     for opp_a in ai_stat.map.opp_army_list:
+    #         if opp_a.offset_coordinates == nei[idx].offset_coordinates:
+    #             return -1, -1
+    #     return nei[idx].offset_coordinates
 
     def get_state_as_str(self):
         if self.state == AI_NPC.AI_State.PASSIVE:

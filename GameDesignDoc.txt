@@ -1,0 +1,74 @@
+#######################################
+### War of Tribes aka. Fight of AIs ###
+###      Game Design Document       ###
+#######################################
+version 0.1 [pre alpha]
+
+
+# -------------------------------- 1. Introduction --------------------------------------
+Vision: Create a 'game', where both the rules and the map can be modified easily.
+Then, multiple agents (AIs) are placed in the map and they have to compete for resources, power and control over
+the map. The strongest, most adaptable AI wins.
+Also, to make is possible to 'test-play' the AI, a interface allows a human player to interact with the game
+
+
+
+
+
+
+# -------------------------------- 2. General Ideas --------------------------------------------
+The map should have a limited amount of resources, spread across such that naturally some tension is created,
+as agents expand to reach newer, fresher resource fields.
+
+The game should be turn-based and played in a isometric, hexagonal map
+Each turn, the AI of each player is asked to do its move.
+
+
+
+
+
+
+
+# -------------------------------- 3. Agents --------------------------------------------
+I thought about having two sorts of 'agents'. 'NPCs', which are simple AIs which do not play to win.
+They occupy the map, minding their own business and are capable of basic diplomacy. Based on their diplomatic value,
+they might attack or grant favourable advantages to the player
+Secondly, there are the player AIs. They play to win the map, expand to reach new resources and ultimately battle for
+control over a certain region.
+
+# 3.1 NPC - Villager
+The villager is intended to have only one building (the village) which can be upgraded multiple times to reinforce its strength.
+The village is placed next to a rich resource field, which the villager will defend if someone mines from it.
+The villager's primary unit is the knight, which is strong in defence. To be able to have access to the resource field,
+the player has to first destroy the village (and defeat the army in combat)
+Thus, the motivation for a AI to attack the villager is access to the resources, however, the npc's ai should be programmed,
+such that if left alone, the villager is very peaceful.
+If the diplomatic value of the villager to the player is high, the bonus could be one of these:
+- additional culture, or some resources per turn, or some food per turn
+
+# 3.2 NPC - Barbaric
+The barbaric is living in tents (camps) these camps can be upgraded twice to increase its defencive strength.
+The barbaric is expanding twice, to a maximum amount of 3 camps which are spread not very far apart.
+The barbaric AI should consider any building, which is built to close to one of its camps as an hostile act. If stressed
+to much, the barbaric will attack the building, or a guarding army.
+Thus, the motivation for the player ai to attack an barbaric could be, that it is short of space to build buildings and the
+barbaric AI is occupying this build-space.  On the flip side, if the barbaric's diplomatic value is high, the respective
+player should get a bonus:
+- the barbaric helps scouting the map: the player can scout 2 or 3 tiles at once in one turn
+The primary unit of the barbaric is the barbaric soldier, which is cheap and not very powerful. However in mass, the
+are a serious threat and they are capable of destroying multiple buildings if provoked
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

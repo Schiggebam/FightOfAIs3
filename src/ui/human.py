@@ -8,7 +8,7 @@ from src.game_logic import GameLogic, Army
 from src.hex_map import *
 from src.ai.AI_GameStatus import AI_Move, AI_GameStatus
 from src.misc.building import Building
-from src.misc.game_constants import MoveType, BuildingType, UnitType
+from src.misc.game_constants import MoveType, BuildingType, UnitType, PlayerType
 from src.misc.game_logic_misc import Logger
 
 
@@ -18,6 +18,13 @@ class HI_State(Enum):
     GRIDMODE = 2
     SPECIFY_FIELDS = 3
     SPECIFY_MOVEMENT = 4
+
+
+class MoveState(Enum):
+    WAIT = 0
+    READY = 1
+    USED = 2
+
 
 class Action(Enum):
     BUILD_HUT = 70
@@ -39,6 +46,7 @@ class SelectionTool(arcade.Sprite):
         self.append_texture(tex)
         self.alpha = 200
         self.set_texture(0)
+
 
 class SelectionIcon(arcade.Sprite):
     """Class represents an icon to select an action, may be bound to a hex, an action is taking 3 texture, to display
@@ -97,6 +105,8 @@ class HumanInteraction:
     """defines the interaction between a human player and the game"""
     def __init__(self, gl: GameLogic, zlvl_selection_tool: arcade.SpriteList, zlvl_icons):
         self.is_active = True
+        self.movement_specified: MoveState = MoveState.WAIT
+        self.action_specified: MoveState = MoveState.WAIT
         self.camera_pos: Tuple[int, int] = (0, 0)
         self.selection_tool = SelectionTool()
         self.zlvl_icons: arcade.SpriteList = zlvl_icons
@@ -200,18 +210,19 @@ class HumanInteraction:
         if button == 4:     # Right click on mouse
             self.set_state(HI_State.GRIDMODE)
             return
+        if self.gl.player_list[self.gl.current_player].player_type is PlayerType.HUMAN:
+            print("is active!")
+            if self.state == HI_State.SPECIFY_FIELDS:
+                self.__handle_state_specify_fields(mouse_x, mouse_y)
 
-        if self.state == HI_State.SPECIFY_FIELDS:
-            self.__handle_state_specify_fields(mouse_x, mouse_y)
+            elif self.state == HI_State.SPECIFY_MOVEMENT:
+                self.__handle_state_specify_movement(mouse_x, mouse_y)
 
-        elif self.state == HI_State.SPECIFY_MOVEMENT:
-            self.__handle_state_specify_movement(mouse_x, mouse_y)
+            elif self.state == HI_State.SELECTION:
+                self.__handle_state_selection(mouse_x, mouse_y)
 
-        elif self.state == HI_State.SELECTION:
-            self.__handle_state_selection(mouse_x, mouse_y)
-
-        elif self.state == HI_State.GRIDMODE:
-            self.__handle_state_gridmode(mouse_x, mouse_y)
+            elif self.state == HI_State.GRIDMODE:
+                self.__handle_state_gridmode(mouse_x, mouse_y)
 
 
 
@@ -233,16 +244,37 @@ class HumanInteraction:
     def request_move(self, status: AI_GameStatus, move: AI_Move, pid: int):
         """initial call, the game logic asks the HI to fill the move obj with the user input"""
         self.set_state(HI_State.GRIDMODE)
+        self.action_specified = MoveState.WAIT
+        self.movement_specified = MoveState.WAIT
         self.move = move
+        self.move.from_human_interaction = True
         self.game_status = status
 
+    def update_game_status(self, status: AI_GameStatus):
+        """the game logic might update the game_status of the human interaction
+        Example: The human moves the army, but hasn't built yet. To ensure that the map view remains consistent,
+        the game logic has to create a new map_status object. So for instance, the tile where the has moved in,
+        isn't buildable anymore, whereas the free tile where the army moved away, is now in the buildable_list.
+        Technically, this gives a small advantage to a human player, because this allows for moves, the AI can't perform
+        Such as: move the army away from a tile and build on the same tile. For now, this is not to big of a deal:)"""
+        self.game_status = status
 
-    def get_move(self):
-        """returns the move, in case nothing was specified, DO_NOTHING is set to be the move_type"""
-        if self.move.move_type is None:
-            self.move.move_type = MoveType.DO_NOTHING
-        self.set_state(HI_State.INACTIVE)
-        return self.move
+    def is_move_complete(self):
+        return self.movement_specified is MoveState.USED and self.action_specified is MoveState.USED
+
+    def get_partial_move(self) -> Optional[AI_Move]:
+        """if part of the move has been specified yet, it does return it anyway"""
+        if self.movement_specified is MoveState.READY:
+            self.movement_specified = MoveState.USED
+            if self.action_specified is MoveState.USED:
+                self.move.move_type = MoveType.DO_NOTHING
+            return self.move
+        if self.action_specified is MoveState.READY:
+            if self.movement_specified is MoveState.USED:
+                self.move.doMoveArmy = False
+            self.action_specified = MoveState.USED
+            return self.move
+        return None
 
     def __check_icon_boudning_box(self, x, y, icon: SelectionIcon, use_elliptic_bounding_box=True) -> bool:
         if use_elliptic_bounding_box:
@@ -347,47 +379,63 @@ class HumanInteraction:
                     else:
                         Logger.log_notification("Invalid option")
         if action:
-            if action == Action.BUILD_FARM:
-                self.move.type = BuildingType.FARM
-                self.move.move_type = MoveType.DO_BUILD
-                self.move.loc = active_icon.hex.offset_coordinates
-                self.active_hexagon = active_icon.hex
-                candidates = [x for x in self.gl.hex_map.get_neighbours(self.active_hexagon) if
-                              AI_Toolkit.is_obj_in_list(x, self.game_status.map.buildable_tiles)]
-                self.set_state(HI_State.SPECIFY_FIELDS)
-            elif action == Action.BUILD_HUT:
-                self.move.type = BuildingType.HUT
-                self.move.move_type = MoveType.DO_BUILD
-                self.move.loc = active_icon.hex.offset_coordinates
-                self.set_state(HI_State.GRIDMODE)
-            elif action == Action.BUILD_RACKS:
-                self.move.type = BuildingType.BARRACKS
-                self.move.move_type = MoveType.DO_BUILD
-                self.move.loc = active_icon.hex.offset_coordinates
-                self.set_state(HI_State.GRIDMODE)
-            elif action == Action.RECRUIT_KNIGHT:
-                self.move.type = UnitType.KNIGHT
-                self.move.move_type = MoveType.DO_RECRUIT_UNIT
-                self.set_state(HI_State.GRIDMODE)
-            elif action == Action.RECRUIT_MERC:
-                self.move.type = UnitType.MERCENARY
-                self.move.move_type = MoveType.DO_RECRUIT_UNIT
-                self.set_state(HI_State.GRIDMODE)
-            elif action == Action.SCOUT:
-                self.move.move_type = MoveType.DO_SCOUT
-                self.move.loc = active_icon.hex.offset_coordinates
-                self.set_state(HI_State.GRIDMODE)
-            elif action == Action.RAISE_ARMY:
-                self.move.move_type = MoveType.DO_RAISE_ARMY
-                self.move.loc = active_icon.hex.offset_coordinates
-                self.set_state(HI_State.GRIDMODE)
-            elif action == Action.ARMY_MOVEMENT:
-                self.move.doMoveArmy = True
-                self.active_hexagon = active_icon.hex
-                candidates = [x for x in self.gl.hex_map.get_neighbours(self.active_hexagon) if
-                              AI_Toolkit.is_obj_in_list(x, self.game_status.map.walkable_tiles)]
-                self.set_state(HI_State.SPECIFY_MOVEMENT)
-                ######
+            if action == Action.ARMY_MOVEMENT:
+                if not (self.movement_specified is MoveState.USED):
+                    self.move.doMoveArmy = True
+                    self.active_hexagon = active_icon.hex
+                    candidates = [x for x in self.gl.hex_map.get_neighbours(self.active_hexagon) if
+                                  AI_Toolkit.is_obj_in_list(x, self.game_status.map.walkable_tiles)]
+                    self.set_state(HI_State.SPECIFY_MOVEMENT)
+                else:
+                    Logger.log_notification("you already moved the army.")
+                    self.set_state(HI_State.GRIDMODE)
+            else:
+                if not (self.action_specified is MoveState.USED):
+                    if action == Action.BUILD_FARM:
+                        self.move.type = BuildingType.FARM
+                        self.move.move_type = MoveType.DO_BUILD
+                        self.move.loc = active_icon.hex.offset_coordinates
+                        self.active_hexagon = active_icon.hex
+                        candidates = [x for x in self.gl.hex_map.get_neighbours(self.active_hexagon) if
+                                      AI_Toolkit.is_obj_in_list(x, self.game_status.map.buildable_tiles)]
+                        self.set_state(HI_State.SPECIFY_FIELDS)
+                    elif action == Action.BUILD_HUT:
+                        self.move.type = BuildingType.HUT
+                        self.move.move_type = MoveType.DO_BUILD
+                        self.move.loc = active_icon.hex.offset_coordinates
+                        self.action_specified = MoveState.READY
+                        self.set_state(HI_State.GRIDMODE)
+                    elif action == Action.BUILD_RACKS:
+                        self.move.type = BuildingType.BARRACKS
+                        self.move.move_type = MoveType.DO_BUILD
+                        self.move.loc = active_icon.hex.offset_coordinates
+                        self.action_specified = MoveState.READY
+                        self.set_state(HI_State.GRIDMODE)
+                    elif action == Action.RECRUIT_KNIGHT:
+                        self.move.type = UnitType.KNIGHT
+                        self.move.move_type = MoveType.DO_RECRUIT_UNIT
+                        self.action_specified = MoveState.READY
+                        self.set_state(HI_State.GRIDMODE)
+                    elif action == Action.RECRUIT_MERC:
+                        self.move.type = UnitType.MERCENARY
+                        self.move.move_type = MoveType.DO_RECRUIT_UNIT
+                        self.action_specified = MoveState.READY
+                        self.set_state(HI_State.GRIDMODE)
+                    elif action == Action.SCOUT:
+                        self.move.move_type = MoveType.DO_SCOUT
+                        self.move.loc = active_icon.hex.offset_coordinates
+                        self.action_specified = MoveState.READY
+                        self.set_state(HI_State.GRIDMODE)
+                    elif action == Action.RAISE_ARMY:
+                        self.move.move_type = MoveType.DO_RAISE_ARMY
+                        self.move.loc = active_icon.hex.offset_coordinates
+                        self.action_specified = MoveState.READY
+                        self.set_state(HI_State.GRIDMODE)
+                else:
+                    Logger.log_notification("you already used up the action, wait until next turn")
+                    self.set_state(HI_State.GRIDMODE)
+
+            ######
             for c in candidates:
                 pix_c = HexMap.offset_to_pixel_coords(c.offset_coordinates)
                 si = SelectionIcon(pix_c[0] + self.camera_pos[0], pix_c[1] + self.camera_pos[1],
@@ -407,6 +455,7 @@ class HumanInteraction:
                 if self.__check_icon_boudning_box(mouse_x, mouse_y, n):
                     self.move.move_army_to = n.hex.offset_coordinates
                     self.active_hexagon = None
+                    self.movement_specified = MoveState.READY
                     self.set_state(HI_State.GRIDMODE)
                     n.gray_out()
         else:
@@ -427,6 +476,7 @@ class HumanInteraction:
 
             if len(self.move.info) == 3 or not has_valid_can:
                 self.active_hexagon = None
+                self.action_specified = MoveState.READY
                 self.set_state(HI_State.GRIDMODE)
 
         else:

@@ -30,6 +30,9 @@ class SimplePanel:
             print("SimplePanel: Unsupported scale set. Supported scales are 1.0, 1.25 and 2.0")
         self.show = False
 
+    def update(self):
+        pass
+
     def draw(self):
         if not self.no_header:
             arcade.draw_text(self.header, self.header_x, self.header_y,
