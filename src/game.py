@@ -75,7 +75,8 @@ class ZlvlRenderer:
                     sp.center_x = sp.center_x + self.rel_x
                     sp.center_y = sp.center_y + self.rel_y
             self.gl.set_camera_pos(self.camera_x, self.camera_y)
-            self.gl.animator.camera_pos = (self.camera_x, self.camera_y)
+            self.gl.animator.update_camera_pos((self.camera_x, self.camera_y))
+            #self.gl.animator.camera_pos = (self.camera_x, self.camera_y)
             self.ui.camera_pos = (self.camera_x, self.camera_y)
             for listener in self.camera_event_listener:
                 listener.camera_pos = (self.camera_x, self.camera_y)
@@ -125,7 +126,7 @@ class Game(arcade.Window):
         self.commands.extend(self.console.initial_commands(SETUP_COMMANDS))
         self.game_logic.setup()
         self.ui.setup()
-        self.game_logic.hi = self.hi
+        self.game_logic.human_interface = self.hi
         if Definitions.SHOW_AI_CTRL:
             ids = []
             for p in self.game_logic.player_list:

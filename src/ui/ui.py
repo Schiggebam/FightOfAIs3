@@ -125,7 +125,7 @@ class UI:
         self.diplo_panel = PanelDiplo(self.screen_width - 280, 250, "Diplo panel", self.gl)
         self.panel_list.append(self.ai_panel)
         self.panel_list.append(self.diplo_panel)
-        self.main_panel.append_texture(arcade.load_texture("../resources/objects/main_panel_1.png"))
+        self.main_panel.append_texture(arcade.load_texture("../resources/objects/main_panel_2.png"))
         self.main_panel.set_position(self.screen_width / 2, 102)
         self.main_panel.set_texture(0)
         self.sprite_list.append(self.main_panel)
@@ -172,26 +172,26 @@ class UI:
                              self.playerinfo[p.id][2])
             x_offset = x_offset + 250
 
-        # FIXME not perfect here:
-        if self.gl.player_list[self.gl.current_player].player_type == PlayerType.HUMAN:
-            arcade.draw_text("Your turn! Give orders and hit next turn.", self.screen_width - 600, 80,
-                             arcade.color.WHITE, 16)
-            c1 = arcade.color.GREEN
-            s1 = "Army movement set"
-            c2 = arcade.color.GREEN
-            s2 = "Action set"
-            if self.hi.move.move_army_to == (-1, -1):
-                c1 = arcade.color.ORANGE
-                s1 = "Awaiting orders to move the army"
-            if self.hi.move.move_type is None or self.hi.move.move_type == MoveType.DO_NOTHING:
-                c2 = arcade.color.ORANGE
-                s2 = "Awaiting orders to build/scout/upgrade/recruit"
-            arcade.draw_text(s1, self.screen_width - 570, 50, c1, 12)
-            arcade.draw_text(s2, self.screen_width - 570, 30, c2, 12)
+
+        # if self.gl.player_list[self.gl.current_player].player_type == PlayerType.HUMAN:
+        #     arcade.draw_text("Your turn! Give orders and hit next turn.", self.screen_width - 600, 80,
+        #                      arcade.color.WHITE, 16)
+        #     c1 = arcade.color.GREEN
+        #     s1 = "Army movement set"
+        #     c2 = arcade.color.GREEN
+        #     s2 = "Action set"
+        #     if self.hi.move.move_army_to == (-1, -1):
+        #         c1 = arcade.color.ORANGE
+        #         s1 = "Awaiting orders to move the army"
+        #     if self.hi.move.move_type is None or self.hi.move.move_type == MoveType.DO_NOTHING:
+        #         c2 = arcade.color.ORANGE
+        #         s2 = "Awaiting orders to build/scout/upgrade/recruit"
+        #     arcade.draw_text(s1, self.screen_width - 570, 50, c1, 12)
+        #     arcade.draw_text(s2, self.screen_width - 570, 30, c2, 12)
 
         # draw notifications
         if len(self.notifications_text) > 0:
-            arcade.draw_text(self.notifications_text, self.screen_width / 2 - 100, 150, arcade.color.WHITE, 14)
+            arcade.draw_text(self.notifications_text, self.screen_width / 2 - 100, 150, arcade.color.ORANGE, 16)
 
     def update(self, wall_clock_time):
         # if self.ai_panel.show:
@@ -257,6 +257,7 @@ class UI:
 
     def callBack1(self):
         self.gl.playNextTurn = True
+        self.gl.nextPlayerButtonPressed = True
 
     def callBack_automatic(self, active):
         self.gl.automatic = active

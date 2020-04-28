@@ -26,7 +26,7 @@ Z_GAME_OBJ = 3
 ERRORS_ARE_FATAL = False
 DEBUG = True
 DETAILED_DEBUG_INFO = 1     # 0: no info, 1: includes calling class, 2: includes calling method
-ENABLE_KEYFRAME_ANIMATIONS = False
+ENABLE_KEYFRAME_ANIMATIONS = True
 MAP_HACK_ENABLE_AT_STARTUP = False
 GAME_LOGIC_CLK_SPEED = 0.75
 
@@ -368,3 +368,10 @@ class BuildingState(Enum):
     UNDER_CONSTRUCTION = 30
     ACTIVE = 31
     DESTROYED = 32
+
+
+class GameLogicState(Enum):
+    NOT_READY = 0
+    READY_FOR_TURN = 2
+    WAITING_FOR_AGENT = 3
+    TURN_COMPLETE = 4

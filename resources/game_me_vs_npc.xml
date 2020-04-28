@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <game>
     <textures>
-        <fog_of_war code="fw" offsetX="0" offsetY="0" scale="1">../resources/map/fog_of_war.png</fog_of_war>
+        <fog_of_war code="fw" offsetX="0" offsetY="0" scale="1">../resources/map/fog_of_war_2.png</fog_of_war>
         <hex_grass_flat code="gr" offsetX="0" offsetY="0" scale="1">../resources/map/lg_var0.png</hex_grass_flat>
         <hex_grass_chopped code="gc" offsetX="0" offsetY="0" scale="1">../resources/map/dg_var0.png</hex_grass_chopped>
         <hex_stone code="st" offsetX="0" offsetY="0" scale="1">../resources/map/stone_var0.bmp</hex_stone>
