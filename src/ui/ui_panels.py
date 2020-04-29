@@ -1,10 +1,14 @@
+from typing import Optional, List
+
 from src.game_accessoires import Army, Unit, Resource
 from src.misc.building import Building
 from src.misc.game_logic_misc import Logger, IncomeCalculator
 from src.player import Player
-from src.ui.SimplePanel import SimplePanel
+from src.texture_store import TextureStore
+from src.ui.SimplePanel import SimplePanel, ClosablePanel, BasicPanel
 from src.ui.lang_en import *
 from src.misc.game_constants import PlayerColour
+from src.ui.ui_accessoires import UI_Texture
 
 ls = "    "
 ts = "  "
@@ -123,10 +127,24 @@ class PanelResource(SimplePanel):
             arcade.draw_text(self.text, self.text_box_x, self.text_box_y-20,
                              arcade.color.WHITE, font_size=14, font_name='verdana')
 
-class PanelLogBattle(SimplePanel):
-    def __init__(self, center_x, center_y, log: Logger.BattleLog):
+
+class PanelLogBattle(ClosablePanel):
+    def __init__(self, center_x, center_y, log: Logger.BattleLog, texture_store: TextureStore):
+        panel_tex: Optional[UI_Texture] = None
+        header = ""
         if log.log_type == LogType.BATTLE_ARMY_VS_ARMY:
-            super().__init__(center_x, center_y, "", panel_tex="../resources/other/attack_vs_army.png", no_header=True)
+            if log.outcome is BattleAfterMath.ATTACKER_WON:
+                panel_tex = UI_Texture.PANEL_BATTLE_AvsA_A_WON
+                header = "Attacker won"
+                self.text = "Attacker won, all defending units are wiped out"
+            elif log.outcome is BattleAfterMath.DEFENDER_WON:
+                panel_tex = UI_Texture.PANEL_BATTLE_AvsA_D_WON
+                header = "Defender won"
+                self.text = "Defender won, all attacking units are defeated"
+            else:
+                panel_tex = UI_Texture.PANEL_BATTLE_AvsA_DRAW
+                header = "Draw!"
+            super().__init__(center_x, center_y, texture_store.get_ui_texture(panel_tex), scale=1.25)
             att_kia = (log.pre_att_units[0] - log.post_att_units[0],
                        log.pre_att_units[1] - log.post_att_units[1],
                        log.pre_att_units[2] - log.post_att_units[2])
@@ -134,28 +152,54 @@ class PanelLogBattle(SimplePanel):
                        log.pre_def_units[1] - log.post_def_units[1],
                        log.pre_def_units[2] - log.post_def_units[2])
 
-            self.in_action = f"{log.pre_att_units[1]} {ls} {log.pre_att_units[0]} {ls}{log.pre_att_units[2]}                     {log.pre_def_units[1]} {ls} {log.pre_def_units[0]} {ls} {log.pre_def_units[2]}"
-            self.kia = f"{att_kia[1]} {ls} {att_kia[0]} {ls}{att_kia[2]}                     {def_kia[1]} {ls} {def_kia[0]} {ls} {def_kia[2]}"
-            self.remaining = f"{log.post_att_units[1]} {ls} {log.post_att_units[0]} {ls}{log.post_att_units[2]}                     {log.post_def_units[1]} {ls} {log.post_def_units[0]} {ls} {log.post_def_units[2]}"
+            self.att_name = str(log.att_name)
+            self.def_name = str(log.def_name)
+            self.in_action = f"{log.pre_att_units[1]} {ls} {log.pre_att_units[0]} {ls}{log.pre_att_units[2]}                    {ls}{log.pre_def_units[1]} {ls} {log.pre_def_units[0]} {ls} {log.pre_def_units[2]}"
+            self.kia = f"{att_kia[1]} {ls} {att_kia[0]} {ls}{att_kia[2]}                    {ls}{def_kia[1]} {ls} {def_kia[0]} {ls} {def_kia[2]}"
+            self.remaining = f"{log.post_att_units[1]} {ls} {log.post_att_units[0]} {ls}{log.post_att_units[2]}                    {ls}{log.post_def_units[1]} {ls} {log.post_def_units[0]} {ls} {log.post_def_units[2]}"
+        # -------------------------------------------------------
         elif log.log_type == LogType.BATTLE_ARMY_VS_BUILDING:
-            super().__init__(center_x, center_y, "", panel_tex="../resources/other/attack_vs_building.png", no_header=True)
+            if log.outcome is BattleAfterMath.ATTACKER_WON:
+                panel_tex = UI_Texture.PANEL_BATTLE_AvsB_A_WON
+                self.text = "Building destroyed"
+                header = "Army won"
+            elif log.outcome is BattleAfterMath.DEFENDER_WON:
+                panel_tex = UI_Texture.PANEL_BATTLE_AvsB_B_WON
+                self.text = "Army suffered catastrophic losses. Building defended"
+                header = "Building defended"
+            else:
+                panel_tex = UI_Texture.PANEL_BATTLE_AvsB_DRAW
+                self.text = "Army destroyed, but not before the building burst into flames"
+                header = "Draw!"
+            super().__init__(center_x, center_y, texture_store.get_ui_texture(panel_tex), scale=1.25)
             att_kia = (log.pre_att_units[0] - log.post_att_units[0],
                        log.pre_att_units[1] - log.post_att_units[1],
                        log.pre_att_units[2] - log.post_att_units[2])
             def_kia = log.pre_def_units[0] - log.post_def_units[0]
 
-            self.in_action = f"{log.pre_att_units[1]} {ls} {log.pre_att_units[0]} {ls}{log.pre_att_units[2]}   {ls}{ls}                 {log.pre_def_units[0]}"
-            self.kia = f"{att_kia[1]} {ls} {att_kia[0]} {ls}{att_kia[2]}{ls}{ls}                    {def_kia}"
-            self.remaining = f"{log.post_att_units[1]} {ls} {log.post_att_units[0]} {ls}{log.post_att_units[2]} {ls}{ls}                   {log.post_def_units[0]}"
+            self.att_name = log.att_name
+            self.def_name = log.def_name
+            self.in_action = f"{log.pre_att_units[1]} {ls} {log.pre_att_units[0]} {ls}{log.pre_att_units[2]}  {ls}{ls}{ls}                 {log.pre_def_units[0]}"
+            self.kia = f"{att_kia[1]} {ls} {att_kia[0]} {ls}{att_kia[2]}{ls}{ls}                   {ls}{def_kia}"
+            self.remaining = f"{log.post_att_units[1]} {ls} {log.post_att_units[0]} {ls}{log.post_att_units[2]}{ls}{ls}{ls}                   {log.post_def_units[0]}"
 
     def draw(self):
         super().draw()
-        arcade.draw_text(self.in_action, self.text_box_x + 15, self.text_box_y - 48,
+        x_offset = 5
+        if len(self.att_name) > 0 and len(self.def_name) > 0:
+            arcade.draw_text(self.att_name, self.text_box_x + 10, self.text_box_y + 10,
+                             arcade.color.WHITE, font_size=15, font_name='verdana')
+            arcade.draw_text(self.def_name, self.text_box_x + 220, self.text_box_y + 10,
+                             arcade.color.WHITE, font_size=15, font_name='verdana')
+        arcade.draw_text(self.in_action, self.text_box_x + x_offset, self.text_box_y - 110,
                          arcade.color.WHITE, font_size=13, font_name='verdana')
-        arcade.draw_text(self.kia, self.text_box_x + 15, self.text_box_y - 90,
+        arcade.draw_text(self.kia, self.text_box_x + x_offset, self.text_box_y - 137,
                          arcade.color.RED, font_size=13, font_name='verdana')
-        arcade.draw_text(self.remaining, self.text_box_x + 15, self.text_box_y - 137,
+        arcade.draw_text(self.remaining, self.text_box_x + x_offset, self.text_box_y - 170,
                          arcade.color.WHITE, font_size=13, font_name='verdana')
+        if len(self.text) > 0:
+            arcade.draw_text(self.text, self.text_box_x + x_offset, self.text_box_y - 202,
+                             arcade.color.WHITE, font_size=11, font_name='verdana')
 
 
 class PanelLogDiplo(SimplePanel):
@@ -181,6 +225,7 @@ class PanelLogDiplo(SimplePanel):
         arcade.draw_text(self.text3, self.text_box_x, self.text_box_y - 45,
                          arcade.color.WHITE, font_size=10, font_name='verdana')
 
+
 class PanelGameWon(SimplePanel):
     def __init__(self, center_x, center_y, winner: Player):
         super().__init__(center_x, center_y, "END", scale=2)
@@ -194,4 +239,16 @@ class PanelGameWon(SimplePanel):
                          self.colour, font_size=20, font_name='verdana', anchor_x="center")
         arcade.draw_text(self.text2, self.text_box_x, self.text_box_y - 220,
                          arcade.color.WHITE, font_size=12, font_name='verdana')
+
+
+class CostPanel(BasicPanel):
+    def __init__(self, center_x, center_y, tex_store, text: str, c: arcade.color):
+        super().__init__(center_x, center_y, tex_store, alpha=160)
+        self.text = text
+        self.c = c
+
+    def draw(self):
+        arcade.draw_text(self.text, self.text_box_x + 5, self.text_box_y + 5,
+                         self.c, font_size=10, font_name='verdana')
+
 

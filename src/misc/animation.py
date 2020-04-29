@@ -2,7 +2,7 @@ from typing import Union, List, Tuple
 
 from src.game_accessoires import Army, Drawable
 from src.hex_map import HexMap
-from src.misc.game_constants import error, hint
+from src.misc.game_constants import error, hint, debug
 
 
 class Animator:
@@ -48,7 +48,7 @@ class Animator:
                 tbr = s
         if tbr:
             tbr.valid = False
-            print("removing drawable from animation")
+            debug("removing drawable from animation")
             self.move_animations.remove(tbr)
 
     def update_camera_pos(self, camera_pos):

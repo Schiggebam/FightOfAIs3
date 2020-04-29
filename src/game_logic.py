@@ -48,9 +48,9 @@ class GameLogic:
         # read player data
         player_info: [(str, {})] = []                           # a tuple per player, first element is player's name
         self.game_file_reader.read_player_info(player_info)
-        id = 0
+        pid = 0
         for p_info in player_info:          # -> Tuple pid and info
-            p = Player(p_info[0], id, p_info[1]['colour'],
+            p = Player(p_info[0], pid, p_info[1]['colour'],
                        (int(p_info[1]['spawn_x']), int(p_info[1]['spawn_y'])),
                        p_info[1]['ai'])
             p.is_barbaric = p_info[1]['ai'] == "barbaric"
@@ -61,32 +61,32 @@ class GameLogic:
                                p.spaw_loc[1] + p_info[1]['army_rel_to_spawn_y'])
             self.player_list.append(p)
             self.map_view.append(False)
-            id = id + 1
+            pid = pid + 1
 
         # load textures which depend on player
-        idx_fun = lambda i: (0, 100 * i)
         for p in self.player_list:
             c = p.colour_code
-            self.texture_store.load_animated_texture("{}_flag".format(c), 10, idx_fun, 108, 100,
+            self.texture_store.load_animated_texture("{}_flag".format(c), 10, lambda i: (0, 100 * i), 108, 100,
                                                      "../resources/objects/animated/flag_100_sprite_{}.png".format(c))
 
-        self.ai_running = False
+        # self.ai_running = False
         # game status
         self.playNextTurn: bool = False
         self.current_player: int = 0
-        self.turn_nr = 0
+        self.turn_nr: int = 0
         self.automatic: bool = False
 
-        self.test = None
-        self.total_time = 0
-        self.animator_time = 0
-        self.wait_for_human = False
-        self.has_human_player = False
+        # self.test = None
+        self.total_time: float = 0
+        # self.animator_time = 0
+        # self.wait_for_human = False
+        self.has_human_player: bool = False
 
         self.ai_ctrl_frame: Optional[AIControl] = None
-        self.show_key_frame_animation = ENABLE_KEYFRAME_ANIMATIONS
+        self.show_key_frame_animation: bool = ENABLE_KEYFRAME_ANIMATIONS
         self.logic_state: GameLogicState = GameLogicState.NOT_READY
-        self.nextPlayerButtonPressed = False
+        self.nextPlayerButtonPressed: bool = False
+        self.elapsed: float = float(0)
 
     def setup(self):
         """ load the game """
@@ -183,22 +183,20 @@ class GameLogic:
             self.playNextTurn = True
             self.nextPlayerButtonPressed = True
 
-    elapsed = float(0)      # TODO make this a member
-
     def set_ai_ctrl_frame(self, ai_ctrl_frame: Optional[AIControl]):
         self.ai_ctrl_frame = ai_ctrl_frame
 
     def update(self, delta_time: float, commands :[], wall_clock_time: float):
         timestamp_start = timeit.default_timer()
         self.__exec_command(commands)
-        GameLogic.elapsed = GameLogic.elapsed + delta_time
+        self.elapsed = self.elapsed + delta_time
         if self.show_key_frame_animation:
             for k_f in self.animator.key_frame_animations:
                 k_f.next_frame(delta_time)
         # self.animator_time = timestamp_start - timeit.default_timer()
-        if GameLogic.elapsed > float(GAME_LOGIC_CLK_SPEED if self.turn_nr < 80 else 1) and self.automatic:
+        if self.elapsed > float(GAME_LOGIC_CLK_SPEED if self.turn_nr < 80 else 1) and self.automatic:
             self.playNextTurn = True
-            GameLogic.elapsed = float(0)
+            self.elapsed = float(0)
 
         if self.playNextTurn:                           # if ready ot play turn
             #if not self.ai_running:                     # State: Ready_to_play_turn -> PLAYING
@@ -421,8 +419,6 @@ class GameLogic:
         player.attacked_set.clear()
 
 
-        # debug(f"time to gather ai_stat: {t2-t1}")
-
 
 
     def destroy_player(self, player):
@@ -472,11 +468,10 @@ class GameLogic:
         for p in self.player_list:
             for a in p.armies:
                 pix_loc = HexMap.offset_to_pixel_coords(a.tile.offset_coordinates)
-                print(self.__camera_pos)
                 a.set_sprite_pos(pix_loc, self.__camera_pos)
 
         # This is a bit of brute force approach and not really necessary. However, animations made it hard
-        # to track when updates are necessary. # TODO handle this with more care
+        # to track when updates are necessary, however the method is still very fast
         self.__reorder_spritelist(self.z_levels[Z_GAME_OBJ])
 
     def exec_ai_move(self, ai_move: AI_Move, player: Player):
@@ -518,7 +513,6 @@ class GameLogic:
                     player.culture = player.culture - cost.culture
                     u: Unit = Unit(t_u)
                     player.armies[0].add_unit(u)
-                    hint("new unit recruited - type: " + str(type))
             else:
                 error("No army. Recruit new army first!")
 
@@ -849,10 +843,11 @@ class GameLogic:
                         if hostile_army.get_population() > 0:
                             pre_att_u = army.get_units_as_tuple()
                             pre_def_u = hostile_army.get_units_as_tuple()
-                            FightCalculator.army_vs_army(army, hostile_army)
+                            outcome: BattleAfterMath = FightCalculator.army_vs_army(army, hostile_army)
                             post_att_u = army.get_units_as_tuple()
                             post_def_u = hostile_army.get_units_as_tuple()
-                            Logger.log_battle_army_vs_army_log(pre_att_u, pre_def_u, post_att_u, post_def_u)
+                            Logger.log_battle_army_vs_army_log(pre_att_u, pre_def_u, post_att_u, post_def_u,
+                                                               outcome, player.name, p.name)
                             p.attacked_set.add((player.id, hostile_army.tile.offset_coordinates))
                             if hostile_army.get_population() == 0:
                                 self.del_army(hostile_army, p)
@@ -867,10 +862,12 @@ class GameLogic:
                     if b.tile.offset_coordinates == new_hex.offset_coordinates:
                         pre_att_u = army.get_units_as_tuple()
                         pre_b = b.defensive_value
-                        FightCalculator.army_vs_building(army, b)
+                        outcome: BattleAfterMath = FightCalculator.army_vs_building(army, b)
+                        print(outcome)
                         post_att_u = army.get_units_as_tuple()
                         post_b = b.defensive_value
-                        Logger.log_battle_army_vs_building(pre_att_u, post_att_u, pre_b, post_b)
+                        Logger.log_battle_army_vs_building(pre_att_u, post_att_u, pre_b, post_b,
+                                                           outcome, player.name, p.name)
                         p.attacked_set.add((player.id, b.tile.offset_coordinates))
                         if b.defensive_value == -1:
                             b.set_state_destruction()

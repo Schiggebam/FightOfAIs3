@@ -1,8 +1,9 @@
-from typing import Callable
+from typing import Dict
 
 import arcade
 
-from src.misc.game_constants import start_progress, progress, end_progress
+from src.misc.game_constants import start_progress, progress, end_progress, Definitions
+
 
 
 class TextureStore:
@@ -12,6 +13,8 @@ class TextureStore:
         # key is a str_code
         self.textures = {}
         self.animated_textures = {}
+        from src.ui.ui_accessoires import UI_Texture
+        self.ui_textures: Dict[UI_Texture, arcade.Texture] = {}
 
     def load_textures(self, dict_requested):
         start_progress("loading textures")
@@ -54,5 +57,15 @@ class TextureStore:
                                                       width=width, height=height)
             self.animated_textures[name].append(tex)
 
-    def get_animated_texture(self, name:str):
+    def get_animated_texture(self, name: str):
         return self.animated_textures[name]
+
+    def load_ui_textures(self):
+        from src.ui.ui_accessoires import UI_Texture
+        for ui_tex in UI_Texture:
+            path = Definitions.UI_TEXTURE_PATH + ui_tex.value
+            self.ui_textures[ui_tex] = arcade.load_texture(path)
+
+    def get_ui_texture(self, key):
+        """load a ui texture. The key must be of type UI_Texture"""
+        return self.ui_textures[key]

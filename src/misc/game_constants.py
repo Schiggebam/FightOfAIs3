@@ -33,6 +33,7 @@ GAME_LOGIC_CLK_SPEED = 0.75
 
 class Definitions:
     VERSION: str = str(0.2)
+    UI_TEXTURE_PATH = "../resources/other/"
     SHOW_AI_CTRL = True
     SHOW_STARTUP_CTRL = True
     SHOW_STATS_ON_EXIT = True
@@ -346,6 +347,12 @@ class MoveType(Enum):
     """requires the 'loc' field to be set, indicating the hexagon were the new army should appear"""
     DO_RAISE_ARMY = 235
 
+
+class BattleAfterMath(Enum):
+    ATTACKER_WON = 0
+    DEFENDER_WON = 1
+    DRAW = 2
+
 ###################
 ### Dataclasses ###
 ###################
@@ -376,3 +383,9 @@ class GameLogicState(Enum):
     READY_FOR_TURN = 2
     WAITING_FOR_AGENT = 3
     TURN_COMPLETE = 4
+
+
+class CursorState(Enum):
+    NORMAL = 320
+    COMBAT = 321
+

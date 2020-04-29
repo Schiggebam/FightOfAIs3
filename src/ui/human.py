@@ -10,6 +10,8 @@ from src.ai.AI_GameStatus import AI_Move, AI_GameStatus
 from src.misc.building import Building
 from src.misc.game_constants import MoveType, BuildingType, UnitType, PlayerType
 from src.misc.game_logic_misc import Logger
+from src.ui.ui_accessoires import CustomCursor
+from src.ui.ui_panels import CostPanel
 
 
 class HI_State(Enum):
@@ -97,13 +99,15 @@ class SelectionIcon(arcade.Sprite):
             self.info_text = "Cannot raise an army if there is already a existing army"
         elif self.action == Action.SCOUT:
             self.info_text = "You need at least 1 resource to scout"
+        elif self.action == Action.ARMY_MOVEMENT:
+            self.info_text = "Army has to have at least 1 unit so it can move."
         else:
             self.info_text = ""
 
 
 class HumanInteraction:
     """defines the interaction between a human player and the game"""
-    def __init__(self, gl: GameLogic, zlvl_selection_tool: arcade.SpriteList, zlvl_icons):
+    def __init__(self, gl: GameLogic,  zlvl_selection_tool: arcade.SpriteList, zlvl_icons):
         self.is_active = True
         self.movement_specified: MoveState = MoveState.WAIT
         self.action_specified: MoveState = MoveState.WAIT
@@ -118,6 +122,9 @@ class HumanInteraction:
         self.active_selection: List[SelectionIcon] = []
         self.active_hexagon: Optional[Hexagon] = None
         self.candidates: Optional[List[SelectionIcon]] = []
+        self.cursor: Optional[CustomCursor] = None
+        self.set_cost_panel = None
+        self.cost_panel: Optional[CostPanel] = None
 
         res = '../resources/other/hi/'
         #FIXME let the texture store do this
@@ -149,6 +156,9 @@ class HumanInteraction:
                                            arcade.load_texture(res + 'hi_raise_army_p.png'),
                                            arcade.load_texture(res + 'hi_raise_army_gray.png'))}
 
+    def set_ui_references(self, cursor: CustomCursor, cost_panel_callback):
+        self.cursor = cursor
+        self.set_cost_panel = cost_panel_callback
 
     def get_icon_coordinates(self, pos: Tuple[int, int], num: int) -> List[Tuple[int, int]] :
         """the location of the icons (up to 4) is hardcoded"""
@@ -188,13 +198,22 @@ class HumanInteraction:
             self.selection_tool.center_x = xx
             self.selection_tool.center_y = yy
         if self.state == HI_State.SELECTION:
+            active_icon = None
             for icon in self.active_selection:
                 if self.__check_icon_boudning_box(mouse_x, mouse_y, icon):
+                    active_icon = icon
                     if not icon.highlighted:
                         icon.highlight()
                 else:
                     if icon.highlighted:
                         icon.normal()
+
+            if active_icon is not None:
+                self.show_cost_panel(active_icon, mouse_x, mouse_y)
+            else:
+                if self.cost_panel.show:
+                    self.hide_cost_panel()
+
         elif self.state == HI_State.SPECIFY_MOVEMENT or self.state == HI_State.SPECIFY_FIELDS:
             for icon in self.candidates:
                 if self.__check_icon_boudning_box(mouse_x, mouse_y, icon):
@@ -204,6 +223,20 @@ class HumanInteraction:
                     if icon.highlighted:
                         icon.normal()
 
+            if self.cursor:
+                if self.state is HI_State.SPECIFY_MOVEMENT:
+                    for icon in self.candidates:
+                        if self.__check_icon_boudning_box(mouse_x, mouse_y, icon):
+                            for opp_b in self.game_status.map.opp_building_list:
+                                if opp_b.visible:
+                                    if opp_b.base_tile.offset_coordinates == icon.hex.offset_coordinates:
+                                        self.cursor.set_cursor_to_combat()
+                            for opp_a in self.game_status.map.opp_army_list:
+                                if opp_a.base_tile.offset_coordinates == icon.hex.offset_coordinates:
+                                    self.cursor.set_cursor_to_combat()
+                        else:
+                            self.cursor.set_cursor_to_normal()
+
     def handle_mouse_press(self, mouse_x: int, mouse_y: int, button):
         """core function forwards mouse click to be interpreted by the respective function, depending on the state.
         Does only accept left or right mouse-button clicks"""
@@ -211,7 +244,6 @@ class HumanInteraction:
             self.set_state(HI_State.GRIDMODE)
             return
         if self.gl.player_list[self.gl.current_player].player_type is PlayerType.HUMAN:
-            print("is active!")
             if self.state == HI_State.SPECIFY_FIELDS:
                 self.__handle_state_specify_fields(mouse_x, mouse_y)
 
@@ -223,10 +255,13 @@ class HumanInteraction:
 
             elif self.state == HI_State.GRIDMODE:
                 self.__handle_state_gridmode(mouse_x, mouse_y)
-
-
+        else:
+            pass
 
     def set_state(self, state: HI_State):
+        if self.cost_panel:
+            if self.cost_panel.show:
+                self.hide_cost_panel()
         if state == HI_State.GRIDMODE:
             for c in self.candidates:
                 self.zlvl_icons.remove(c)
@@ -234,6 +269,7 @@ class HumanInteraction:
                 self.zlvl_icons.remove(a)
             self.active_selection.clear()
             self.candidates.clear()
+            self.cursor.set_cursor_to_normal()
             self.selection_tool.alpha = 200
             self.selection_tool.center_x = -50
             self.selection_tool.center_y = -50      # small hack to make it appear only on first mouse move
@@ -345,6 +381,7 @@ class HumanInteraction:
                 has_res_for_knight = self.game_status.me.resources >= knight_cost.resources and \
                                      self.game_status.me.culture >= knight_cost.culture and \
                                      self.game_status.me.population + knight_cost.population <= self.game_status.me.population_limit
+                army_pop = self.game_status.map.army_list[0].population and self.movement_specified is not MoveState.USED
                 pos_list = self.get_icon_coordinates((mouse_x, mouse_y), 3)
                 idx = 0
                 self.active_selection.append(SelectionIcon(pos_list[idx][0], pos_list[idx][1],
@@ -357,7 +394,7 @@ class HumanInteraction:
                 idx += 1
                 self.active_selection.append(SelectionIcon(pos_list[idx][0], pos_list[idx][1],
                                                            self.textures['hi_move_army'],
-                                                           Action.ARMY_MOVEMENT, h, is_active=True))
+                                                           Action.ARMY_MOVEMENT, h, is_active=(army_pop > 0)))
         for ai in self.active_selection:
             self.zlvl_icons.append(ai)
         self.set_state(HI_State.SELECTION)
@@ -481,3 +518,54 @@ class HumanInteraction:
 
         else:
             error("this is a problem 0")
+
+    def show_cost_panel(self, icon: SelectionIcon, x, y):
+        if self.cost_panel:
+            if self.cost_panel.show:
+                return
+        txt = ""
+        player = self.gl.player_list[self.gl.current_player]
+        j = 0 if self.action_specified is MoveState.USED else 1
+        if icon.action is Action.BUILD_RACKS:
+            txt += f"Action required ({j}/1) \n"
+            txt += f"Resources: {player.amount_of_resources}/{Building.get_construction_cost(BuildingType.BARRACKS)} \n"
+        elif icon.action is Action.BUILD_HUT:
+            txt += f"Action required ({j}/1) \n"
+            txt += f"Resources: {player.amount_of_resources}/{Building.get_construction_cost(BuildingType.HUT)} \n"
+        elif icon.action is Action.BUILD_FARM:
+            txt += f"Action required ({j}/1) \n"
+            txt += f"Resources: {player.amount_of_resources}/{Building.get_construction_cost(BuildingType.FARM)} \n"
+        elif icon.action is Action.RECRUIT_KNIGHT:
+            cost = Unit.get_unit_cost(UnitType.KNIGHT)
+            txt += f"Action required ({j}/1) \n"
+            txt += f"Resources: {player.amount_of_resources}/{cost.resources} \n"
+            txt += f"Culture: {player.culture}/{cost.culture} \n"
+            txt += f"Population: {cost.population}"
+        elif icon.action is Action.RECRUIT_MERC:
+            cost = Unit.get_unit_cost(UnitType.MERCENARY)
+            txt += f"Action required ({j}/1) \n"
+            txt += f"Resources: {player.amount_of_resources}/{cost.resources} \n"
+            txt += f"Culture: {player.culture}/{cost.culture} \n"
+            txt += f"Population: {cost.population}"
+        elif icon.action is Action.RAISE_ARMY:
+            txt += f"Action required ({j}/1) \n \n"
+        elif icon.action is Action.SCOUT:
+            txt += f"Action required ({j}/1) \n"
+            txt += f"Resources: {player.amount_of_resources}/1 \n"
+        elif icon.action is Action.ARMY_MOVEMENT:
+            i = 0 if self.movement_specified is MoveState.USED else 1
+            txt += f"Movement required ({i}/1) \n \n"
+        else:
+            txt = "free \n \n"
+
+        c = arcade.color.WHITE if icon.is_active else arcade.color.RED
+
+        self.cost_panel = CostPanel(x + 100, y + 60, self.gl.texture_store, txt, c)
+        self.zlvl_icons.append(self.cost_panel.sprite)
+        self.set_cost_panel(self.cost_panel)
+        self.cost_panel.show = True
+
+    def hide_cost_panel(self):
+        self.zlvl_icons.remove(self.cost_panel.sprite)
+        self.cost_panel.show = False
+

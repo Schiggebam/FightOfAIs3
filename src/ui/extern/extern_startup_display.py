@@ -88,7 +88,7 @@ class StartupFrame(wx.Frame):
         self.combo_box_1.SetMinSize((150, 23))
         self.panel_5.SetFocus()
         self.panel_5.SetScrollRate(10, 10)
-        self.checkbox_show_ai_ctrl.SetValue(0)
+        self.checkbox_show_ai_ctrl.SetValue(1)
         self.checkbox_show_stats.SetValue(0)
         self.checkbox_allow_cmd_input.SetValue(1)
         self.checkbox_enable_debug.SetValue(1)

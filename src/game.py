@@ -5,6 +5,7 @@ import os
 from os import sys, path
 import timeit
 
+from src.misc.camera import Camera
 
 sys.path.append(path.dirname(path.dirname(path.abspath(__file__))))
 # print(os.getcwd())
@@ -47,8 +48,6 @@ class ZlvlRenderer:
             z.draw()
         self.ui.draw()
 
-    def update_camera(self, rel_x, rel_y):
-        pass
 
     def update(self, delta_t: float):
         rel = int(float(CAMERA_SENSITIVITY) * delta_t)
@@ -92,7 +91,7 @@ class Game(arcade.Window):
         file_path = os.path.dirname(os.path.abspath(__file__))
         os.chdir(file_path)
         sys.path.append(path.dirname(path.dirname(path.abspath(__file__))))
-        #print(os.getcwd())
+        print('working dir: ' + str(os.getcwd()))
 
         self.z_level_renderer: ZlvlRenderer = ZlvlRenderer(NUM_Z_LEVELS)
         self.game_logic: GameLogic = GameLogic(game_xml_file, self.z_level_renderer.z_levels)
@@ -103,6 +102,7 @@ class Game(arcade.Window):
         self.z_level_renderer.ui = self.ui
         self.z_level_renderer.gl = self.game_logic
         self.z_level_renderer.camera_event_listener.append(self.hi)
+        self.camera: Optional[Camera] = None
 
         self.commands: [(str, str)] = []
 
@@ -120,8 +120,8 @@ class Game(arcade.Window):
             self.ai_ctrl: Optional[AIControl] = None
 
     def setup(self):
-        # arcade.set_background_color(arcade.color.DARK_BLUE)
         arcade.set_background_color(arcade.color.BLACK)
+        self.camera = Camera(SCREEN_WIDTH, SCREEN_HEIGHT)
         self.commands.extend(self.console.initial_commands(SETUP_COMMANDS))
         self.game_logic.setup()
         self.ui.setup()
@@ -134,6 +134,7 @@ class Game(arcade.Window):
             self.ai_ctrl = AIControl(ids)
             self.ai_ctrl.start()                    # start thread
             self.game_logic.set_ai_ctrl_frame(self.ai_ctrl)
+        self.set_mouse_visible(False)
 
     def on_close(self):
         if Definitions.SHOW_AI_CTRL:
@@ -204,7 +205,7 @@ class Game(arcade.Window):
             found = self.ui.check_mouse_press_for_buttons(x, y)
             #if not found:
             self.ui.hl_pressed_tile(x, y, button)
-
+            self.ui.handle_mouse_click(x, y)
             self.hi.handle_mouse_press(int(x), int(y), button)
 
     def on_mouse_release(self, x, y, button, key_modifiers):
@@ -220,6 +221,14 @@ class Game(arcade.Window):
             self.z_level_renderer.left_key = True
         if key == arcade.key.RIGHT:
             self.z_level_renderer.right_key = True
+        # if key == arcade.key.UP:
+        #     self.z_level_renderer.up_key = True
+        # if key == arcade.key.DOWN:
+        #     self.z_level_renderer.down_key = True
+        # if key == arcade.key.LEFT:
+        #     self.z_level_renderer.left_key = True
+        # if key == arcade.key.RIGHT:
+        #     self.z_level_renderer.right_key = True
         if key == arcade.key.SPACE:
             self.ui.next_turn_button.on_press()
 
@@ -233,11 +242,20 @@ class Game(arcade.Window):
             self.z_level_renderer.left_key = False
         if key == arcade.key.RIGHT:
             self.z_level_renderer.right_key = False
+        # if key == arcade.key.UP:
+        #     self.camera.up_key = False
+        # if key == arcade.key.DOWN:
+        #     self.camera.down_key = False
+        # if key == arcade.key.LEFT:
+        #     self.camera.left_key = False
+        # if key == arcade.key.RIGHT:
+        #     self.camera.right_key = False
         if key == arcade.key.SPACE:
             self.ui.next_turn_button.on_release()
 
     def on_mouse_motion(self, x: float, y: float, dx: float, dy: float):
         # pass
+        self.ui.handle_mouse_motion(x, y)
         self.hi.handle_mouse_motin(int(x), int(y))
 
 

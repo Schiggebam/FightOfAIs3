@@ -5,6 +5,7 @@ from src.ui.human import HumanInteraction
 from src.game_logic import GameLogic
 from src.ui.IconButton import IconButton
 from src.ui.SimpleButton import TextButton
+from src.ui.ui_accessoires import CustomCursor
 from src.ui.ui_panels import *
 from dataclasses import dataclass
 
@@ -97,6 +98,7 @@ class UI:
         self.ui_elements: Dict[str, Union[AutomaticIconButton]] = {}
         self.playerinfo = {}
         self.volatile_panel = []
+        self.closable_panels = []
         self.win_screen_shown = False
         self.status_text = ""
         self.notifications_text = ""
@@ -119,8 +121,13 @@ class UI:
             x_offset = x_offset + 250
 
         self.main_panel: arcade.Sprite = arcade.Sprite()
+        self.cursor: Optional[CustomCursor] = None
+        self.cost_panel = None
 
     def setup(self):
+        self.gl.texture_store.load_ui_textures()
+        self.cursor = CustomCursor(self.gl.texture_store)
+        self.hi.set_ui_references(self.cursor, self.cost_panel_callback)
         self.ai_panel = PanelAI(self.screen_width - 280, 500, "AI panel", self.gl)
         self.diplo_panel = PanelDiplo(self.screen_width - 280, 250, "Diplo panel", self.gl)
         self.panel_list.append(self.ai_panel)
@@ -161,6 +168,11 @@ class UI:
         for p in self.panel_list:
             if p.show:
                 p.draw()
+
+        if self.cost_panel:
+            if self.cost_panel.show:
+                self.cost_panel.draw()
+
         for b in self.buttonlist:
             b.draw()
 
@@ -193,6 +205,8 @@ class UI:
         if len(self.notifications_text) > 0:
             arcade.draw_text(self.notifications_text, self.screen_width / 2 - 100, 150, arcade.color.ORANGE, 16)
 
+        self.cursor.draw()
+
     def update(self, wall_clock_time):
         # if self.ai_panel.show:
         #     self.ai_panel.update(self.gl)
@@ -202,9 +216,14 @@ class UI:
         self.notifications_text = ""
         for n, t in self.notifications:
             self.notifications_text += n.text + "\n"
+
         for p in self.panel_list:
             if p.show:
                 p.update()
+
+        if self.cost_panel:
+            if self.cost_panel.show:
+                self.cost_panel.draw()
 
         for player in self.gl.player_list:
             if not player.has_lost:
@@ -244,8 +263,8 @@ class UI:
             for i in range(Logger.logs.qsize()):
                 log = Logger.logs.get()
                 if log.log_type == LogType.BATTLE_ARMY_VS_ARMY or log.log_type == LogType.BATTLE_ARMY_VS_BUILDING:
-                    panel_attack = PanelLogBattle(pos[i][0], pos[i][1], log)
-                    self.show_volatile_panel(panel_attack)
+                    panel_attack = PanelLogBattle(pos[i][0], pos[i][1], log, self.gl.texture_store)
+                    self.show_closable_panel(panel_attack)
 
                 if log.log_type == LogType.DIPLO_ENEMY_BUILDING_SCOUTED:
                     panel_diplo = PanelLogDiplo(pos[i][0], pos[i][1], log)
@@ -284,6 +303,9 @@ class UI:
         self.gl.map_hack = active
         self.gl.change_in_map_view = True
 
+    def cost_panel_callback(self, cost_panel):
+        self.cost_panel = cost_panel
+
     def check_mouse_press_for_buttons(self, x, y) -> bool:
         """ Given an x, y, see if we need to register any button clicks. """
         for button in self.buttonlist:
@@ -298,6 +320,16 @@ class UI:
             button.on_press()
             return True
         return False
+
+    def handle_mouse_click(self, x, y):
+        to_be_removed = None
+        for panel in self.closable_panels:
+            if panel.is_close_button_hit(x, y):
+                self.panel_list.remove(panel)
+                to_be_removed = panel
+                self.sprite_list.remove(panel.sprite)
+        if to_be_removed:
+            self.closable_panels.remove(to_be_removed)
 
     def hl_pressed_tile(self, x, y, button):
         if len(self.volatile_panel) > 0 or button == 4:
@@ -332,8 +364,18 @@ class UI:
             return True
         return False
 
+    def handle_mouse_motion(self, x, y):
+        if self.cursor:
+            self.cursor.update_cursor(x, y)
+
     def show_volatile_panel(self, panel):
         self.volatile_panel.append(panel)
+        self.panel_list.append(panel)
+        self.sprite_list.append(panel.sprite)
+        panel.show = True
+
+    def show_closable_panel(self, panel):
+        self.closable_panels.append(panel)
         self.panel_list.append(panel)
         self.sprite_list.append(panel.sprite)
         panel.show = True

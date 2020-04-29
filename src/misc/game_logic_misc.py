@@ -6,7 +6,8 @@ from typing import Tuple
 from src.game_accessoires import Army
 
 from src.misc.building import Building
-from src.misc.game_constants import BuildingType, BuildingState, LogType, DiploEventType, UnitType, error
+from src.misc.game_constants import BuildingType, BuildingState, LogType, DiploEventType, UnitType, error, \
+    BattleAfterMath
 from src.player import Player
 
 
@@ -74,7 +75,7 @@ class IncomeCalculator:
 class FightCalculator:
 
     @staticmethod
-    def army_vs_army(attacker: Army, defender: Army):
+    def army_vs_army(attacker: Army, defender: Army) -> BattleAfterMath:
         attack_value = attacker.get_attack_strength()
         defencive_value = defender.get_defence_strength()
         if attack_value == 0:
@@ -107,9 +108,15 @@ class FightCalculator:
             defender_kill_count_unit_x = defender_unit_x - ((defender_unit_x / defender_pop) *
                                                             defender_surviving_pop_ratio)
             defender.remove_units_of_type(ceil(defender_kill_count_unit_x), unit)
+        if attacker_won and defender_won:
+            return BattleAfterMath.DRAW
+        elif attacker_won:
+            return BattleAfterMath.ATTACKER_WON
+        else:
+            return BattleAfterMath.DEFENDER_WON
 
     @staticmethod
-    def army_vs_building(attacker: Army, defender: Building):
+    def army_vs_building(attacker: Army, defender: Building) -> BattleAfterMath:
         attack_value = attacker.get_attack_strength()
         defencive_value = defender.defensive_value
         attacker_won = attack_value >= defencive_value  # they can both win if their values are equal
@@ -126,8 +133,19 @@ class FightCalculator:
                                                                 attacker_surviving_pop_ratio)
                 attacker.remove_units_of_type(ceil(attacker_kill_count_unit_x), unit)
             defender.defensive_value = -1       # building is destroyed
+
         if defender_won:
             attacker.remove_all_units()         # army is destroyed
+
+        if attacker.get_population() == 0:
+            defender_won = True
+
+        if attacker_won and defender_won:
+            return BattleAfterMath.DRAW
+        elif attacker_won:
+            return BattleAfterMath.ATTACKER_WON
+        else:
+            return BattleAfterMath.DEFENDER_WON
 
 
 
@@ -139,12 +157,16 @@ class Logger:
 
     class BattleLog(Log):
         def __init__(self, log_type: LogType, pre_att_u: Tuple[int, int, int], pre_def_u: Tuple[int, int, int],
-                     post_att_u: Tuple[int, int, int], post_def_u: Tuple[int, int, int]):
+                     post_att_u: Tuple[int, int, int], post_def_u: Tuple[int, int, int], outcome: BattleAfterMath,
+                     att_name: str, def_name: str):
             super().__init__(log_type)
             self.pre_att_units: Tuple[int, int, int] = pre_att_u
             self.pre_def_units: Tuple[int, int, int] = pre_def_u
             self.post_att_units: Tuple[int, int, int] = post_att_u
             self.post_def_units: Tuple[int, int, int] = post_def_u
+            self.outcome: BattleAfterMath = outcome
+            self.att_name = att_name
+            self.def_name = def_name
 
     class EventLog(Log):
         def __init__(self, log_type: LogType, event: DiploEventType, relative_change: float, loc: (int, int), lifetime: int, player_name: str):
@@ -164,17 +186,19 @@ class Logger:
 
     @staticmethod
     def log_battle_army_vs_army_log(pre_att_u: Tuple[int, int, int], pre_def_u: Tuple[int, int, int],
-                                    post_att_u: Tuple[int, int, int], post_def_u: Tuple[int, int, int]):
+                                    post_att_u: Tuple[int, int, int], post_def_u: Tuple[int, int, int],
+                                    outcome: BattleAfterMath, att_name: str, def_name: str):
 
         log = Logger.BattleLog(LogType.BATTLE_ARMY_VS_ARMY, pre_att_u, pre_def_u,
-                               post_att_u, post_def_u)
+                               post_att_u, post_def_u, outcome, att_name, def_name)
         Logger.logs.put(log)
 
     @staticmethod
     def log_battle_army_vs_building(pre_att_u: Tuple[int, int, int],  post_att_u: Tuple[int, int, int],
-                                    pre_building_value, post_building_value):
+                                    pre_building_value, post_building_value,
+                                    outcome: BattleAfterMath, att_name: str, def_name: str):
         log = Logger.BattleLog(LogType.BATTLE_ARMY_VS_BUILDING, pre_att_u, (pre_building_value, 0, 0),
-                               post_att_u, (post_building_value, 0, 0))
+                               post_att_u, (post_building_value, 0, 0), outcome, att_name, def_name)
         Logger.logs.put(log)
 
     @staticmethod
