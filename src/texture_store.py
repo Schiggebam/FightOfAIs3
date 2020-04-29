@@ -3,9 +3,10 @@ from typing import Dict
 import arcade
 
 from src.misc.game_constants import start_progress, progress, end_progress, Definitions
+from src.misc.singleton import Singleton
 
 
-
+@Singleton
 class TextureStore:
 
     def __init__(self):

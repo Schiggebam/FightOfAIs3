@@ -1,14 +1,11 @@
 import arcade
 
+from src.texture_store import TextureStore
+from src.ui.ui_accessoires import UI_Texture
+
 
 class TextButton:
-    def __init__(self,
-                 center_x, center_y,
-                 width, height,
-                 text,
-                 font_size=18,
-                 font_face="Arial",
-                 button_height=2):
+    def __init__(self, center_x, center_y, width, height, text, font_size=18, font_face="Arial", button_height=2):
         self.center_x = center_x
         self.center_y = center_y
         self.width = width
@@ -19,8 +16,10 @@ class TextButton:
         self.pressed = False
         self.button_height = button_height
         self.sprite: arcade.Sprite = arcade.Sprite()
-        self.sprite.append_texture(arcade.load_texture("../resources/other/unpressed.png"))
-        self.sprite.append_texture(arcade.load_texture("../resources/other/pressed.png"))
+        self.sprite.append_texture(TextureStore.instance().get_ui_texture(UI_Texture.BUTTON_BASIC_UNPRESSED))
+        self.sprite.append_texture(TextureStore.instance().get_ui_texture(UI_Texture.BUTTON_BASIC_PRESSED))
+        #self.sprite.append_texture(arcade.load_texture("../resources/other/unpressed.png"))
+        #self.sprite.append_texture(arcade.load_texture("../resources/other/pressed.png"))
         self.sprite.center_x = center_x
         self.sprite.center_y = center_y
         self.sprite.set_texture(0)

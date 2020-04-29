@@ -44,6 +44,10 @@ class UI_Texture(Enum):
     CURSOR_COMBAT = "cursors/cursor_fight.png"
 
     # ---------- Buttons -------------
+    """basic text button"""
+    BUTTON_BASIC_UNPRESSED = "unpressed.png"
+    BUTTON_BASIC_PRESSED = "pressed.png"
+
 
     # ---------- Panels --------------
     """most basic, plain black panel"""

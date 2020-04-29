@@ -1,5 +1,6 @@
 import arcade
 
+from src.texture_store import TextureStore
 from src.ui.ui_accessoires import UI_Texture
 
 
@@ -74,10 +75,10 @@ class ClosablePanel:
 
 class BasicPanel:
     """Just a basic black background"""
-    def __init__(self, center_x, center_y, texture_store, width=150, height=72, alpha=255):
+    def __init__(self, center_x, center_y, width=150, height=72, alpha=255):
         self.sprite = arcade.Sprite(center_x=center_x, center_y=center_y,
                                     image_width=width, image_height=height)
-        self.sprite.append_texture(texture_store.get_ui_texture(UI_Texture.PANEL_BASIC))
+        self.sprite.append_texture(TextureStore.instance().get_ui_texture(UI_Texture.PANEL_BASIC))
         self.sprite.set_texture(0)
         self.sprite.alpha = alpha
         self.text_box_x = center_x - width/2

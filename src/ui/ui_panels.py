@@ -242,8 +242,8 @@ class PanelGameWon(SimplePanel):
 
 
 class CostPanel(BasicPanel):
-    def __init__(self, center_x, center_y, tex_store, text: str, c: arcade.color):
-        super().__init__(center_x, center_y, tex_store, alpha=160)
+    def __init__(self, center_x, center_y, text: str, c: arcade.color):
+        super().__init__(center_x, center_y, alpha=160)
         self.text = text
         self.c = c
 

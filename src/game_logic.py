@@ -17,7 +17,7 @@ from src.ui.extern.extern_ai_display import AIControl
 
 class GameLogic:
     def __init__(self, game_xml_file: str, z_levels: [arcade.SpriteList]):
-        self.texture_store: TextureStore = TextureStore()
+        self.texture_store: TextureStore = TextureStore.instance()
         self.game_file_reader: GameFileReader = GameFileReader(game_xml_file)
         self.z_levels: [arcade.SpriteList] = z_levels               # reference to the sprite lists
         self.hex_map: Optional[HexMap] = None

@@ -527,40 +527,40 @@ class HumanInteraction:
         player = self.gl.player_list[self.gl.current_player]
         j = 0 if self.action_specified is MoveState.USED else 1
         if icon.action is Action.BUILD_RACKS:
-            txt += f"Action required ({j}/1) \n"
+            txt += f"Action ({j}/1) \n"
             txt += f"Resources: {player.amount_of_resources}/{Building.get_construction_cost(BuildingType.BARRACKS)} \n"
         elif icon.action is Action.BUILD_HUT:
-            txt += f"Action required ({j}/1) \n"
+            txt += f"Action ({j}/1) \n"
             txt += f"Resources: {player.amount_of_resources}/{Building.get_construction_cost(BuildingType.HUT)} \n"
         elif icon.action is Action.BUILD_FARM:
-            txt += f"Action required ({j}/1) \n"
+            txt += f"Action ({j}/1) \n"
             txt += f"Resources: {player.amount_of_resources}/{Building.get_construction_cost(BuildingType.FARM)} \n"
         elif icon.action is Action.RECRUIT_KNIGHT:
             cost = Unit.get_unit_cost(UnitType.KNIGHT)
-            txt += f"Action required ({j}/1) \n"
+            txt += f"Action ({j}/1) \n"
             txt += f"Resources: {player.amount_of_resources}/{cost.resources} \n"
             txt += f"Culture: {player.culture}/{cost.culture} \n"
             txt += f"Population: {cost.population}"
         elif icon.action is Action.RECRUIT_MERC:
             cost = Unit.get_unit_cost(UnitType.MERCENARY)
-            txt += f"Action required ({j}/1) \n"
+            txt += f"Action ({j}/1) \n"
             txt += f"Resources: {player.amount_of_resources}/{cost.resources} \n"
             txt += f"Culture: {player.culture}/{cost.culture} \n"
             txt += f"Population: {cost.population}"
         elif icon.action is Action.RAISE_ARMY:
-            txt += f"Action required ({j}/1) \n \n"
+            txt += f"Action ({j}/1) \n \n"
         elif icon.action is Action.SCOUT:
-            txt += f"Action required ({j}/1) \n"
+            txt += f"Action ({j}/1) \n"
             txt += f"Resources: {player.amount_of_resources}/1 \n"
         elif icon.action is Action.ARMY_MOVEMENT:
             i = 0 if self.movement_specified is MoveState.USED else 1
-            txt += f"Movement required ({i}/1) \n \n"
+            txt += f"Movement ({i}/1) \n \n"
         else:
             txt = "free \n \n"
 
         c = arcade.color.WHITE if icon.is_active else arcade.color.RED
 
-        self.cost_panel = CostPanel(x + 100, y + 60, self.gl.texture_store, txt, c)
+        self.cost_panel = CostPanel(x + 100, y + 60, txt, c)
         self.zlvl_icons.append(self.cost_panel.sprite)
         self.set_cost_panel(self.cost_panel)
         self.cost_panel.show = True

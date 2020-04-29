@@ -75,6 +75,7 @@ class UI:
         self.hi: HumanInteraction = hi
         self.buttonlist = []
         self.panel_list: List[Panels] = []
+        TextureStore.instance().load_ui_textures()
         self.next_turn_button = NextTurnButton(screen_width - 150, 70, self.callBack1)
         self.ba = AutomaticButton(screen_width - 150, 30, self.callBack_automatic)
         diplo_button = AutomaticIconButton(screen_width - 50, 200, self.callBack_diplo,
@@ -125,7 +126,6 @@ class UI:
         self.cost_panel = None
 
     def setup(self):
-        self.gl.texture_store.load_ui_textures()
         self.cursor = CustomCursor(self.gl.texture_store)
         self.hi.set_ui_references(self.cursor, self.cost_panel_callback)
         self.ai_panel = PanelAI(self.screen_width - 280, 500, "AI panel", self.gl)
