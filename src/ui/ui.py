@@ -161,14 +161,16 @@ class UI:
                     self.ui_elements[f"watch_id_{p.id}"].on_press()
 
     def draw(self):
-        for hex in self.gl.hex_map.map:
-            if hex.debug_msg != "":
-                from src.hex_map import HexMap
-                (x, y) = HexMap.offset_to_pixel_coords(hex.offset_coordinates)
-                arcade.draw_text(hex.debug_msg, x + self.camera_pos[0], y + self.camera_pos[1], arcade.color.BLACK)
-
+        # t1 = timeit.default_timer()
+        # FIXME think of something better here!
+        # for hex in self.gl.hex_map.map:
+        #     if hex.debug_msg != "":
+        #         from src.hex_map import HexMap
+        #         (x, y) = HexMap.offset_to_pixel_coords(hex.offset_coordinates)
+        #         arcade.draw_text(hex.debug_msg, x + self.camera_pos[0], y + self.camera_pos[1], arcade.color.BLACK)
+        # t2 = timeit.default_timer()
         self.sprite_list.draw()
-
+        # t3 = timeit.default_timer()
         # draw turn number
         arcade.draw_text("Turn: " + str(self.gl.turn_nr), self.screen_width - 80, 65, arcade.color.WHITE, 14)
         arcade.draw_text("Map Hack", self.screen_width - 85, 35, arcade.color.WHITE, 14)
@@ -176,18 +178,18 @@ class UI:
         hl_x_off = self.gl.current_player * 250 + 140
         hl_y_off = 65
         arcade.draw_rectangle_filled(hl_x_off, hl_y_off, 120, 70, arcade.color.DARK_ORANGE)
-
+        # t4 = timeit.default_timer()
         for p in self.panel_list:
             if p.show:
                 p.draw()
-
+        # t5 = timeit.default_timer()
         if self.cost_panel:
             if self.cost_panel.show:
                 self.cost_panel.draw()
 
         for b in self.button_list:
             b.draw()
-
+        # t6 = timeit.default_timer()
         # draw the player stats:
         x_offset = 70
         for p in self.gl.player_list:
@@ -218,6 +220,9 @@ class UI:
             arcade.draw_text(self.notifications_text, self.screen_width / 2 - 100, 150, arcade.color.ORANGE, 16)
 
         self.cursor.draw()
+        # t7 = timeit.default_timer()
+        # if t7 - t1 > 0.05:
+        #     print(f"{t7 - t6}, {t6 - t5}, {t5 - t4}, {t4 - t3}, {t3 - t2}, {t2 - t1}")
 
     def update(self, wall_clock_time):
         # if self.ai_panel.show:

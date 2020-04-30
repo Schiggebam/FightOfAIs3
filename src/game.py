@@ -44,9 +44,12 @@ class ZlvlRenderer:
         self.camera_event_listener: List[Any] = []
 
     def render(self):
+
         for z in self.z_levels:
             z.draw()
+
         self.ui.draw()
+
 
 
     def update(self, delta_t: float):
