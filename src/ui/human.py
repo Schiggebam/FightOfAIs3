@@ -176,6 +176,7 @@ class HumanInteraction:
 
     def handle_mouse_motin(self, mouse_x: int, mouse_y: int):
         # CODE TO COMPUTE "snapping to grid" explicitly. Keep this for now
+        # !!!!!!!!!!!!!!!!!!!!!!!!
         # This variant should be a bit faster (because we don't have to go via the hexmap),
         # but the second option allows to respect the height of the hexagon (sea-level - vs land-level)
         # also we get a reference to the hex for free, which is handy

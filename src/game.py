@@ -229,8 +229,8 @@ class Game(arcade.Window):
         #     self.z_level_renderer.left_key = True
         # if key == arcade.key.RIGHT:
         #     self.z_level_renderer.right_key = True
-        if key == arcade.key.SPACE:
-            self.ui.next_turn_button.on_press()
+        self.ui.handle_key_input(key)
+
 
 
     def on_key_release(self, key: int, modifiers: int):

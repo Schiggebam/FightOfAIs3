@@ -75,17 +75,18 @@ class AI_GameInterface:
         self.time_begin = 0
         self.time_end = 0
 
-    def launch_AI(self, id: int, ai_str: str, other_players: [int]):
+    def launch_AI(self, id: int, ai_str: str, ai_name: str, other_players: [int]):
         from src.ai.ai_npc import AI_NPC
         from src.ai.AI_Macedon import AI_Mazedonian
         if ai_str == "cultivated":
-            self.dict_of_ais[id] = AI_Mazedonian(ai_str, id, other_players)
+            self.dict_of_ais[id] = AI_Mazedonian(ai_name, id, other_players)
         elif ai_str == "expansionist":
-            self.dict_of_ais[id] = AI_Mazedonian(ai_str, id, other_players)
+            self.dict_of_ais[id] = AI_Mazedonian(ai_name, id, other_players)
         elif ai_str == "barbaric":
             self.dict_of_ais[id] = AI_NPC(id, other_players, AI_NPC.Script.BARBARIC_HOSTILE)
         elif ai_str == "villager":
             self.dict_of_ais[id] = AI_NPC(id, other_players, AI_NPC.Script.VILLAGER)
+        debug("size of AI dict: " + str(len(self.dict_of_ais)))
 
     @staticmethod
     def create_ai_status(ai_stat: AI_GameStatus, turn_nr,

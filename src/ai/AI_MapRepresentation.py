@@ -133,7 +133,7 @@ class Map:
         self.scoutable_tiles: List[Tile] = []
         self.buildable_tiles: List[Tile] = []
         self.walkable_tiles: List[Tile] = []
-        self.farm_field_tiles: List[Tile] = []
+        self.own_farm_field_tiles: List[Tile] = []
         self.discovered_tiles: List[Tile] = []
 
     def add_tile(self, offset_coordinates: Tuple[int, int], gt: GroundType):
@@ -176,11 +176,11 @@ class Map:
         self.opp_army_list.append(army)
 
     def add_own_building(self, offset_coordinates: Tuple[int, int], building: Building):
-        b: AI_Building = self.__add_building(offset_coordinates, building)
+        b: AI_Building = self.__add_building(offset_coordinates, building, True)
         self.building_list.append(b)
 
     def add_opp_building(self, offset_coordinates: Tuple[int, int], building: Building, id: int):
-        b: AI_Building = self.__add_building(offset_coordinates, building)
+        b: AI_Building = self.__add_building(offset_coordinates, building, False)
         b.owner = id
         self.opp_building_list.append(b)
 
@@ -214,18 +214,18 @@ class Map:
         tile.army = ai_a
         return ai_a
 
-
-    def __add_building(self, offset_coordinates: Tuple[int, int], building: Building) -> AI_Building:
+    def __add_building(self, offset_coordinates: Tuple[int, int], building: Building, is_own: bool) -> AI_Building:
         tile = self.__get_tile(offset_coordinates)
         ai_b = AI_Building(tile)
         ai_b.offset_coordinates = building.tile.offset_coordinates
         ai_b.type = building.building_type
         ai_b.state = building.building_state
-        for a in building.associated_tiles:
-            if a.offset_coordinates in self.map:         # one may see the building but not all of its adjacent tiles
-                t = self.__get_tile(a.offset_coordinates)
-                ai_b.associated_tiles.append(t)
-                self.farm_field_tiles.append(t)
+        if is_own:
+            for a in building.associated_tiles:
+                if a.offset_coordinates in self.map:         # one may see the building but not all of its adjacent tiles
+                    t = self.__get_tile(a.offset_coordinates)
+                    ai_b.associated_tiles.append(t)
+                    self.own_farm_field_tiles.append(t)
         ai_b.visible = False
         for t in self.discovered_tiles:
             if t.offset_coordinates == ai_b.offset_coordinates:

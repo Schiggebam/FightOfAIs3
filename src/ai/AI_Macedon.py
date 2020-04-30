@@ -8,8 +8,8 @@ from dataclasses import dataclass
 from src.ai import AI_Toolkit
 from src.ai.AI_GameStatus import AI_GameStatus, AI_Move
 from src.ai.AI_MapRepresentation import Tile, AI_Army, AI_Building
-from src.ai.ai_blueprint import AI, WaitOption, BuildOption, RecruitmentOption, ScoutingOption, Weight, Option, Compass, \
-    ThreatLevel, CardinalDirection
+from src.ai.ai_blueprint import AI, WaitOption, BuildOption, RecruitmentOption, ScoutingOption, Weight, Option, \
+    Compass, CardinalDirection
 
 from src.misc.game_constants import DiploEventType, hint, BuildingType, error, debug, UnitType, Priority, MoveType, \
     PlayerType
@@ -34,6 +34,7 @@ class AI_Mazedonian(AI):
         PASSIVE = 0
         AGGRESSIVE = 1
         DEFENSIVE = 2
+        CRUSADE = 3
 
     @dataclass
     class ArmyConstellation:
@@ -87,6 +88,8 @@ class AI_Mazedonian(AI):
         self.previous_army_population: int = -1
         self.previous_amount_of_buildings: int = -1
         self.previous_food: int = -1
+        self.crusade_time: int = 0
+        self.crusade_target_id: int = -1
 
         # values to move to the xml file: and dependent on personality
         self.properties: Dict[str, Any] = {}
@@ -106,7 +109,7 @@ class AI_Mazedonian(AI):
                                                          (BuildingType.BARRACKS, 2)]
         bo_mid_game: List[Tuple[BuildingType, int]] = [(BuildingType.FARM, 6), (BuildingType.HUT, 5),
                                                        (BuildingType.BARRACKS, 4)]
-        bo_late_game: List[Tuple[BuildingType, int]] = [(BuildingType.FARM, 10), (BuildingType.HUT, 9),
+        bo_late_game: List[Tuple[BuildingType, int]] = [(BuildingType.FARM, 13), (BuildingType.HUT, 9),
                                                         (BuildingType.BARRACKS, 10)]
         self.ac_passive: AI_Mazedonian.ArmyConstellation = AI_Mazedonian.ArmyConstellation("passive", (0.5, 0.5))
         self.ac_aggressive: AI_Mazedonian.ArmyConstellation = AI_Mazedonian.ArmyConstellation("aggressive", (0.8, 0.2))
@@ -114,7 +117,7 @@ class AI_Mazedonian(AI):
         self.build_orders: List[AI_Mazedonian.BuildOrder] = []
         self.build_orders.append(AI_Mazedonian.BuildOrder("early game", bo_early_game, 5))
         self.build_orders.append(AI_Mazedonian.BuildOrder("mid game", bo_mid_game, 10))
-        self.build_orders.append(AI_Mazedonian.BuildOrder("late game", bo_late_game, 30))
+        self.build_orders.append(AI_Mazedonian.BuildOrder("late game", bo_late_game, 45))
         self.food_lower_limit: int = 15
         self.w_scouting_smooth_border: float = 1
         self.w_scouting_resource: float = 3
@@ -130,7 +133,7 @@ class AI_Mazedonian(AI):
     def do_move(self, ai_stat: AI_GameStatus, move: AI_Move):
         self._reset_dump()
         t1 = timeit.default_timer()
-        # hint("------ {} -------".format(self.name))
+        self._dump("------ {} -------".format(self.name))
         self.set_vars(ai_stat)
         self.create_heat_maps(ai_stat, move)
         self.update_diplo_events(ai_stat)
@@ -177,11 +180,11 @@ class AI_Mazedonian(AI):
     def evaluate_army_movement(self, ai_stat: AI_GameStatus, move: AI_Move):
         if len(ai_stat.map.army_list) == 0:
             return
-
+        target = ""
         if self.state == AI_Mazedonian.AI_State.PASSIVE:
             # for now, just move it out of the way.
             army_is_on_field = False
-            if ai_stat.map.army_list[0].base_tile in ai_stat.map.farm_field_tiles:
+            if ai_stat.map.army_list[0].base_tile in ai_stat.map.own_farm_field_tiles:
                 army_is_on_field = True
             if not army_is_on_field:
                 has_farm = False
@@ -191,13 +194,15 @@ class AI_Mazedonian(AI):
                 if has_farm:
                     # walk to random field
                     path = []
-                    idx = random.randint(0, len(ai_stat.map.farm_field_tiles) - 1)
+                    idx = random.randint(0, len(ai_stat.map.own_farm_field_tiles) - 1)
+                    print(f"from: {ai_stat.map.army_list[0].base_tile.offset_coordinates} to {ai_stat.map.own_farm_field_tiles[idx].offset_coordinates}")
                     path = AI_Toolkit.dijkstra_pq(ai_stat.map.army_list[0].base_tile,
-                                                  ai_stat.map.farm_field_tiles[idx],
+                                                  ai_stat.map.own_farm_field_tiles[idx],
                                                   ai_stat.map.walkable_tiles)
                     if len(path) > 1:
                         move.move_army_to = path[1].offset_coordinates
                         move.doMoveArmy = True
+                        target = " corn field "
 
         elif self.state == AI_Mazedonian.AI_State.DEFENSIVE or self.state == AI_Mazedonian.AI_State.AGGRESSIVE:
             if len(self.priolist_targets) > 0:
@@ -210,12 +215,15 @@ class AI_Mazedonian(AI):
                     if len(path) > 1:
                         move.move_army_to = path[1].offset_coordinates
                         move.doMoveArmy = True
+                        target = "army" if type(self.priolist_targets[0].target) is AI_Army else "building"
                         if DETAILED_DEBUG:
                             self._dump('moving to: {} from {} to {}'.format(str(move.move_army_to),
                                                                       start_tile.offset_coordinates,
                                                                       target_tile.offset_coordinates))
                 else:
                     self._dump("targets value to low. Will not attack")
+        if move.doMoveArmy:
+            self._dump(f"Movement: target: {target} @ loc: {move.move_army_to}")
 
     def set_vars(self, ai_stat: AI_GameStatus):
         if self.previous_food > ai_stat.me.food:
@@ -238,7 +246,7 @@ class AI_Mazedonian(AI):
         self.claimed_tiles.clear()
         c_dist = 2 if 'claiming_distance' not in self.properties else self.properties['claiming_distance']
         for d, s in heat_map:
-            if d <= c_dist:
+            if d < c_dist:
                 self.claimed_tiles.add(s)
         heat_map_2 = AI_Toolkit.simple_heat_map(ai_stat.map.scoutable_tiles, ai_stat.map.discovered_tiles,
                                                 lambda n: True)
@@ -277,12 +285,10 @@ class AI_Mazedonian(AI):
         for e_b in ai_stat.map.opp_building_list:
             if e_b.visible:
                 if AI_Toolkit.is_obj_in_list(e_b, self.claimed_tiles):
-                    # debug("New Event: ENEMY_BUILDING_IN_CLAIMED_ZONE")
                     self.diplomacy.add_event(e_b.owner, e_b.offset_coordinates,
                                              DiploEventType.ENEMY_BUILDING_IN_CLAIMED_ZONE, -2, 3, self.name)
         for e_a in ai_stat.map.opp_army_list:
             if AI_Toolkit.is_obj_in_list(e_a, self.claimed_tiles):
-                # debug("New Event: ENEMY_ARMY_INVADING_CLAIMED_ZONE")
                 self.diplomacy.add_event(e_a.owner, e_a.offset_coordinates,
                                          DiploEventType.ENEMY_ARMY_INVADING_CLAIMED_ZONE, -2, 3, self.name)
 
@@ -369,15 +375,32 @@ class AI_Mazedonian(AI):
             if len(self.hostile_player) == 0:
                 self.state = AI_Mazedonian.AI_State.PASSIVE
 
+        # crusade ?
+        if self.protocol is AI_Mazedonian.Protocol.LATE_GAME and self.state != AI_Mazedonian.AI_State.CRUSADE:
+            if ai_stat.me.resources > 100 and ai_stat.me.food > 100 and ai_stat.me.population > 20:
+                target_player_id = self.diplomacy.get_player_with_lowest_dv()
+                if target_player_id != -1:
+                    self.state = AI_Mazedonian.AI_State.CRUSADE
+                    self.crusade_target_id = target_player_id
+                    self.crusade_time = 10
+
+        if self.state is AI_Mazedonian.AI_State.CRUSADE:
+            self.crusade_time -= 1
+            if self.crusade_time < 0:
+                self.state = AI_Mazedonian.AI_State.PASSIVE
+
+
         self._dump(f"State: {old_state} -> {self.state}")
 
     def weight_options(self, options: List[Option], ai_stat: AI_GameStatus, move: AI_Move):
+        used_weights: List[str] = []
         for opt in options:
             opt.weighted_score = opt.score.value
             if opt.score == Priority.P_NO:  # no option (should not depend on weights) -> contain invalid info
                 continue
             for w in self.weights:
                 if w.condition(opt, ai_stat):
+                    used_weights.append(w.condition.__name__)
                     if DETAILED_DEBUG:
                         self._dump(f"Weight w: {w.weight} applied on score: {opt.weighted_score} of {type(opt)} ")
                     opt.weighted_score = opt.weighted_score + w.weight
@@ -404,7 +427,10 @@ class AI_Mazedonian(AI):
         for m in self.priolist_targets:
             s = f"\tAttack Target : {'army' if type(m.target) is AI_Army else 'building'}, score: {m.weighted_score}"
             self._dump(s)
-
+        s_tmp = ""
+        for w in used_weights:
+            s_tmp += w + ", "
+        self._dump(s_tmp)
         # translate this into move
         best_option: Option = options[0]
         if type(best_option) == WaitOption:
@@ -434,7 +460,6 @@ class AI_Mazedonian(AI):
             move.str_rep_of_action = "raising new army at"
         else:
             error("unexpected type")
-        # hint(f"DECISION: {move.str_rep_of_action}")
 
         self._dump(f"DECISION: {move.str_rep_of_action}")
 
@@ -820,8 +845,12 @@ class AI_Mazedonian(AI):
         for key, value in self.compass.book.items():
             s_tmp += f"{key} -> {value.value}, "
         self._dump(s_tmp)
-        self._dump(f"Free tiles: {self.num_free_tiles} ({self.num_free_tiles/len(ai_stat.map.discovered_tiles)} %)")
+        self._dump(f"Free tiles: {self.num_free_tiles} ({self.num_free_tiles/len(ai_stat.map.discovered_tiles)*100:.1} %)")
         # hint(f"N: {self.compass.}, E: {self.compass.east}, S: {self.compass.south}, W: {self.compass.west}")
+        # dump active events:
+        self._dump("Events: -------------------")
+        for event in self.diplomacy.events:
+            self._dump(f"{event.description} [{event.lifetime}]")
 
     def get_army_spawn_loc(self, ai_stat: AI_GameStatus) -> Tuple[int, int]:
         nei: List[Tile] = AI_Toolkit.get_neibours_on_set(ai_stat.map.building_list[0].base_tile, ai_stat.map.walkable_tiles)

@@ -201,19 +201,7 @@ class AI_Diplo:
                 e.lifetime = e.lifetime_max
                 return
         # otherwise, if event does not exist, yet
-        event_str = ""
-        if event == DiploEventType.TYPE_ENEMY_BUILDING_SCOUTED:
-            event_str = "Enemy building scouted at: " + str(loc)
-        elif event == DiploEventType.TYPE_ENEMY_ARMY_INVADING:
-            event_str = "Enemy army scouted at: " + str(loc)
-        elif event == DiploEventType.ENEMY_BUILDING_IN_CLAIMED_ZONE:
-            event_str = "Enemy building is located in claimed zone"
-        elif event == DiploEventType.ENEMY_ARMY_INVADING_CLAIMED_ZONE:
-            event_str = "Enemy army is invading claimed zone"
-        elif event == DiploEventType.ATTACKED_BY_FACTION:
-            event_str = "Attacked by Faction"
-        else:
-            error("Unknown event!")
+        event_str = DiploEventType.get_event_description(event, loc)
         ai_event = AI_Diplo.AI_DiploEvent(target_id, rel_change, lifetime, event, event_str)
         ai_event.add_loc(loc)
         self.events.append(ai_event)
@@ -239,6 +227,15 @@ class AI_Diplo:
         for d in self.diplomacy:
             if d[0] == player_id:
                 return d[1]
+
+    def get_player_with_lowest_dv(self) -> int:
+        lowest_value = float(100)
+        lowest_pid = -1
+        for pid, value in self.diplomacy:
+            if lowest_value > value:
+                lowest_value = value
+                lowest_pid = pid
+        return lowest_pid
 
 
 class AI:

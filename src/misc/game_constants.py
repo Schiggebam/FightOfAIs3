@@ -8,6 +8,7 @@ import sys
 ######################
 from dataclasses import dataclass
 from enum import Enum
+from typing import Tuple
 
 import arcade
 
@@ -66,7 +67,7 @@ def get_caller() -> str:
 
 
 def debug(msg: str, colour=0):
-    if not DEBUG:
+    if not Definitions.DEBUG_MODE:
         return
     caller = ""
     if DETAILED_DEBUG_INFO != 0:
@@ -258,6 +259,21 @@ class DiploEventType(Enum):
     ENEMY_ARMY_INVADING_CLAIMED_ZONE = 103
     ATTACKED_BY_FACTION = 104
 
+    @staticmethod
+    def get_event_description(event: DiploEventType, loc: Tuple[int, int]):
+        if event is DiploEventType.TYPE_ENEMY_BUILDING_SCOUTED:
+            return "Enemy building scouted at: " + str(loc)
+        elif event is DiploEventType.TYPE_ENEMY_ARMY_INVADING:
+            return "Enemy army scouted at: " + str(loc)
+        elif event is DiploEventType.ENEMY_BUILDING_IN_CLAIMED_ZONE:
+            return "Enemy building is located in claimed zone"
+        elif event is DiploEventType.ENEMY_ARMY_INVADING_CLAIMED_ZONE:
+            return "Enemy army is invading claimed zone"
+        elif event is DiploEventType.ATTACKED_BY_FACTION:
+            return "Attacked by Faction"
+        else:
+            error("Unknown event!")
+            return ""
 
 class UnitType(Enum):
     KNIGHT = 0

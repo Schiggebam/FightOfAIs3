@@ -335,6 +335,10 @@ class UI:
             return True
         return False
 
+    def handle_key_input(self, key):
+        if key == arcade.key.SPACE:
+            self.ui_elements[UI_Element.BUTTON_NEXT_TURN].on_release()
+
     def handle_mouse_click(self, x, y):
         to_be_removed = None
         for panel in self.closable_panels:

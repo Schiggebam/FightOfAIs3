@@ -161,6 +161,15 @@ def setup_weights(self) -> List[Tuple[Callable, float]]:
 
     w.append((w13, 1.7))
 
+    def w14(elem: AI_Mazedonian.Option, ai_stat: AI_GameStatus) -> bool:
+        """during Crusade, build troops"""
+        if type(elem) is RecruitmentOption:
+            if self.state is AI_Mazedonian.AI_State.CRUSADE:
+                return True
+        return False
+
+    w.append((w14, 5))
+
     hint(f"AI has found {len(w)} weight functions.")
     return w
 
@@ -225,6 +234,15 @@ def setup_movement_weights(self: AI_Mazedonian) -> List[Tuple[Callable, float]]:
         return False
 
     aw.append((aw6, 1))
+
+    def aw7(elem: AI_Mazedonian.AttackTarget, ai_stat: AI_GameStatus) -> bool:
+        """Idea: during crusade, attack target player"""
+        if self.state is AI_Mazedonian.AI_State.CRUSADE:
+            if elem.target.owner == self.crusade_target_id:
+                return True
+        return False
+
+    aw.append((aw7, 5))
 
     hint(f"AI has found {len(aw)} movement weight functions.")
     return aw
