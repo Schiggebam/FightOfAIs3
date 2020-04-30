@@ -30,26 +30,50 @@ class CustomCursor(arcade.Sprite):
             self.set_texture(0)
 
 
+class UI_Element(Enum):
+    BUTTON_NEXT_TURN = 170
+    BUTTON_PLAY_AUTO = 171
+
+    PANEL_AI = 180
+    PANEL_DIPLOMATICS = 181
+
+
+
 class UI_Texture(Enum):
     """
     All textures in the class will be loaded at startup
     The path to the texture will be appended to UI_TEXTURE_PATH in Definitions
     """
 
-    # ---------- Mouse cursors -------
+    # ---------- Mouse cursors -----------------------------------
     """default cursor texture"""
     CURSOR_NORMAL = "cursors/cursor_normal.png"
 
-    """cursure texture for all combat action"""
+    """cursore texture for all combat action"""
     CURSOR_COMBAT = "cursors/cursor_fight.png"
 
-    # ---------- Buttons -------------
+    # ---------- Buttons ----------------------------------------
     """basic text button"""
     BUTTON_BASIC_UNPRESSED = "unpressed.png"
     BUTTON_BASIC_PRESSED = "pressed.png"
 
+    """texture for diplomatics button"""
+    ICON_BUTTON_DIPLO_UNPRESSED = "diplo_button_unpressed.png"
+    ICON_BUTTON_DIPLO_PRESSED = "diplo_button_pressed.png"
 
-    # ---------- Panels --------------
+    """texture for ai button"""
+    ICON_BUTTON_AI_UNPRESSED = "ai_button_unpressed.png"
+    ICON_BUTTON_AI_PRESSED = "ai_button_pressed.png"
+
+    """texture for button, which toggles the map view"""
+    ICON_BUTTON_WATCH_UNPRESSED = "watch_button_unpressed.png"
+    ICON_BUTTON_WATCH_PRESSED = "watch_button_pressed.png"
+
+    # ---------- Panels ----------------------------------------
+    """main bottom panel"""
+    PANEL_MAIN = "panels/main_panel_2.png"
+
+
     """most basic, plain black panel"""
     PANEL_BASIC = "panels/basic_panel.png"
 

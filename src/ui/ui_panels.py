@@ -5,7 +5,7 @@ from src.misc.building import Building
 from src.misc.game_logic_misc import Logger, IncomeCalculator
 from src.player import Player
 from src.texture_store import TextureStore
-from src.ui.SimplePanel import SimplePanel, ClosablePanel, BasicPanel
+from src.ui.ui_panel_templates import SimplePanel, ClosablePanel, BasicPanel
 from src.ui.lang_en import *
 from src.misc.game_constants import PlayerColour
 from src.ui.ui_accessoires import UI_Texture
@@ -56,7 +56,6 @@ class PanelDiplo(SimplePanel):
                     else:
                         self.text += '---' + ls + ts
             self.text += "\n \n"
-
 
     def draw(self):
         super().draw()
@@ -252,3 +251,9 @@ class CostPanel(BasicPanel):
                          self.c, font_size=10, font_name='verdana')
 
 
+class MainPanel(arcade.Sprite):
+    def __init__(self, screen_width: int, y=102):
+        super().__init__()
+        self.append_texture(TextureStore.instance().get_ui_texture(UI_Texture.PANEL_MAIN))
+        self.set_position(screen_width/2, y)
+        self.set_texture(0)

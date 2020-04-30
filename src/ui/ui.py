@@ -1,11 +1,11 @@
+import timeit
 from math import sqrt
-from typing import List, Optional, Tuple, Union, Dict
+from typing import Tuple, Union, Dict
 
 from src.ui.human import HumanInteraction
 from src.game_logic import GameLogic
-from src.ui.IconButton import IconButton
-from src.ui.SimpleButton import TextButton
-from src.ui.ui_accessoires import CustomCursor
+from src.ui.ui_accessoires import CustomCursor, UI_Element
+from src.ui.ui_button_templates import TextButton, IconButton
 from src.ui.ui_panels import *
 from dataclasses import dataclass
 
@@ -47,7 +47,8 @@ class AutomaticButton(TextButton):
 
 
 class AutomaticIconButton(IconButton):
-    def __init__(self, center_x, center_y, action_function, tex_pressed: str, tex_unpressed: str, scale=1.0):
+    def __init__(self, center_x, center_y, action_function,
+                 tex_pressed: UI_Texture, tex_unpressed: UI_Texture, scale=1.0):
         super().__init__(center_x, center_y, tex_pressed, tex_unpressed, scale=scale)
         self.action_function = action_function
         self.active = False
@@ -65,7 +66,10 @@ class AutomaticIconButton(IconButton):
         pass
 
 
-Panels = Union[PanelAI, PanelDiplo, PanelArmy, PanelResource, PanelBuilding]
+"""type definitions"""
+t_panels = Union[PanelAI, PanelDiplo, PanelArmy, PanelResource, PanelBuilding, PanelLogBattle]
+t_buttons = Union[IconButton, TextButton, NextTurnButton, AutomaticButton]
+t_ui_element = Union[t_buttons, t_panels]
 
 
 class UI:
@@ -73,30 +77,15 @@ class UI:
         self.camera_pos = (0, 0)
         self.gl: GameLogic = gl  # holds an instance of the game logic
         self.hi: HumanInteraction = hi
-        self.buttonlist = []
-        self.panel_list: List[Panels] = []
+        self.button_list: List[t_buttons] = []
+        self.panel_list: List[t_panels] = []
         TextureStore.instance().load_ui_textures()
-        self.next_turn_button = NextTurnButton(screen_width - 150, 70, self.callBack1)
-        self.ba = AutomaticButton(screen_width - 150, 30, self.callBack_automatic)
-        diplo_button = AutomaticIconButton(screen_width - 50, 200, self.callBack_diplo,
-                                           "../resources/other/diplo_button_pressed.png",
-                                           "../resources/other/diplo_button_unpressed.png")
-        ai_button = AutomaticIconButton(screen_width - 50, 265, self.callBack_ai,
-                                        "../resources/other/ai_button_pressed.png",
-                                        "../resources/other/ai_button_unpressed.png")
-        self.ai_panel: Optional[PanelAI] = None
-        self.diplo_panel = None
 
-        self.buttonlist.append(self.ba)
-        self.buttonlist.append(self.next_turn_button)
-
-        self.buttonlist.append(diplo_button)
-        self.buttonlist.append(ai_button)
         self.screen_width = screen_width
         self.screen_height = screen_height
         self.sprite_list = arcade.SpriteList()
-        # TODO: move ui elements in this dict! This class is a mess!
-        self.ui_elements: Dict[str, Union[AutomaticIconButton]] = {}
+
+        self.ui_elements: Dict[UI_Element, t_ui_element] = {}
         self.playerinfo = {}
         self.volatile_panel = []
         self.closable_panels = []
@@ -104,39 +93,62 @@ class UI:
         self.status_text = ""
         self.notifications_text = ""
         self.notifications: List[Tuple[Notification, float]] = []
-        x_offset = 40
-        map_hack_button = AutomaticIconButton(self.screen_width - 50, 20, self.callBack_map_hack,
-                                              "../resources/other/watch_button_pressed.png",
-                                              "../resources/other/watch_button_unpressed.png", scale=0.75)
-        # map_hack_button.on_press()
-        self.buttonlist.append(map_hack_button)
-        for p in self.gl.player_list:
-            watch_button = AutomaticIconButton(10 + x_offset, 100, self.callBack_watch,
-                                               "../resources/other/watch_button_pressed.png",
-                                               "../resources/other/watch_button_unpressed.png", scale=0.5)
-            watch_button.args.append(p.id)
-            self.ui_elements[f"watch_id_{p.id}"] = watch_button
-            # if p.player_type == PlayerType.HUMAN:
-            #     watch_button.on_press()
-            self.buttonlist.append(watch_button)
-            x_offset = x_offset + 250
 
-        self.main_panel: arcade.Sprite = arcade.Sprite()
         self.cursor: Optional[CustomCursor] = None
         self.cost_panel = None
 
     def setup(self):
         self.cursor = CustomCursor(self.gl.texture_store)
         self.hi.set_ui_references(self.cursor, self.cost_panel_callback)
-        self.ai_panel = PanelAI(self.screen_width - 280, 500, "AI panel", self.gl)
-        self.diplo_panel = PanelDiplo(self.screen_width - 280, 250, "Diplo panel", self.gl)
-        self.panel_list.append(self.ai_panel)
-        self.panel_list.append(self.diplo_panel)
-        self.main_panel.append_texture(arcade.load_texture("../resources/objects/main_panel_2.png"))
-        self.main_panel.set_position(self.screen_width / 2, 102)
-        self.main_panel.set_texture(0)
-        self.sprite_list.append(self.main_panel)
-        for b in self.buttonlist:
+
+        # --------------------- Initialize UI ------------------------------
+        main_panel = MainPanel(self.screen_width)
+        self.sprite_list.append(main_panel)
+
+        ai_panel = PanelAI(self.screen_width - 280, 500, "AI panel", self.gl)
+        diplo_panel = PanelDiplo(self.screen_width - 280, 250, "Diplo panel", self.gl)
+        self.ui_elements[UI_Element.PANEL_AI] = ai_panel
+        self.ui_elements[UI_Element.PANEL_DIPLOMATICS] = diplo_panel
+
+        self.panel_list.append(ai_panel)
+        self.panel_list.append(diplo_panel)
+
+        next_turn_button = NextTurnButton(self.screen_width - 150, 70, self.callBack1)
+        ba = AutomaticButton(self.screen_width - 150, 30, self.callBack_automatic)
+        self.button_list.append(ba)
+        self.button_list.append(next_turn_button)
+        self.ui_elements[UI_Element.BUTTON_NEXT_TURN] = next_turn_button
+        self.ui_elements[UI_Element.BUTTON_PLAY_AUTO] = ba
+        diplo_button = AutomaticIconButton(self.screen_width - 50, 200, self.callBack_diplo,
+                                           UI_Texture.ICON_BUTTON_DIPLO_PRESSED,
+                                           UI_Texture.ICON_BUTTON_DIPLO_UNPRESSED)
+        ai_button = AutomaticIconButton(self.screen_width - 50, 265, self.callBack_ai,
+                                        UI_Texture.ICON_BUTTON_AI_PRESSED,
+                                        UI_Texture.ICON_BUTTON_AI_UNPRESSED)
+        self.button_list.append(diplo_button)
+        self.button_list.append(ai_button)
+
+        x_offset = 40
+        map_hack_button = AutomaticIconButton(self.screen_width - 50, 20, self.callBack_map_hack,
+                                              UI_Texture.ICON_BUTTON_WATCH_PRESSED,
+                                              UI_Texture.ICON_BUTTON_WATCH_UNPRESSED, scale=0.75)
+        # map_hack_button.on_press()
+        self.button_list.append(map_hack_button)
+        for p in self.gl.player_list:
+            watch_button = AutomaticIconButton(10 + x_offset, 100, self.callBack_watch,
+                                               UI_Texture.ICON_BUTTON_WATCH_PRESSED,
+                                               UI_Texture.ICON_BUTTON_WATCH_UNPRESSED, scale=0.5)
+            watch_button.args.append(p.id)
+            self.ui_elements[f"watch_id_{p.id}"] = watch_button
+            # if p.player_type == PlayerType.HUMAN:
+            #     watch_button.on_press()
+            self.button_list.append(watch_button)
+            x_offset = x_offset + 250
+
+
+
+
+        for b in self.button_list:
             self.sprite_list.append(b.sprite)
 
         if not self.gl.has_human_player:
@@ -173,7 +185,7 @@ class UI:
             if self.cost_panel.show:
                 self.cost_panel.draw()
 
-        for b in self.buttonlist:
+        for b in self.button_list:
             b.draw()
 
         # draw the player stats:
@@ -282,18 +294,20 @@ class UI:
         self.gl.automatic = active
 
     def callBack_diplo(self, active, args):
-        if self.diplo_panel.show:
-            self.diplo_panel.sprite.remove_from_sprite_lists()
+        diplo_panel = self.ui_elements[UI_Element.PANEL_DIPLOMATICS]
+        if diplo_panel.show:
+            diplo_panel.sprite.remove_from_sprite_lists()
         else:
-            self.sprite_list.append(self.diplo_panel.sprite)
-        self.diplo_panel.show = not self.diplo_panel.show
+            self.sprite_list.append(diplo_panel.sprite)
+        diplo_panel.show = not diplo_panel.show
 
     def callBack_ai(self, active, args):
-        if self.ai_panel.show:
-            self.ai_panel.sprite.remove_from_sprite_lists()
+        ai_panel = self.ui_elements[UI_Element.PANEL_AI]
+        if ai_panel.show:
+            ai_panel.sprite.remove_from_sprite_lists()
         else:
-            self.sprite_list.append(self.ai_panel.sprite)
-        self.ai_panel.show = not self.ai_panel.show
+            self.sprite_list.append(ai_panel.sprite)
+        ai_panel.show = not ai_panel.show
 
     def callBack_watch(self, active, args):
         self.gl.map_view[args[0]] = active
@@ -308,7 +322,7 @@ class UI:
 
     def check_mouse_press_for_buttons(self, x, y) -> bool:
         """ Given an x, y, see if we need to register any button clicks. """
-        for button in self.buttonlist:
+        for button in self.button_list:
             if x > button.center_x + button.width / 2:
                 continue
             if x < button.center_x - button.width / 2:
@@ -339,16 +353,19 @@ class UI:
             self.volatile_panel.clear()
             return
 
-        from src.hex_map import HexMap
-        candidates = []
-        for hex in self.gl.hex_map.map:  # FIXME should avoid looping over all elements. This is trash here
-            hex_pix = tuple(map(sum, zip(HexMap.offset_to_pixel_coords(hex.offset_coordinates), self.camera_pos)))
-            dist = sqrt(((x - hex_pix[0]) * 0.5 * (x - hex_pix[0]) * 0.5) + ((y - hex_pix[1]) * (y - hex_pix[1])))
-            if dist < 30:
-                candidates.append((dist, hex))
-        if len(candidates) > 0:
-            candidates.sort(key=lambda x: x[0], reverse=False)
-            a, a_class = self.gl.get_map_element(candidates[0][1].offset_coordinates)
+        # from src.hex_map import HexMap
+        # candidates = []
+        hexagon = self.gl.hex_map.get_hex_by_pixel((x, y), self.camera_pos)
+        if hexagon:
+            a, a_class = self.gl.get_map_element(hexagon.offset_coordinates)
+        # for hex in self.gl.hex_map.map:
+        #     hex_pix = tuple(map(sum, zip(HexMap.offset_to_pixel_coords(hex.offset_coordinates), self.camera_pos)))
+        #     dist = sqrt(((x - hex_pix[0]) * 0.5 * (x - hex_pix[0]) * 0.5) + ((y - hex_pix[1]) * (y - hex_pix[1])))
+        #     if dist < 30:
+        #         candidates.append((dist, hex))
+        # if len(candidates) > 0:
+        #     candidates.sort(key=lambda x: x[0], reverse=False)
+        #     a, a_class = self.gl.get_map_element(candidates[0][1].offset_coordinates)
             from src.misc.building import Building
             from src.game_accessoires import Resource
             from src.game_accessoires import Army
@@ -381,13 +398,15 @@ class UI:
         panel.show = True
 
     def halt_progress(self):
-        if self.ba.active:
-            self.ba.on_press()
+        if self.ui_elements[UI_Element.BUTTON_PLAY_AUTO].active:
+            self.ui_elements[UI_Element.BUTTON_PLAY_AUTO].on_press()
+        # if self.ba.active:
+        #     self.ba.on_press()
         self.gl.automatic = False
 
     def check_mouse_release_for_buttons(self, _x, _y):
         """ If a mouse button has been released, see if we need to process
             any release events. """
-        for button in self.buttonlist:
+        for button in self.button_list:
             if button.pressed:
                 button.on_release()
