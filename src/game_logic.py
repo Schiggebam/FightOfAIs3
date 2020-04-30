@@ -397,15 +397,7 @@ class GameLogic:
                         tmp.has_attacked = True
                         # tmp.attack_loc.append((pid, loc))
 
-        costs = {'scout': int(1)}
-        for b_type in BuildingType:
-            if b_type != BuildingType.OTHER_BUILDING:
-                costs[Building.building_info[b_type]['tex_code']] = Building.building_info[b_type]['construction_cost']
-
-        costs['bs'] = Unit.get_unit_cost(UnitType.BABARIC_SOLDIER)
-        costs['knight'] = Unit.get_unit_cost(UnitType.KNIGHT)
-        costs['mercenary'] = Unit.get_unit_cost(UnitType.MERCENARY)
-        # modern cost # Fixme move away from cost 'as a field' -> cost 'as a dict' with CostType instead of str as key
+        scout_cost = 1
         b_costs: Dict[BuildingType, int] = {}
         for t_b in BuildingType:
             if t_b != BuildingType.OTHER_BUILDING:
@@ -414,7 +406,7 @@ class GameLogic:
         for t_u in UnitType:
             u_costs[t_u] = Unit.get_unit_cost(t_u)
 
-        AI_GameInterface.create_ai_status(ai_game_status, self.turn_nr, costs,
+        AI_GameInterface.create_ai_status(ai_game_status, self.turn_nr, scout_cost,
                                           ai_map, me, opponents, b_costs, u_costs)
         player.attacked_set.clear()
 

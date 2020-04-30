@@ -1,6 +1,6 @@
 import threading
 import timeit
-from typing import Set, Tuple, Optional, Union, List, Any, Dict
+from typing import Tuple, Optional, Union, List, Any, Dict
 
 from src.ai.AI_MapRepresentation import Map, AI_Player, AI_Opponent
 from src.misc.game_constants import error, UnitType, BuildingType, MoveType, UnitCost, debug
@@ -48,26 +48,6 @@ class AI_GameStatus:
         self.turn_nr: int = -1
         """cost in resources of scouting a hexagon"""
         self.costScout: int = -1
-        """cost in resouces to build a hut """
-        self.costBuildS1: int = -1
-        """cost in resources to build a villa (currently not in use)"""
-        self.costBuildS2: int = -1
-        """cost in resources to build a farm"""
-        self.costBuildFarm: int = -1
-        """cost in resouces to build a barracks"""
-        self.costBuildRacks: int = -1
-        """cost in rescoures to build a 'camp level 1'"""
-        self.costBuildC1: int = -1
-        """cost in rescoures to build a 'camp level 2'"""
-        self.costBuildC2: int = -1
-        """cost in rescoures to build a 'camp level 3'"""
-        self.costBuildC3: int = -1
-        """cost in UnitCost to build a 'barbaric soldier'"""
-        self.costUnitBS: Optional[UnitCost] = None  # cost in resources, culture and population
-        """cost in UnitCost to build a 'knight'"""
-        self.costUnitKn: Optional[UnitCost] = None
-        """cost in UnitCost to build a 'mercenary'"""
-        self.costUnitMe: Optional[UnitCost] = None
         """holds the construction cost of all building types in a Dict"""
         self.cost_building_construction: Dict[BuildingType, int] = {}
         """holds the unitcost of all unit types in a Dict"""
@@ -107,10 +87,9 @@ class AI_GameInterface:
         elif ai_str == "villager":
             self.dict_of_ais[id] = AI_NPC(id, other_players, AI_NPC.Script.VILLAGER)
 
-
     @staticmethod
     def create_ai_status(ai_stat: AI_GameStatus, turn_nr,
-                         costs, ai_map: Map, me: AI_Player, opponents: List[AI_Opponent],
+                         scout_cost, ai_map: Map, me: AI_Player, opponents: List[AI_Opponent],
                          building_costs: Dict[BuildingType, int],
                          unit_cost: Dict[UnitType, UnitCost]):
         ai_stat.turn_nr = turn_nr
@@ -118,17 +97,7 @@ class AI_GameInterface:
         ai_stat.me = me
         ai_stat.opponents = opponents
 
-        ai_stat.costScout = costs['scout']
-        ai_stat.costBuildS1 = costs['s1']
-        ai_stat.costBuildC1 = costs['c1']
-        ai_stat.costBuildC2 = costs['c2']
-        ai_stat.costBuildC3 = costs['c3']
-        ai_stat.costBuildS2 = costs['s2']
-        ai_stat.costBuildRacks = costs['br']
-        ai_stat.costBuildFarm = costs['fa']
-        ai_stat.costUnitBS = costs['bs']
-        ai_stat.costUnitKn = costs['knight']
-        ai_stat.costUnitMe = costs['mercenary']
+        ai_stat.costScout = scout_cost
         # TODO costs to dict:
         ai_stat.cost_building_construction = building_costs
         ai_stat.cost_unit_recruitment = unit_cost
@@ -150,8 +119,6 @@ class AI_GameInterface:
         self.time_begin = timeit.default_timer()
         ai_worker = threading.Thread(target=self.run, args=(ai_stat, move, player_id))
         ai_worker.start()
-
-
 
     def query_ai(self, query, arg, player_id) -> str:
         if query == "diplo":

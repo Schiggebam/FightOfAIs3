@@ -509,7 +509,7 @@ class AI_Mazedonian(AI):
         fields = []
         p = Priority.P_NO
         is_next_to_res = False  # just for printing
-        if ai_stat.me.resources >= ai_stat.costBuildFarm:
+        if ai_stat.me.resources >= ai_stat.cost_building_construction[BuildingType.FARM]:
             for ai_t in ai_stat.map.buildable_tiles:
                 tmp = False  # just for printing
                 possible_fields = []
@@ -552,7 +552,7 @@ class AI_Mazedonian(AI):
         """building sites get scored by their number of resource fields next to them"""
         best_score = -1
         best_site = (-1, -1)
-        if ai_stat.me.resources >= ai_stat.costBuildS1:
+        if ai_stat.me.resources >= ai_stat.cost_building_construction[BuildingType.HUT]:
             for ai_t in ai_stat.map.buildable_tiles:
                 score = AI_Toolkit.num_resources_on_adjacent(ai_t)
                 if best_score < score:
@@ -562,7 +562,7 @@ class AI_Mazedonian(AI):
 
     def __best_building_site_barracks(self, ai_stat: AI_GameStatus) -> Tuple[Priority, Tuple[int, int]]:
         """building sites should be a claimed tile and not next to a resource"""
-        if ai_stat.me.resources >= ai_stat.costBuildRacks:
+        if ai_stat.me.resources >= ai_stat.cost_building_construction[BuildingType.BARRACKS]:
             candidates = []
             for c in self.claimed_tiles:
                 if not c.is_buildable:  # if tile is not buildable, forget it
@@ -620,34 +620,36 @@ class AI_Mazedonian(AI):
             prio_knight = Priority.increase(prio_knight)
             prio_merc = Priority.increase(prio_merc)
         # mercenary
-        if ai_stat.me.population + ai_stat.costUnitMe.population <= ai_stat.me.population_limit:
-            if ai_stat.me.resources >= ai_stat.costUnitMe.resources:
-                if ai_stat.me.culture >= ai_stat.costUnitMe.culture:
+        cost_unit_me = ai_stat.cost_unit_recruitment[UnitType.MERCENARY]
+        if ai_stat.me.population + cost_unit_me.population <= ai_stat.me.population_limit:
+            if ai_stat.me.resources >= cost_unit_me.resources:
+                if ai_stat.me.culture >= cost_unit_me.culture:
                     options.append(RecruitmentOption(UnitType.MERCENARY, prio_merc))
                 else:
                     if DETAILED_DEBUG:
                         hint("not enough culture to recruit a mercenary. actual: {} required: {}".format(
-                            ai_stat.me.culture, ai_stat.costUnitMe.culture))
+                            ai_stat.me.culture, cost_unit_me.culture))
             else:
                 if DETAILED_DEBUG:
                     hint("not enough resources to recruit a mercenary. actual: {} required: {}".format(
-                        ai_stat.me.resources, ai_stat.costUnitMe.resources))
+                        ai_stat.me.resources, cost_unit_me.resources))
         else:
             if DETAILED_DEBUG:
                 hint("not enough free population to recruit a mercenary")
         # knight
-        if ai_stat.me.population + ai_stat.costUnitKn.population <= ai_stat.me.population_limit:
-            if ai_stat.me.resources >= ai_stat.costUnitKn.resources:
-                if ai_stat.me.culture >= ai_stat.costUnitKn.culture:
+        cost_unit_kn = ai_stat.cost_unit_recruitment[UnitType.KNIGHT]
+        if ai_stat.me.population + cost_unit_kn.population <= ai_stat.me.population_limit:
+            if ai_stat.me.resources >= cost_unit_kn.resources:
+                if ai_stat.me.culture >= cost_unit_kn.culture:
                     options.append(RecruitmentOption(UnitType.KNIGHT, prio_knight))
                 else:
                     if DETAILED_DEBUG:
                         hint("not enough culture to recruit a knight. actual: {} required: {}".format(
-                            ai_stat.me.culture, ai_stat.costUnitKn.culture))
+                            ai_stat.me.culture, cost_unit_kn.culture))
             else:
                 if DETAILED_DEBUG:
                     hint("not enough resources to recruit a knight. actual: {} required: {}".format(
-                        ai_stat.me.resources, ai_stat.costUnitKn.resources))
+                        ai_stat.me.resources, cost_unit_kn.resources))
         else:
             if DETAILED_DEBUG:
                 hint("not enough free population to recruit a knight")
