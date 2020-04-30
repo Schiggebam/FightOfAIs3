@@ -63,6 +63,9 @@ class Animator:
         self.move_animations.append(move)
 
     def update(self, time):
+        if len(self.move_animations) == 0:
+            return
+
         for move in self.move_animations:
             if move.start_time_ms == -1:
                 move.start_time_ms = time

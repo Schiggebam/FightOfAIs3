@@ -1,4 +1,4 @@
-import threading
+
 import timeit
 from typing import Tuple, Optional, Union, List, Any, Dict
 
@@ -103,7 +103,23 @@ class AI_GameInterface:
         ai_stat.cost_building_construction = building_costs
         ai_stat.cost_unit_recruitment = unit_cost
 
-    def run(self,  ai_stat: AI_GameStatus, move: AI_Move, player_id):
+    # def run(self,  ai_stat: AI_GameStatus, move: AI_Move, player_id):
+    #     self.dict_of_ais[player_id].do_move(ai_stat, move)
+    #     # performance logging
+    #     from src.ai.performance import ScoreSpentResources
+    #     score = ScoreSpentResources.evaluate(ai_stat.map)
+    #     from src.ai.performance import PerformanceLogger
+    #     PerformanceLogger.log_performance_file(ai_stat.turn_nr, ai_stat.me.id, score)
+    #     self.__has_finished = True
+    #     self.time_end = timeit.default_timer()
+
+    def do_a_move(self, ai_stat: AI_GameStatus, move: AI_Move, player_id):
+        """spawns a new thread which does the AI calculations to reduce load/stalls in update thread"""
+        self.__has_finished = False
+        self.ref_to_move = move     # <-- keep reference on move, once __has_finished is true, the object is complete
+        # self.time_begin = timeit.default_timer()
+        # ai_worker = threading.Thread(target=self.run, args=(ai_stat, move, player_id))
+        # ai_worker.start()
         self.dict_of_ais[player_id].do_move(ai_stat, move)
         # performance logging
         from src.ai.performance import ScoreSpentResources
@@ -111,15 +127,6 @@ class AI_GameInterface:
         from src.ai.performance import PerformanceLogger
         PerformanceLogger.log_performance_file(ai_stat.turn_nr, ai_stat.me.id, score)
         self.__has_finished = True
-        self.time_end = timeit.default_timer()
-
-    def do_a_move(self, ai_stat: AI_GameStatus, move: AI_Move, player_id):
-        """spawns a new thread which does the AI calculations to reduce load/stalls in update thread"""
-        self.__has_finished = False
-        self.ref_to_move = move     # <-- keep reference on move, once __has_finished is true, the object is complete
-        self.time_begin = timeit.default_timer()
-        ai_worker = threading.Thread(target=self.run, args=(ai_stat, move, player_id))
-        ai_worker.start()
 
     def query_ai(self, query, arg, player_id) -> str:
         if query == "diplo":

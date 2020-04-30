@@ -1,3 +1,4 @@
+import threading
 import timeit
 # from threading import Thread
 
@@ -187,6 +188,7 @@ class GameLogic:
         self.ai_ctrl_frame = ai_ctrl_frame
 
     def update(self, delta_time: float, commands :[], wall_clock_time: float):
+        # t97 = timeit.default_timer()
         timestamp_start = timeit.default_timer()
         self.__exec_command(commands)
         self.elapsed = self.elapsed + delta_time
@@ -197,29 +199,36 @@ class GameLogic:
         if self.elapsed > float(GAME_LOGIC_CLK_SPEED if self.turn_nr < 80 else 1) and self.automatic:
             self.playNextTurn = True
             self.elapsed = float(0)
-
+        # t98 = timeit.default_timer()
+        # ----------------- CORE ----------------------
         if self.playNextTurn:
-            t1 = timeit.default_timer()
+            #orig_state = str(self.logic_state)
+            #t1 = timeit.default_timer()
             self.handle_turn()
-            t2 = timeit.default_timer()
-            debug(f"update loop took: {(t2 - t1) * 1000:.0} ms")
+            #t2 = timeit.default_timer()
+            #debug(f"update loop took: {(t2 - t1):.6} s [{orig_state}]")
+        # ----------------------------------------
+        # t99 = timeit.default_timer()
         if self.show_key_frame_animation:
             for s in self.z_levels[Z_FLYING]:
                 s.update_animation()
-
+        # t100 = timeit.default_timer()
         if self.change_in_map_view:
             t1 = timeit.default_timer()
             self.toggle_fog_of_war_lw(self.hex_map.map, show_update_bar=True)
             self.change_in_map_view = False
             t2 = timeit.default_timer()
             debug(f"change map view routine took: {(t2 - t1) :.6} s")
-
+        # t101 = timeit.default_timer()
         self.animator.update(wall_clock_time)
         self.total_time = timestamp_start - timeit.default_timer()
-        # debug("update loop took: {} s []".format(self.total_time))
+        # t102 = timeit.default_timer()
+        # if t102 - t97 > 0.1:
+        #     print(f"1:{t98 - t97}, 2:{t99 - t98}, 3:{t100 - t99}, 4:{t101 - t100}, 5:{t102- t101}")
 
     def handle_turn(self):
         """handles the turn for a player (human, ai or npc), extends the main update loop"""
+
         if self.logic_state is GameLogicState.NOT_READY:
             error(f"game logic not ready, logic state: {self.logic_state}")
             self.playNextTurn = False
@@ -249,19 +258,23 @@ class GameLogic:
                 if self.human_interface.is_move_complete() or self.nextPlayerButtonPressed:
                     self.logic_state = GameLogicState.TURN_COMPLETE
         else:   # handle AI agent
-
             if self.logic_state is GameLogicState.READY_FOR_TURN:
                 self.play_players_turn(player)
                 self.logic_state = GameLogicState.WAITING_FOR_AGENT
 
             elif self.logic_state is GameLogicState.WAITING_FOR_AGENT:
                 if self.ai_interface.has_finished():
+
                     ai_move = self.ai_interface.ref_to_move
-                    debug("AI took {} ms".format(self.ai_interface.get_ai_execution_time()))
+
+                    # debug("AI took {} ms".format(self.ai_interface.get_ai_execution_time()))
                     if ai_move:  # player might have lost
                         self.exec_ai_move(ai_move, player)
+
                     if Definitions.SHOW_AI_CTRL:
+
                         self.ai_ctrl_frame.update(self.ai_interface.get_dump(player.id), player.id)
+
                     self.logic_state = GameLogicState.TURN_COMPLETE
 
         if self.logic_state is GameLogicState.TURN_COMPLETE:
@@ -273,13 +286,18 @@ class GameLogic:
                 self.playNextTurn = True
             else:
                 self.playNextTurn = False
-            hint("                              SUCCESSFULLY PLAYED TURN")
+            # hint("                              SUCCESSFULLY PLAYED TURN")
             self.logic_state = GameLogicState.READY_FOR_TURN
 
+    def spawn_ai_thread(self, player):
+        ai_game_status = AI_GameStatus()
+        ai_move = AI_Move()
+        self.construct_game_status(player, ai_game_status)
+        self.ai_interface.do_a_move(ai_game_status, ai_move, player.id)
 
     def play_players_turn(self, player: Player):
         """wrapper function, extends the main update loop"""
-        debug(f"Play move of player {player.name} [pid: {player.id}]")
+        # debug(f"Play move of player {player.name} [pid: {player.id}]")
         self.updata_map()
         if self.check_win_condition(player):
             self.winner = player
@@ -288,14 +306,23 @@ class GameLogic:
         if player.has_lost:
             self.destroy_player(player)
             return
-        ai_game_status = AI_GameStatus()
-        self.construct_game_status(player, ai_game_status)
-
-        ai_move = AI_Move()
         if player.player_type == PlayerType.HUMAN:
+            ai_game_status = AI_GameStatus()
+            self.construct_game_status(player, ai_game_status)
+            ai_move = AI_Move()
             self.human_interface.request_move(ai_game_status, ai_move, player.id)
         else:
-            self.ai_interface.do_a_move(ai_game_status, ai_move, player.id)
+            ai_worker = threading.Thread(target=self.spawn_ai_thread, args=(player, ))
+            ai_worker.start()
+
+        # ai_game_status = AI_GameStatus()
+        # self.construct_game_status(player, ai_game_status)
+        #
+        # ai_move = AI_Move()
+        # if player.player_type == PlayerType.HUMAN:
+        #     self.human_interface.request_move(ai_game_status, ai_move, player.id)
+        # else:
+        #     self.ai_interface.do_a_move(ai_game_status, ai_move, player.id)
 
     def update_player_properties(self, player):
         """calculate income, new culture level, food, etc."""
@@ -438,7 +465,7 @@ class GameLogic:
         self.__reorder_spritelist(self.z_levels[Z_GAME_OBJ])
 
     def exec_ai_move(self, ai_move: AI_Move, player: Player):
-        t1 = timeit.default_timer()
+
         self.__check_validity(ai_move)
         for d in self.hex_map.map:
             d.debug_msg = ""
@@ -551,8 +578,7 @@ class GameLogic:
                     error(f"Invalid target for army movement: {ai_move.move_army_to}")
             else:
                 error("No army available")
-        t_tot = timeit.default_timer() - t1
-        debug("exec_ai_move took {} s".format(t_tot))
+
 
 
     def __check_validity(self, ai_move: AI_Move):
@@ -699,7 +725,7 @@ class GameLogic:
         for player in self.player_list:
             self.update_fog_of_war(player)
         t3 = timeit.default_timer()
-        debug("Toggeling the map took: {} s (fog of war update: {})".format(t3 - t1, t3 - t2))
+        # debug("Toggeling the map took: {} s (fog of war update: {})".format(t3 - t1, t3 - t2))
 
     def add_resource(self, resource: Resource):
         self.scenario.resource_list.append(resource)
@@ -844,7 +870,7 @@ class GameLogic:
             if self.hex_map.hex_distance(new_hex, army.tile) == 1:
                 self.animator.add_move_animation(army, new_hex.offset_coordinates, float(.4))
                 army.tile = new_hex
-                hint('army is moving to ' + str(army.tile.offset_coordinates))
+                # hint('army is moving to ' + str(army.tile.offset_coordinates))
                 #army.set_sprite_pos(HexMap.offset_to_pixel_coords(new_hex.offset_coordinates))
                 self.__reorder_spritelist(self.z_levels[Z_GAME_OBJ])
                 self.toggle_fog_of_war_lw(player.discovered_tiles)

@@ -27,7 +27,7 @@ Z_GAME_OBJ = 3
 ERRORS_ARE_FATAL = False
 DEBUG = True
 DETAILED_DEBUG_INFO = 1     # 0: no info, 1: includes calling class, 2: includes calling method
-ENABLE_KEYFRAME_ANIMATIONS = True
+ENABLE_KEYFRAME_ANIMATIONS = False
 MAP_HACK_ENABLE_AT_STARTUP = False
 GAME_LOGIC_CLK_SPEED = 0.75
 
@@ -69,13 +69,14 @@ def get_caller() -> str:
 def debug(msg: str, colour=0):
     if not Definitions.DEBUG_MODE:
         return
-    caller = ""
-    if DETAILED_DEBUG_INFO != 0:
-        caller = get_caller()
-    c = bcolors.OKBLUE
-    if colour == 1:
-        c = bcolors.OKGREEN
-    print("[DEBUG]{} : {}{}{}".format(caller, c, str(msg), bcolors.ENDC))
+    print(msg)
+    # caller = ""
+    # if DETAILED_DEBUG_INFO != 0:
+    #     caller = get_caller()
+    # c = bcolors.OKBLUE
+    # if colour == 1:
+    #     c = bcolors.OKGREEN
+    # print("[DEBUG]{} : {}{}{}".format(caller, c, str(msg), bcolors.ENDC))
 
 
 def hint(msg: str):

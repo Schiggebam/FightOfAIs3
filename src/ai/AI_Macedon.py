@@ -90,6 +90,7 @@ class AI_Mazedonian(AI):
         self.previous_food: int = -1
         self.crusade_time: int = 0
         self.crusade_target_id: int = -1
+        self.previous_attack_target: Optional[AI_Mazedonian.AttackTarget] = None
 
         # values to move to the xml file: and dependent on personality
         self.properties: Dict[str, Any] = {}
@@ -180,7 +181,8 @@ class AI_Mazedonian(AI):
     def evaluate_army_movement(self, ai_stat: AI_GameStatus, move: AI_Move):
         if len(ai_stat.map.army_list) == 0:
             return
-        target = ""
+        target_str = ""
+        self.previous_attack_target = None
         if self.state == AI_Mazedonian.AI_State.PASSIVE:
             # for now, just move it out of the way.
             army_is_on_field = False
@@ -195,35 +197,39 @@ class AI_Mazedonian(AI):
                     # walk to random field
                     path = []
                     idx = random.randint(0, len(ai_stat.map.own_farm_field_tiles) - 1)
-                    print(f"from: {ai_stat.map.army_list[0].base_tile.offset_coordinates} to {ai_stat.map.own_farm_field_tiles[idx].offset_coordinates}")
+                    # print(f"from: {ai_stat.map.army_list[0].base_tile.offset_coordinates} to {ai_stat.map.own_farm_field_tiles[idx].offset_coordinates}")
                     path = AI_Toolkit.dijkstra_pq(ai_stat.map.army_list[0].base_tile,
                                                   ai_stat.map.own_farm_field_tiles[idx],
                                                   ai_stat.map.walkable_tiles)
                     if len(path) > 1:
                         move.move_army_to = path[1].offset_coordinates
                         move.doMoveArmy = True
-                        target = " corn field "
+                        target_str = "corn field"
 
-        elif self.state == AI_Mazedonian.AI_State.DEFENSIVE or self.state == AI_Mazedonian.AI_State.AGGRESSIVE:
+        #elif self.state == AI_Mazedonian.AI_State.DEFENSIVE or self.state == AI_Mazedonian.AI_State.AGGRESSIVE:
+        else:
             if len(self.priolist_targets) > 0:
-                if self.threshold_target_value <= self.priolist_targets[0].score:
+                if self.threshold_target_value <= self.priolist_targets[0].weighted_score:
                     # hint("on warpath: {} {}".format(self.threshold_target_value, self.priolist_targets[0].score))
                     # attack
                     start_tile = ai_stat.map.army_list[0].base_tile
                     target_tile = self.priolist_targets[0].target.base_tile
                     path = AI_Toolkit.dijkstra_pq(start_tile, target_tile, ai_stat.map.walkable_tiles)
                     if len(path) > 1:
+                        self.previous_attack_target = self.priolist_targets[0]
                         move.move_army_to = path[1].offset_coordinates
                         move.doMoveArmy = True
-                        target = "army" if type(self.priolist_targets[0].target) is AI_Army else "building"
-                        if DETAILED_DEBUG:
+                        target = self.priolist_targets[0]
+                        s = "army" if type(target.target) is AI_Army else "building"
+                        target_str = f"Movement: target: {s} @ loc: {target.target.offset_coordinates}"
+                        if BASIC_DEBUG:
                             self._dump('moving to: {} from {} to {}'.format(str(move.move_army_to),
                                                                       start_tile.offset_coordinates,
                                                                       target_tile.offset_coordinates))
                 else:
                     self._dump("targets value to low. Will not attack")
         if move.doMoveArmy:
-            self._dump(f"Movement: target: {target} @ loc: {move.move_army_to}")
+            self._dump(target_str)
 
     def set_vars(self, ai_stat: AI_GameStatus):
         if self.previous_food > ai_stat.me.food:
@@ -303,6 +309,9 @@ class AI_Mazedonian(AI):
         for opp in ai_stat.opponents:
             if opp.has_lost and opp.id in self.hostile_player:
                 self.hostile_player.remove(opp.id)
+        if self.crusade_target_id != -1:
+            if self.crusade_target_id not in self.hostile_player:
+                self.hostile_player.add(self.crusade_target_id)
         self._dump(f"hostile players: {str(self.hostile_player)}")
 
     def estimate_opponent_strength(self, ai_stat: AI_GameStatus):
@@ -377,17 +386,21 @@ class AI_Mazedonian(AI):
 
         # crusade ?
         if self.protocol is AI_Mazedonian.Protocol.LATE_GAME and self.state != AI_Mazedonian.AI_State.CRUSADE:
-            if ai_stat.me.resources > 100 and ai_stat.me.food > 100 and ai_stat.me.population > 20:
+            if ai_stat.me.food > 100 and ai_stat.me.population > 20:
                 target_player_id = self.diplomacy.get_player_with_lowest_dv()
                 if target_player_id != -1:
-                    self.state = AI_Mazedonian.AI_State.CRUSADE
-                    self.crusade_target_id = target_player_id
-                    self.crusade_time = 10
+                    if len(self.priolist_targets) > 0:
+                        self.state = AI_Mazedonian.AI_State.CRUSADE
+                        self.crusade_target_id = target_player_id
+                        self.crusade_time = 15
+                else:
+                    self._dump("unable to find ID for crusade")
 
         if self.state is AI_Mazedonian.AI_State.CRUSADE:
             self.crusade_time -= 1
             if self.crusade_time < 0:
                 self.state = AI_Mazedonian.AI_State.PASSIVE
+                self.crusade_target_id = -1
 
 
         self._dump(f"State: {old_state} -> {self.state}")
@@ -405,11 +418,14 @@ class AI_Mazedonian(AI):
                         self._dump(f"Weight w: {w.weight} applied on score: {opt.weighted_score} of {type(opt)} ")
                     opt.weighted_score = opt.weighted_score + w.weight
 
+        used_weights.append(" | ")
+
         for m in self.priolist_targets:
             if m.score == Priority.P_NO:
                 continue
             for w in self.m_weights:
                 if w.condition(m, ai_stat):
+                    used_weights.append(w.condition.__name__)
                     m.weighted_score = m.weighted_score + w.weight
 
         options.sort(key=lambda x: x.weighted_score, reverse=True)
@@ -821,7 +837,6 @@ class AI_Mazedonian(AI):
                     value = 3 if is_army else 2
             if BASIC_DEBUG:
                 self._dump(f"Target @ {str(target.offset_coordinates)} ({'army' if is_army else 'building'}) has value {value}")
-            # self.priolist_targets.append((value, target, is_army))
             self.priolist_targets.append(AI_Mazedonian.AttackTarget(target, value))
         if len(self.priolist_targets) > 0:
             self.priolist_targets.sort(key=lambda x: x.score, reverse=True)

@@ -244,5 +244,14 @@ def setup_movement_weights(self: AI_Mazedonian) -> List[Tuple[Callable, float]]:
 
     aw.append((aw7, 5))
 
+    def aw8(elem: AI_Mazedonian.AttackTarget, ai_stat: AI_GameStatus) -> bool:
+        """Keep the previous attack target for static targets"""
+        if self.previous_attack_target is not None:
+            if elem.target.offset_coordinates == self.previous_attack_target.target.offset_coordinates:
+                return True
+        return False
+
+    aw.append((aw8, 2))
+
     hint(f"AI has found {len(aw)} movement weight functions.")
     return aw
