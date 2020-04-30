@@ -343,10 +343,16 @@ class GameLogic:
 
     def construct_game_status(self, player: Player, ai_game_status: AI_GameStatus):
         """constructs an object, which holds the current view of the game out of a players perspective"""
+
+        # tiles = self.get_all_at_once(player)
+        # scoutable_tiles_1 = tiles[0]
+        # buildable_tiles_1 = tiles[1]
+        # walkable_tiles_1 = tiles[2]
+
         scoutable_tiles = self.get_scoutable_tiles(player)
         buildable_tiles = self.get_buildable_tiles(player)
-        known_resources = self.get_known_resources(player)
         walkable_tiles = self.get_walkable_tiles(player)
+        known_resources = self.get_known_resources(player)
         enemy_buildings = self.get_enemy_buildings(player, scoutable_tiles)  # tuple set((bld, owner_id))
         enemy_armies = self.get_enemy_armies(player)        # tuple set((army, owner_id))
 
@@ -374,12 +380,12 @@ class GameLogic:
             ai_map.add_resource(r.tile.offset_coordinates, r)
         for b in player.buildings:
             ai_map.add_own_building(b.tile.offset_coordinates, b)
-        for b, id in enemy_buildings:
-            ai_map.add_opp_building(b.tile.offset_coordinates, b, id)
+        for b, pid in enemy_buildings:
+            ai_map.add_opp_building(b.tile.offset_coordinates, b, pid)
         for a in player.armies:
             ai_map.add_own_army(a.tile.offset_coordinates, a)
-        for a, id in enemy_armies:
-            ai_map.add_opp_army(a.tile.offset_coordinates, a, id)
+        for a, pid in enemy_armies:
+            ai_map.add_opp_army(a.tile.offset_coordinates, a, pid)
         # ai_map.print_map()
         from src.ai.AI_MapRepresentation import AI_Player, AI_Opponent
         me = AI_Player(player.id, player.name, player.player_type, player.amount_of_resources,
@@ -614,11 +620,33 @@ class GameLogic:
         has_food = player.food > 0
         return not (has_food and has_active_building)
 
+    def get_all_at_once(self, player: Player) -> List[Set[Hexagon]]:
+        """returns scoutable, buildable and walkable tiles at once"""
+        set_walkable = set()
+        set_buildable = set()
+        set_scoutable = set()
+        for hex in player.discovered_tiles:
+            for n in self.hex_map.get_neighbours(hex):
+                if n not in player.discovered_tiles:
+                    set_scoutable.add(n)
+            if hex.ground.buildable:
+                set_buildable.add(hex)
+            if hex.ground.walkable:
+                set_walkable.add(hex)
+        for p in self.player_list:      # enemy buildings are walkable (to attack them) if they are scouted
+            if p.id != player.id:
+                for b in p.buildings:
+                    if b.tile in player.discovered_tiles:
+                        set_walkable.add(b.tile)
+                for army in p.armies:
+                    if army.tile in set_buildable:
+                        set_buildable.remove(army.tile)
+        return [set(filter(None, set_scoutable)), set(filter(None, set_buildable)), set(filter(None, set_walkable))]
 
     def get_scoutable_tiles(self, player: Player) -> set:
         s_set = set()
-        for hex in self.hex_map.map:
-            if hex in player.discovered_tiles and hex.ground.walkable:
+        for hex in player.discovered_tiles:
+            if hex.ground.walkable:
                 for h in self.hex_map.get_neighbours(hex):
                     if h not in player.discovered_tiles:
                         s_set.add(h)
@@ -656,10 +684,11 @@ class GameLogic:
 
     def get_enemy_buildings(self, player: Player, scoutable_tiles: Set[Hexagon]) -> set:
         e_set = set()
+        u = set().union(player.discovered_tiles, scoutable_tiles)
         for other_player in self.player_list:
             if other_player.id != player.id:
                 for o_b in other_player.buildings:
-                    for my_dis in set().union(player.discovered_tiles, scoutable_tiles):
+                    for my_dis in u:
                         if o_b.tile.offset_coordinates == my_dis.offset_coordinates:
                             e_set.add((o_b, other_player.id))
         return e_set

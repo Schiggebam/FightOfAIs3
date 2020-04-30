@@ -166,7 +166,8 @@ class AI_Mazedonian(AI):
         all_options.extend(build_options)
         all_options.extend(recruitment_options)
         # all_options.extend(scouting_options)
-        all_options.append(scouting_options[0])  # reducing complexity - just consider the best scouting option
+        if len(scouting_options) > 0:
+            all_options.append(scouting_options[0])  # reducing complexity - just consider the best scouting option
         all_options.append(WaitOption(Priority.P_MEDIUM))  # do nothing is an option
         self.weight_options(all_options, ai_stat, move)
         self.evaluate_army_movement(ai_stat, move)
@@ -554,10 +555,13 @@ class AI_Mazedonian(AI):
             for ai_t in ai_stat.map.buildable_tiles:
                 tmp = False  # just for printing
                 possible_fields = []
+                score = 0
                 for n in AI_Toolkit.get_neibours_on_set(ai_t, ai_stat.map.buildable_tiles):
                     if AI_Toolkit.num_resources_on_adjacent(n) == 0:
                         possible_fields.append(n)
-                score = len(possible_fields)
+                    if AI_Toolkit.is_obj_in_list(n, ai_stat.map.scoutable_tiles):
+                        score += 1
+                score += len(possible_fields)
                 amount_of_fields = min(3, len(possible_fields))
                 sampled = random.sample(possible_fields, amount_of_fields)
                 # if build site is next to a resource --> reduce value by 1 for each resource field
@@ -565,7 +569,8 @@ class AI_Mazedonian(AI):
                 # make the score dependent on safety level of region
                 #score = score - self.compass.get_threat_level(ai_t).value * 2
                 if ai_t in self.danger_zone:
-                    score = score - 10
+                    score += - 10
+
                 if best_score < score:
                     best_score = score
                     is_next_to_res = tmp
@@ -915,6 +920,8 @@ class AI_Mazedonian(AI):
             s = s + "defensive"
         elif self.state == AI_Mazedonian.AI_State.AGGRESSIVE:
             s = s + "aggressive"
+        elif self.state == AI_Mazedonian.AI_State.CRUSADE:
+            s = s + "crusade"
         s = s + "\n    PR:" + str(self.protocol)
         if self.build_order:
             s = s + "\n    BO:" + str(self.build_order.name)
