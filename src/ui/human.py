@@ -2,7 +2,7 @@ from math import sqrt
 
 import arcade
 
-from src.ai import AI_Toolkit
+from src.ai.toolkit import essentials
 from src.game_accessoires import Unit
 from src.game_logic import GameLogic, Army
 from src.hex_map import *
@@ -334,7 +334,7 @@ class HumanInteraction:
         obj, obj_class = self.gl.get_map_element(h.offset_coordinates)
 
         # tiles is scoutable
-        if AI_Toolkit.is_obj_in_list(h, self.game_status.map.scoutable_tiles):
+        if essentials.is_obj_in_list(h, self.game_status.map.scoutable_tiles):
             has_res_for_scouting = self.game_status.me.resources >= 1
             pos_list = self.get_icon_coordinates((mouse_x, mouse_y), 1)
             self.active_selection.append(SelectionIcon(pos_list[0][0], pos_list[0][1],
@@ -342,7 +342,7 @@ class HumanInteraction:
                                                        Action.SCOUT, h, is_active=has_res_for_scouting))
         # tile is buildable
         elif obj is None and h is not None:
-            if AI_Toolkit.is_obj_in_list(h, self.game_status.map.buildable_tiles):
+            if essentials.is_obj_in_list(h, self.game_status.map.buildable_tiles):
                 has_res_for_hut = Building.building_info[BuildingType.HUT][
                                       'construction_cost'] <= self.game_status.me.resources
                 has_res_for_farm = Building.building_info[BuildingType.FARM][
@@ -373,7 +373,7 @@ class HumanInteraction:
                 return
 
         elif obj_class is Army:
-            if AI_Toolkit.is_obj_in_list(obj.tile, self.game_status.map.army_list):
+            if essentials.is_obj_in_list(obj.tile, self.game_status.map.army_list):
                 merc_cost = Unit.get_unit_cost(UnitType.MERCENARY)
                 knight_cost = Unit.get_unit_cost(UnitType.KNIGHT)
                 has_res_for_merc = self.game_status.me.resources >= merc_cost.resources and \
@@ -422,7 +422,7 @@ class HumanInteraction:
                     self.move.doMoveArmy = True
                     self.active_hexagon = active_icon.hex
                     candidates = [x for x in self.gl.hex_map.get_neighbours(self.active_hexagon) if
-                                  AI_Toolkit.is_obj_in_list(x, self.game_status.map.walkable_tiles)]
+                                  essentials.is_obj_in_list(x, self.game_status.map.walkable_tiles)]
                     self.set_state(HI_State.SPECIFY_MOVEMENT)
                 else:
                     Logger.log_notification("you already moved the army.")
@@ -435,7 +435,7 @@ class HumanInteraction:
                         self.move.loc = active_icon.hex.offset_coordinates
                         self.active_hexagon = active_icon.hex
                         candidates = [x for x in self.gl.hex_map.get_neighbours(self.active_hexagon) if
-                                      AI_Toolkit.is_obj_in_list(x, self.game_status.map.buildable_tiles)]
+                                      essentials.is_obj_in_list(x, self.game_status.map.buildable_tiles)]
                         self.set_state(HI_State.SPECIFY_FIELDS)
                     elif action == Action.BUILD_HUT:
                         self.move.type = BuildingType.HUT

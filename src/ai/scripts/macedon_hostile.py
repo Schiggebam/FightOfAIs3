@@ -1,6 +1,6 @@
 from typing import Any, Dict, Callable, Tuple, List
 
-from src.ai import AI_Toolkit
+from src.ai.toolkit import essentials
 from src.ai.AI_GameStatus import AI_GameStatus
 from src.ai.AI_Macedon import AI_Mazedonian
 from src.ai.AI_MapRepresentation import AI_Army, AI_Building
@@ -152,10 +152,10 @@ def setup_weights(self) -> List[Tuple[Callable, float]]:
         if ai_stat.me.population_limit <= ai_stat.me.population:
             if type(elem) is BuildOption:
                 if elem.type == BuildingType.BARRACKS:
-                    if not AI_Toolkit.has_building_under_construction(BuildingType.BARRACKS, ai_stat):
+                    if not essentials.has_building_under_construction(BuildingType.BARRACKS, ai_stat):
                         return True
             if type(elem) is WaitOption:
-                if not AI_Toolkit.has_building_under_construction(BuildingType.BARRACKS, ai_stat):
+                if not essentials.has_building_under_construction(BuildingType.BARRACKS, ai_stat):
                     return True
             return False
 
@@ -179,7 +179,7 @@ def setup_movement_weights(self: AI_Mazedonian) -> List[Tuple[Callable, float]]:
 
     def aw1(elem: AI_Mazedonian.AttackTarget, ai_stat: AI_GameStatus) -> bool:
         if type(elem.target) == AI_Army:
-            if AI_Toolkit.is_obj_in_list(elem.target, self.claimed_tiles):
+            if essentials.is_obj_in_list(elem.target, self.claimed_tiles):
                 return True
         return False
 

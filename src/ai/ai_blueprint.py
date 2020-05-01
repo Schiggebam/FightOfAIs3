@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from typing import Callable, Tuple, List, Union, Optional, Dict
 from enum import Enum
 
-from src.ai import AI_Toolkit
+from src.ai.toolkit import essentials
 from src.ai.AI_GameStatus import AI_GameStatus, AI_Move
 from src.ai.AI_MapRepresentation import AI_Building, AI_Army, Tile
 from src.misc.game_constants import DiploEventType, error, Priority, UnitType, BuildingType, debug, hint, Definitions
@@ -125,8 +125,8 @@ class Compass:
     @staticmethod
     def get_cardinal_direction_obj(tile: Tile, base: Tile) -> List[CardinalDirection]:
         """wrapper function for get_cardinal_direction(...)"""
-        cc1 = AI_Toolkit.offset_to_cube_coord(tile)
-        cc2 = AI_Toolkit.offset_to_cube_coord(base)
+        cc1 = essentials.offset_to_cube_coord(tile)
+        cc2 = essentials.offset_to_cube_coord(base)
         return Compass.get_cardinal_direction(cc1, cc2)
 
     @staticmethod

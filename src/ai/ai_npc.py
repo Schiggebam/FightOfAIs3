@@ -1,16 +1,15 @@
 from enum import Enum
 import random
 import importlib
-import time
 
 from typing import Set, Optional, Union, List, Any, Dict, Tuple
 
-from src.ai import AI_Toolkit
+from src.ai.toolkit import essentials
 from src.ai.AI_GameStatus import AI_Move, AI_GameStatus
 from src.ai.AI_MapRepresentation import AI_Building, AI_Army, Tile
 from src.ai.ai_blueprint import AI, Weight, BuildOption, RecruitmentOption, RaiseArmyOption, ArmyMovementOption, \
     WaitOption, UpgradeOption
-from src.misc.game_constants import DiploEventType, hint, BuildingType, error, MoveType, Priority, UnitType
+from src.misc.game_constants import DiploEventType, error, MoveType, Priority
 
 
 class AI_NPC(AI):
@@ -189,8 +188,8 @@ class AI_NPC(AI):
         self._dump(s)
 
     def calculate_heatmaps(self, ai_stat: AI_GameStatus):
-        heat_map = AI_Toolkit.simple_heat_map(ai_stat.map.building_list, ai_stat.map.walkable_tiles,
-                                              lambda n: AI_Toolkit.is_obj_in_list(n, ai_stat.map.walkable_tiles))
+        heat_map = essentials.simple_heat_map(ai_stat.map.building_list, ai_stat.map.walkable_tiles,
+                                              lambda n: essentials.is_obj_in_list(n, ai_stat.map.walkable_tiles))
         for d, s in heat_map:
             if d <= self.properties['range_claimed_tiles']:
                 self.claimed_tiles.append(s)
@@ -226,7 +225,7 @@ class AI_NPC(AI):
     def evaluate_move_recruit_unit(self, ai_stat: AI_GameStatus) -> Union[None, RaiseArmyOption, RecruitmentOption]:
         if len(ai_stat.map.army_list) == 0:
             for b in ai_stat.map.building_list:
-                nei = AI_Toolkit.get_neibours_on_set(b, ai_stat.map.buildable_tiles)  # buildable -> to avoid opp armies
+                nei = essentials.get_neighbours_on_set(b, ai_stat.map.buildable_tiles)  # buildable -> to avoid opp armies
                 if len(nei) == 0:
                     continue
                 x = random.sample(nei, 1)[0]
@@ -257,7 +256,7 @@ class AI_NPC(AI):
                     target_tile = target.base_tile
                     path = []
                     if not (start_tile is None or target_tile is None):
-                        path = AI_Toolkit.dijkstra_pq(start_tile, target_tile, ai_stat.map.walkable_tiles)
+                        path = essentials.dijkstra_pq(start_tile, target_tile, ai_stat.map.walkable_tiles)
                     else:
                         print(target_tile)
                         print(start_tile)
@@ -275,16 +274,16 @@ class AI_NPC(AI):
                     self._dump("AI Barbaric: evading enemy army")
                     longest_path: Tuple[int, Optional[Tile]] = (-1, None)
                     target_tile = ai_stat.map.opp_army_list[0].base_tile
-                    dist_to_army = AI_Toolkit.get_distance(target_tile, ai_stat.map.army_list[0].base_tile)
+                    dist_to_army = essentials.get_distance(target_tile, ai_stat.map.army_list[0].base_tile)
                     if dist_to_army >= self.safety_dist_to_enemy_army:
                         self._dump("AI Barbaric: Enemy army far enough away, no need to evade.")
                         return movements
-                    neighbours = AI_Toolkit.get_neibours_on_set(ai_stat.map.army_list[0], ai_stat.map.walkable_tiles)
+                    neighbours = essentials.get_neighbours_on_set(ai_stat.map.army_list[0], ai_stat.map.walkable_tiles)
                     for nei in neighbours:
                         path = []
                         start_tile = nei
                         if start_tile and target_tile:
-                            path = AI_Toolkit.dijkstra_pq(start_tile, target_tile, ai_stat.map.walkable_tiles)
+                            path = essentials.dijkstra_pq(start_tile, target_tile, ai_stat.map.walkable_tiles)
                         else:
                             error("AI Barbaric: start_tile or target_tile not valid!")
                         if len(path) > 1:
@@ -296,20 +295,20 @@ class AI_NPC(AI):
             if len(ai_stat.map.opp_army_list) > 0:
                 self._dump("AI npc: moving between village and enemy army")
                 shortest_path: Tuple[int, Optional[Tile]] = (100, None)
-                neighbours = AI_Toolkit.get_neibours_on_set(ai_stat.map.building_list[0], ai_stat.map.walkable_tiles)
+                neighbours = essentials.get_neighbours_on_set(ai_stat.map.building_list[0], ai_stat.map.walkable_tiles)
                 target_tile = ai_stat.map.opp_army_list[0].base_tile
                 for nei in neighbours:
                     path = []
                     start_tile = nei
                     if start_tile and target_tile:
-                        path = AI_Toolkit.dijkstra_pq(start_tile, target_tile, ai_stat.map.walkable_tiles)
+                        path = essentials.dijkstra_pq(start_tile, target_tile, ai_stat.map.walkable_tiles)
                     if len(path) > 1:
                         if len(path) < shortest_path[0]:
                             shortest_path = (len(path), nei)
                 # calculate movement for army
                 start_tile = ai_stat.map.army_list[0].base_tile
                 target_tile = shortest_path[1]
-                path = AI_Toolkit.dijkstra_pq(start_tile, target_tile, ai_stat.map.walkable_tiles)
+                path = essentials.dijkstra_pq(start_tile, target_tile, ai_stat.map.walkable_tiles)
                 if len(path) > 1:
                     movements.append(ArmyMovementOption(path[1], Priority.P_MEDIUM, path[1].offset_coordinates))
         return movements

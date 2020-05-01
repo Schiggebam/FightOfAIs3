@@ -1,17 +1,35 @@
 import copy
 import queue
-from typing import List, Union, Tuple, Optional
+from typing import List, Union, Tuple, Callable
 
-from src.ai.AI_GameStatus import AI_GameStatus
 from src.ai.AI_MapRepresentation import Tile, AI_Element
 from src.hex_map import Hexagon
-from src.misc.game_constants import error, BuildingType, BuildingState, hint, debug
+from src.misc.game_constants import debug
+
+# ------------------------ Essential TOOLKIT FUNCTIONS: ------------------------
 
 AI_OBJ = Union[AI_Element, Tile]
 
 
 def simple_heat_map(initial_set: List[AI_OBJ], working_set: List[AI_OBJ],
-                    condition) -> List[Tuple[int, AI_OBJ]]:
+                    condition: Callable[[AI_OBJ], bool]) -> List[Tuple[int, AI_OBJ]]:
+    """
+    create simple heat map.
+    Essentially, this performs a breadth first search, starting from a set, instead of a single point.
+    Example: if you'd like to get the minimum distance from any tile in a set to a building, the call would
+    look something like this:
+
+    simple_heat_map(building_list, discovered_tiles, lambda function)
+
+    The lambda function allows for an additional selection on which tiles get included into the search.
+    For instance, one might want to exclude all tiles, which have a resource
+
+    :param initial_set: list from where to start the search
+    :param working_set: only neighbors, which are in this list will be considered for the search
+    :param condition: additional condition, see above
+    :return: heat map, a tuple containing an integer value which is the distance to the closest object in initial list plus the object itself
+    """
+
     heat_map: List[Tuple[int, AI_OBJ]] = []
     tmp = queue.Queue()
     discovered = set()
@@ -24,19 +42,23 @@ def simple_heat_map(initial_set: List[AI_OBJ], working_set: List[AI_OBJ],
         discovered.add(s)
         if d >= 0:
             heat_map.append((d, s))
-        nei = get_neibours_on_set(s, working_set)
+        nei = get_neighbours_on_set(s, working_set)
         for n in nei:
             if n not in discovered and condition(n):
                 tmp.put((d + 1, n))
     return heat_map
 
 
-def estimate_income(list_buildings):
-    pass
+def dijkstra_pq(start: Tile, target: Tile, domain: List[Tile]) -> List[Tile]:
+    """
+    simple path-finding routine, based on dijkstra's algorithm
 
+    :param start: start Tile from where to start the search
+    :param target: target Tile, search will abort upon reaching it
+    :param domain: the search domain
+    :return: a sequence of connected tiles, which represent the path
+    """
 
-def dijkstra_pq(start, target, domain: List[Tile]) -> List[Tile]:
-    # print("DIJ: {} -> {}".format(start.offset_coordinates, target.offset_coordinates))
     path: List[Tile] = []
     Q = []
     for d in domain:
@@ -58,7 +80,7 @@ def dijkstra_pq(start, target, domain: List[Tile]) -> List[Tile]:
     while x.offset_coordinates != start.offset_coordinates:
         x = x.pre
         path.append(x)
-        if x is None:                   # this is a bit weird in conjunction with the while condition.
+        if x is None:  # this is a bit weird in conjunction with the while condition.
             break
     # path.append(start)
     path.reverse()
@@ -79,8 +101,6 @@ def dijkstra_pq(start, target, domain: List[Tile]) -> List[Tile]:
         return [start]
 
 
-
-
 def get_tile_by_xy(coords, discovered_tiles: []):
     for e in discovered_tiles:
         if coords == e.offset_coordinates:
@@ -88,13 +108,28 @@ def get_tile_by_xy(coords, discovered_tiles: []):
     return None
 
 
-def get_neibours_on_set(tile: AI_OBJ, working_set: List) -> List:
+def get_neighbours_on_set(tile: AI_OBJ, working_set: List[Tile]) -> List[Tile]:
+    """
+
+
+    :param tile:
+    :param working_set: the domain, in which the neighbors are searched
+    :return: a list of all neighbors of the tile, which are also in the working list
+    """
     nei = get_neighbours(tile)
     filtered = [x for x in nei if x in working_set]
     return filtered
 
 
 def get_neighbours(e: AI_OBJ) -> List[Tile]:
+    """
+    returns all the available neighbours of a tile
+    (!) If you are interested in all neighbors which share also a list, use:
+    get_neighbours_on_set(...)
+
+    :param e: center tile
+    :return: list, containing all valid (non- None) neighbours
+    """
     nei = []
     if type(e) is Tile:
         nei = [e.tile_ne, e.tile_e, e.tile_se, e.tile_sw, e.tile_w, e.tile_nw]
@@ -164,9 +199,17 @@ def cube_distance(a, b):
     return (abs(a[0] - b[0]) + abs(a[1] - b[1]) + abs(a[2] - b[2])) / 2
 
 
-def is_obj_in_list(obj: Union[AI_OBJ, Hexagon], list) -> bool:
-    """check whether a the offset coordinates of an object match the ones of an element in the list"""
-    for e in list:
+def is_obj_in_list(obj: Union[AI_OBJ, Hexagon], domain: List[Union[AI_OBJ, Hexagon]]) -> bool:
+    """
+    check whether a the offset coordinates of an object match the ones of an element in the list
+    comparison is done via the coordinates of the element
+
+    :param obj: any object, which has offset_coordinates AI_Object or Hexagon
+    :param domain: comparison list
+    :return: True, if the object is in the list, else False
+    """
+
+    for e in domain:
         if e.offset_coordinates == obj.offset_coordinates:
             return True
     return False
@@ -176,62 +219,3 @@ def deep_copy_list(src):
     return copy.deepcopy(src)
 
 
-############## NEWER TOOLKIT FUNCTIONS: ########################################
-def num_resources_on_adjacent(obj: AI_OBJ) -> int:
-    tile: Tile = get_tile_from_ai_obj(obj)  # assuming this is not none
-    value = 0
-    for n in get_neighbours(tile):
-        if n.has_resource():
-            value = value + 1
-    return value
-
-
-def get_tile_from_ai_obj(obj: AI_OBJ) -> Optional[Tile]:
-    tile: Optional[Tile] = None
-    if type(obj) is Tile:
-        tile = obj
-    else:
-        tile = obj.base_tile
-    if tile is None:  # is None
-        error("Unable to get Tile from AI_Obj")
-    return tile
-
-
-def num_buidling(building_type: BuildingType, ai_stat: AI_GameStatus, count_under_construction=False):
-    value = 0
-    for b in ai_stat.map.building_list:
-        if b.type == building_type:
-            if count_under_construction:
-                if b.state == BuildingState.UNDER_CONSTRUCTION or b.state == BuildingState.ACTIVE:
-                    value = value + 1
-            else:
-                if b.state == BuildingState.ACTIVE:
-                    value = value + 1
-    return value
-
-
-def has_building_under_construction(building_type: BuildingType, ai_stat: AI_GameStatus):
-    for b in ai_stat.map.building_list:
-        if b.type == building_type:
-            if b.state == BuildingState.UNDER_CONSTRUCTION:
-                return True
-    return False
-
-def estimate_res_income(ai_stat: AI_GameStatus) -> int:
-    """roughly estimates the resource income. Does not take the fact into account, that resources might mine out"""
-    from src.misc.building import Building
-    res_per_tile = Building.building_info['resource_per_field']
-    value = 0
-    for b in ai_stat.map.building_list:
-        if b.type == BuildingType.HUT:
-            for n in get_neighbours(b):
-                if n.has_resource():
-                    value = value + res_per_tile
-    return value
-
-
-def estimate_cult_income(ai_stat: AI_GameStatus):
-    """roughly estimates the culture income"""
-    from src.misc.building import Building
-    for b in ai_stat.map.building_list:
-        pass

@@ -1,6 +1,4 @@
-import timeit
-from math import sqrt
-from typing import Tuple, Union, Dict
+from typing import Union, Dict
 
 from src.ui.human import HumanInteraction
 from src.game_logic import GameLogic
@@ -85,7 +83,7 @@ class UI:
         self.screen_height = screen_height
         self.sprite_list = arcade.SpriteList()
 
-        self.ui_elements: Dict[UI_Element, t_ui_element] = {}
+        self.ui_elements: Dict[Union[UI_Element, str], t_ui_element] = {}
         self.playerinfo = {}
         self.volatile_panel = []
         self.closable_panels = []
