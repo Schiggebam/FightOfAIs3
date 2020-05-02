@@ -10,7 +10,7 @@
         <forest code="f1" offsetX="0" offsetY="23" scale="1">../resources/map/forest_schatten.png</forest>
         <building_hut code="s1" offsetX="0" offsetY="15" scale="1">../resources/map/other_hut_1.png</building_hut>
         <building_farm code="fa" offsetX="0" offsetY="5" scale="1">../resources/objects/simple_hut.png</building_farm>
-        <building_villa code="s2" offsetX="0" offsetY="0" scale="1">../resources/objects/simple_villa.png</building_villa>
+        <building_villa code="s2" offsetX="0" offsetY="5" scale="1">../resources/objects/other_building.png</building_villa>
         <outline code="ou" offsetX="0" offsetY="0" scale="1">../resources/map/outline_selected.png</outline>
         <flag_red code="f1_red" offsetX="5" offsetY="-5" scale="0.75">../resources/objects/flag_red_1.png</flag_red>
         <flag_yellow code="f1_yellow" offsetX="5" offsetY="-5" scale="0.75">../resources/objects/flag_yellow_1.png</flag_yellow>
