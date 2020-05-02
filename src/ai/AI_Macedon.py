@@ -9,7 +9,7 @@ from src.ai.AI_MapRepresentation import Tile, AI_Army, AI_Building
 from src.ai.ai_blueprint import AI
 from src.ai.toolkit import essentials, basic
 from src.ai.toolkit.basic import Weight, BuildOption, RecruitmentOption, WaitOption, Compass, ScoutingOption, Option, \
-    CardinalDirection
+    CardinalDirection, UpgradeOption
 from src.misc.game_constants import DiploEventType, hint, BuildingType, error, debug, UnitType, Priority, MoveType, \
     PlayerType
 
@@ -164,6 +164,7 @@ class AI_Mazedonian(AI):
         all_options: List[Option] = []
         all_options.extend(build_options)
         all_options.extend(recruitment_options)
+        all_options.extend(self.evaluate_move_upgrading(ai_stat))
         # all_options.extend(scouting_options)
         if len(scouting_options) > 0:
             all_options.append(scouting_options[0])  # reducing complexity - just consider the best scouting option
@@ -474,6 +475,11 @@ class AI_Mazedonian(AI):
             move.move_type = MoveType.DO_RAISE_ARMY
             move.loc = self.get_army_spawn_loc(ai_stat)
             move.str_rep_of_action = "raising new army at"
+        elif type(best_option) is UpgradeOption:
+            move.move_type = MoveType.DO_UPGRADE_BUILDING
+            move.loc = best_option.site
+            move.type = best_option.type
+            move.str_rep_of_action = "upgrading hut to villa"
         else:
             error("unexpected type")
 
@@ -700,6 +706,37 @@ class AI_Mazedonian(AI):
             if DETAILED_DEBUG:
                 hint("not enough free population to recruit a knight")
         return options
+
+    def evaluate_move_upgrading(self, ai_stat: AI_GameStatus) -> List[UpgradeOption]:
+        """ find best option for an upgradable building
+        Idea: reduce score if there are still adjacent resource fields or if the hut is in the danger zone
+        Increase score if number of inactive huts is high and if located in save zone"""
+        def normalize(s: float) -> Priority:
+            if s < 0:
+                return Priority.P_NO
+            elif 0 <= s < 3:
+                return Priority.P_MEDIUM
+            elif s >= 3:
+                return Priority.P_HIGH
+
+        options: List[UpgradeOption] = []
+        if ai_stat.me.resources < ai_stat.cost_building_construction[BuildingType.VILLA]:
+            return options
+
+        huts = [x for x in ai_stat.map.building_list if x.type is BuildingType.HUT]
+        best_score: float = -100
+        best_option: Optional[UpgradeOption] = None
+        for hut in huts:
+            score = - basic.num_resources_on_adjacent(hut)
+            score += self.inactive_huts
+            if hut.base_tile in self.claimed_tiles:
+                score = score + 1
+            if hut.base_tile in self.danger_zone:
+                score = score - 2
+            if score > best_score:
+                best_score = score
+                best_option = UpgradeOption(BuildingType.VILLA, hut.offset_coordinates, normalize(score))
+        return [best_option]
 
     def evaluate_move_scouting(self, ai_stat: AI_GameStatus) -> List[ScoutingOption]:
         """scores the scouting options, currently by the distance to a own building

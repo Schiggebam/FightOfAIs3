@@ -192,9 +192,9 @@
         <Farm code="fa" construction_cost="15" culture_per_turn="0" resource_per_field="0"
             resource_per_turn="0" sight_range="2" food_consumption="0" construction_time="2"
             defensive_value="2" flag_x="-5" flag_y="33" grant_pop="0">description</Farm>
-        <B2 code="s2" construction_cost="15" culture_per_turn="0" resource_per_field="2"
-            resource_per_turn="0" sight_range="2" food_consumption="2" construction_time="3"
-            defensive_value="2" flag_x="0" flag_y="50" grant_pop="0">description</B2>
+        <Villa code="s2" construction_cost="15" culture_per_turn="1" resource_per_field="0"
+            resource_per_turn="1" sight_range="4" food_consumption="2" construction_time="3"
+            defensive_value="5" flag_x="30" flag_y="25" grant_pop="0">description</Villa>
         <Camp1 code="c1" construction_cost="7" culture_per_turn="0" resource_per_field="0"
             resource_per_turn="1" sight_range="3" food_consumption="0" construction_time="0"
             defensive_value="2" flag_x="0" flag_y="20" grant_pop="7">description</Camp1>
@@ -205,7 +205,7 @@
             resource_per_turn="1" sight_range="3" food_consumption="0" construction_time="0"
             defensive_value="10" flag_x="0" flag_y="20" grant_pop="14">description</Camp3>
         <Village1 code="vl1" construction_cost="7" culture_per_turn="1" resource_per_field="0"
-            resource_per_turn="1" sight_range="3" food_consumption="5" construction_time="0"
+            resource_per_turn="1" sight_range="3" food_consumption="0" construction_time="0"
             defensive_value="10" flag_x="5" flag_y="65" grant_pop="5">description</Village1>
         <Village2 code="vl2" construction_cost="10" culture_per_turn="1" resource_per_field="0"
             resource_per_turn="1" sight_range="3" food_consumption="0" construction_time="0"

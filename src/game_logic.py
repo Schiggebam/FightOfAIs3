@@ -1,19 +1,19 @@
 import threading
 import timeit
-# from threading import Thread
-
-from src.ai.AI_GameStatus import AI_GameStatus, AI_Move, AI_GameInterface
-
-from src.misc.animation import Animator
-from src.misc.game_constants import *
-from src.game_accessoires import Scenario, Ground, Resource, Drawable, Flag, Unit
-from src.game_file_reader import GameFileReader
-from src.hex_map import HexMap, MapStyle, Hexagon
-from src.texture_store import TextureStore
-from src.misc.game_logic_misc import *
 from typing import Optional, List, Set, Dict
 
+from src.ai.AI_GameStatus import AI_GameStatus, AI_Move, AI_GameInterface
+from src.game_accessoires import Scenario, Ground, Resource, Drawable, Flag
+from src.game_file_reader import GameFileReader
+from src.hex_map import HexMap, MapStyle
+from src.misc.animation import Animator
+from src.misc.game_constants import *
+from src.misc.game_logic_misc import *
+from src.texture_store import TextureStore
 from src.ui.extern.extern_ai_display import AIControl
+
+
+# from threading import Thread
 
 
 class GameLogic:
@@ -513,7 +513,7 @@ class GameLogic:
 
         if ai_move.move_type == MoveType.DO_BUILD:
             if not self.hex_map.get_hex_by_offset(ai_move.loc).ground.buildable:
-                error("Exec AI Move: Location is not buildable!")
+                error("Exec AI Move: Location is not buildable! {}".format(ai_move.loc))
                 return
             b_type = 0
             if player.is_barbaric:

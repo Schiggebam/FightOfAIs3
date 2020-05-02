@@ -10,7 +10,7 @@
         <forest code="f1" offsetX="0" offsetY="23" scale="1">../resources/map/forest_schatten.png</forest>
         <building_hut code="s1" offsetX="0" offsetY="15" scale="1">../resources/map/other_hut_1.png</building_hut>
         <building_farm code="fa" offsetX="0" offsetY="5" scale="1">../resources/objects/simple_hut.png</building_farm>
-        <building_villa code="s2" offsetX="0" offsetY="0" scale="1">../resources/objects/simple_villa.png</building_villa>
+        <building_villa code="s2" offsetX="0" offsetY="5" scale="1">../resources/objects/other_building.png</building_villa>
         <outline code="ou" offsetX="0" offsetY="0" scale="1">../resources/map/outline_selected.png</outline>
         <flag_red code="f1_red" offsetX="5" offsetY="-5" scale="0.75">../resources/objects/flag_red_1.png</flag_red>
         <flag_yellow code="f1_yellow" offsetX="5" offsetY="-5" scale="0.75">../resources/objects/flag_yellow_1.png</flag_yellow>
@@ -192,9 +192,9 @@
         <Farm code="fa" construction_cost="15" culture_per_turn="0" resource_per_field="0"
             resource_per_turn="0" sight_range="2" food_consumption="0" construction_time="2"
             defensive_value="2" flag_x="-5" flag_y="33" grant_pop="0">description</Farm>
-        <B2 code="s2" construction_cost="15" culture_per_turn="0" resource_per_field="2"
-            resource_per_turn="0" sight_range="2" food_consumption="2" construction_time="3"
-            defensive_value="2" flag_x="0" flag_y="50" grant_pop="0">description</B2>
+        <Villa code="s2" construction_cost="15" culture_per_turn="1" resource_per_field="0"
+            resource_per_turn="1" sight_range="4" food_consumption="2" construction_time="3"
+            defensive_value="5" flag_x="30" flag_y="25" grant_pop="0">description</Villa>
         <Camp1 code="c1" construction_cost="7" culture_per_turn="0" resource_per_field="0"
             resource_per_turn="1" sight_range="3" food_consumption="0" construction_time="0"
             defensive_value="2" flag_x="0" flag_y="20" grant_pop="7">description</Camp1>

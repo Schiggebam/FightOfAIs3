@@ -5,7 +5,7 @@ from src.ai.AI_GameStatus import AI_GameStatus
 from src.ai.AI_Macedon import AI_Mazedonian
 from src.ai.AI_MapRepresentation import AI_Army, AI_Building
 from src.ai.toolkit.basic import WaitOption, BuildOption, RecruitmentOption, ScoutingOption, RaiseArmyOption, \
-    has_building_under_construction
+    has_building_under_construction, UpgradeOption
 from src.misc.game_constants import hint, BuildingType
 
 
@@ -170,6 +170,15 @@ def setup_weights(self) -> List[Tuple[Callable, float]]:
         return False
 
     w.append((w14, 5))
+
+    def w15(elem: AI_Mazedonian.Option, ai_stat: AI_GameStatus) -> bool:
+        """Idea: Upgrade villa if possible"""""
+        if type(elem) is UpgradeOption:
+            if self.protocol is AI_Mazedonian.Protocol.LATE_GAME:
+                return True
+        return False
+
+    w.append((w15, 3))
 
     hint(f"AI has found {len(w)} weight functions.")
     return w

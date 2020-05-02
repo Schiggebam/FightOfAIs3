@@ -1,4 +1,4 @@
-from typing import Union, Dict
+from typing import Union, Dict, List
 
 from src.ui.human import HumanInteraction
 from src.game_logic import GameLogic
@@ -65,7 +65,7 @@ class AutomaticIconButton(IconButton):
 
 
 """type definitions"""
-t_panels = Union[PanelAI, PanelDiplo, PanelArmy, PanelResource, PanelBuilding, PanelLogBattle]
+t_panels = Union[PanelAI, PanelDiplo, PanelArmy, PanelResource, PanelBuilding, PanelLogBattle, PanelInfo]
 t_buttons = Union[IconButton, TextButton, NextTurnButton, AutomaticButton]
 t_ui_element = Union[t_buttons, t_panels]
 
@@ -105,11 +105,14 @@ class UI:
 
         ai_panel = PanelAI(self.screen_width - 280, 500, "AI panel", self.gl)
         diplo_panel = PanelDiplo(self.screen_width - 280, 250, "Diplo panel", self.gl)
+        info_panel = PanelInfo(self.screen_width/2, self.screen_height/2, "Info", self.gl)
         self.ui_elements[UI_Element.PANEL_AI] = ai_panel
         self.ui_elements[UI_Element.PANEL_DIPLOMATICS] = diplo_panel
+        self.ui_elements[UI_Element.PANEL_INFO] = info_panel
 
         self.panel_list.append(ai_panel)
         self.panel_list.append(diplo_panel)
+        self.panel_list.append(info_panel)
 
         next_turn_button = NextTurnButton(self.screen_width - 150, 70, self.callBack1)
         ba = AutomaticButton(self.screen_width - 150, 30, self.callBack_automatic)
@@ -123,8 +126,12 @@ class UI:
         ai_button = AutomaticIconButton(self.screen_width - 50, 265, self.callBack_ai,
                                         UI_Texture.ICON_BUTTON_AI_PRESSED,
                                         UI_Texture.ICON_BUTTON_AI_UNPRESSED)
+        info_button = AutomaticIconButton(self.screen_width - 50, 330, self.callback_info,
+                                          UI_Texture.ICON_BUTTON_INFO_PRESSED,
+                                          UI_Texture.ICON_BUTTON_INFO_UNPRESSED)
         self.button_list.append(diplo_button)
         self.button_list.append(ai_button)
+        self.button_list.append(info_button)
 
         x_offset = 40
         map_hack_button = AutomaticIconButton(self.screen_width - 50, 20, self.callBack_map_hack,
@@ -303,6 +310,14 @@ class UI:
         else:
             self.sprite_list.append(diplo_panel.sprite)
         diplo_panel.show = not diplo_panel.show
+
+    def callback_info(self, active, args):
+        info_panel = self.ui_elements[UI_Element.PANEL_INFO]
+        if info_panel.show:
+            info_panel.sprite.remove_from_sprite_lists()
+        else:
+            self.sprite_list.append(info_panel.sprite)
+        info_panel.show = not info_panel.show
 
     def callBack_ai(self, active, args):
         ai_panel = self.ui_elements[UI_Element.PANEL_AI]

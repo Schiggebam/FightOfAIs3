@@ -37,7 +37,7 @@ class IncomeCalculator:
     def calculate_food(self, player: Player) -> int:
         food_inc = 0
         if player.player_type is PlayerType.BARBARIC or player.player_type is PlayerType.VILLAGER:
-            return 0  # no food mechancis for barbaric players
+            return 0  # no food mechanics for npc players
         for building in player.buildings:
             if building.construction_time > 0 or building.building_state == BuildingState.UNDER_CONSTRUCTION or \
                  building.building_state == BuildingState.DESTROYED:

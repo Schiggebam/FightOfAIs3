@@ -1,17 +1,54 @@
-from typing import Optional, List
+from typing import Optional
 
 from src.game_accessoires import Army, Unit, Resource
 from src.misc.building import Building
+from src.misc.game_constants import PlayerColour
 from src.misc.game_logic_misc import Logger, IncomeCalculator
 from src.player import Player
 from src.texture_store import TextureStore
-from src.ui.ui_panel_templates import SimplePanel, ClosablePanel, BasicPanel
 from src.ui.lang_en import *
-from src.misc.game_constants import PlayerColour
 from src.ui.ui_accessoires import UI_Texture
+from src.ui.ui_panel_templates import SimplePanel, ClosablePanel, BasicPanel
 
 ls = "    "
 ts = "  "
+
+class PanelInfo(SimplePanel):
+    def __init__(self, center_x, center_y, header: str, gl):
+        super().__init__(center_x, center_y, header, scale=2)
+        self.text = "Please read the GameDesignDoc.txt / Documentation for general information!\n"
+        self.text += "Buildings: \n"
+        self.sprites = []
+        offset_y = 0
+        for t_b in [BuildingType.HUT, BuildingType.VILLA, BuildingType.BARRACKS, BuildingType.FARM]:
+            s = arcade.Sprite(center_x=self.text_box_x-20, center_y=self.text_box_y - offset_y)
+            s.append_texture(TextureStore.instance().get_texture(Building.building_info[t_b]['tex_code']))
+            s.set_texture(0)
+            self.sprites.append(s)
+            self.text += ts + building_type_conversion(t_b) + "\n"
+            self.text += ls + Building.building_info[t_b]['description'] + "\n"
+            self.text += ls + f"Construction cost: {Building.get_construction_cost(t_b)},"
+            self.text += f" defencive value: {Building.building_info[t_b]['defensive_value']}\n"
+            if t_b is BuildingType.HUT:
+                self.text += ls + f"Income per adjacent resource field: {Building.building_info[t_b]['resource_per_field']}"
+                self.text += f", culture per turn: {Building.building_info[t_b]['culture_per_turn']} \n"
+                self.text += ls + f"Food consumption: {Building.building_info[t_b]['food_consumption']} \n"
+            if t_b is BuildingType.BARRACKS:
+                self.text += ls + f"Increases population by: {Building.building_info[t_b]['grant_pop']}\n"
+            if t_b is BuildingType.FARM:
+                self.text += ls + f"Food per corn field: 1 \n"
+            if t_b is BuildingType.VILLA:
+                self.text += ls + f"Resource per turn by itself: {Building.building_info[t_b]['resource_per_turn']}\n"
+            offset_y += 70
+
+    def draw(self):
+        super().draw()
+        if len(self.text) > 0:
+            arcade.draw_text(self.text, self.text_box_x+15, self.text_box_y-250,
+                             arcade.color.WHITE, font_size=10, font_name='verdana')
+        for s in self.sprites:
+            s.draw()
+
 
 class PanelAI(SimplePanel):
     def __init__(self, center_x, center_y, header: str, gl):

@@ -21,7 +21,7 @@ class Villager(AI_NPC):
         hostile_buildings = [x for x in ai_stat.map.opp_building_list if x.owner in self.hostile_player and x.visible]
         """Idea: if a hostile army is in bound -> defencive. Otherwise, raid a hostile building if there is one """
         if self.state is AI_NPC.AI_State.PASSIVE:
-            if len(ai_stat.map.opp_army_list) > 0:
+            if len(ai_stat.map.opp_army_list) > 0:      # will only remain in defencive state, if army is not too close
                 self.state = AI_NPC.AI_State.DEFENSIVE
             if len(hostile_buildings) > 0 and len(hostile_armies) == 0:
                 self.state = AI_NPC.AI_State.AGGRESSIVE
@@ -34,7 +34,12 @@ class Villager(AI_NPC):
         """Idea: if defencive, become passive once there are no more threats, from there it can get aggressive again"""
         if self.state is AI_NPC.AI_State.DEFENSIVE:
             if len(hostile_armies) == 0:
-                self.state = AI_NPC.AI_State.PASSIVE
+                too_close_for_comfort = False
+                for o_a in ai_stat.map.opp_army_list:
+                    if get_distance(ai_stat.map.building_list[0].base_tile, o_a.base_tile) <= 2:
+                        too_close_for_comfort = True
+                if not too_close_for_comfort:
+                    self.state = AI_NPC.AI_State.PASSIVE
 
         self._dump(f"State: {old_state} -> {self.state.name}")
 

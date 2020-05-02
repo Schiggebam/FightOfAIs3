@@ -68,7 +68,7 @@ def setup_movement_weights(self: AI_NPC) -> List[Tuple[Callable, float]]:
 
     def w3(elem: ArmyMovementOption, ai_stat: AI_GameStatus) -> bool:
         """if defencive, defend at all cost"""
-        if self.state == AI_NPC.AI_State.AGGRESSIVE:
+        if self.state == AI_NPC.AI_State.DEFENSIVE:
             return True
         return False
 

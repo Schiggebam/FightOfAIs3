@@ -33,9 +33,11 @@ class CustomCursor(arcade.Sprite):
 class UI_Element(Enum):
     BUTTON_NEXT_TURN = 170
     BUTTON_PLAY_AUTO = 171
+    BUTTON_INFO = 172
 
     PANEL_AI = 180
     PANEL_DIPLOMATICS = 181
+    PANEL_INFO = 182
 
 
 
@@ -68,6 +70,9 @@ class UI_Texture(Enum):
     """texture for button, which toggles the map view"""
     ICON_BUTTON_WATCH_UNPRESSED = "watch_button_unpressed.png"
     ICON_BUTTON_WATCH_PRESSED = "watch_button_pressed.png"
+
+    ICON_BUTTON_INFO_UNPRESSED = "buttons/info_button_unpressed.png"
+    ICON_BUTTON_INFO_PRESSED = "buttons/info_button_pressed.png"
 
     # ---------- Panels ----------------------------------------
     """main bottom panel"""
