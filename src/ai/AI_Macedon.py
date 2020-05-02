@@ -1,16 +1,15 @@
 import random
 import timeit
+from dataclasses import dataclass
 from enum import Enum
 from typing import Set, List, Tuple, Union, Optional, Dict, Any
 
-from dataclasses import dataclass
-
-from src.ai.toolkit import essentials
 from src.ai.AI_GameStatus import AI_GameStatus, AI_Move
 from src.ai.AI_MapRepresentation import Tile, AI_Army, AI_Building
-from src.ai.ai_blueprint import AI, WaitOption, BuildOption, RecruitmentOption, ScoutingOption, Weight, Option, \
-    Compass, CardinalDirection
-
+from src.ai.ai_blueprint import AI
+from src.ai.toolkit import essentials, basic
+from src.ai.toolkit.basic import Weight, BuildOption, RecruitmentOption, WaitOption, Compass, ScoutingOption, Option, \
+    CardinalDirection
 from src.misc.game_constants import DiploEventType, hint, BuildingType, error, debug, UnitType, Priority, MoveType, \
     PlayerType
 
@@ -199,7 +198,7 @@ class AI_Mazedonian(AI):
                     path = []
                     idx = random.randint(0, len(ai_stat.map.own_farm_field_tiles) - 1)
                     # print(f"from: {ai_stat.map.army_list[0].base_tile.offset_coordinates} to {ai_stat.map.own_farm_field_tiles[idx].offset_coordinates}")
-                    path = essentials.dijkstra_pq(ai_stat.map.army_list[0].base_tile,
+                    path = essentials.a_star(ai_stat.map.army_list[0].base_tile,
                                                   ai_stat.map.own_farm_field_tiles[idx],
                                                   ai_stat.map.walkable_tiles)
                     if len(path) > 1:
@@ -215,7 +214,7 @@ class AI_Mazedonian(AI):
                     # attack
                     start_tile = ai_stat.map.army_list[0].base_tile
                     target_tile = self.priolist_targets[0].target.base_tile
-                    path = essentials.dijkstra_pq(start_tile, target_tile, ai_stat.map.walkable_tiles)
+                    path = essentials.a_star(start_tile, target_tile, ai_stat.map.walkable_tiles)
                     if len(path) > 1:
                         self.previous_attack_target = self.priolist_targets[0]
                         move.move_army_to = path[1].offset_coordinates
@@ -291,13 +290,13 @@ class AI_Mazedonian(AI):
 
         for e_b in ai_stat.map.opp_building_list:
             if e_b.visible:
-                if essentials.is_obj_in_list(e_b, self.claimed_tiles):
+                if essentials.is_obj_in_list(e_b, list(self.claimed_tiles)):
                     self.diplomacy.add_event(e_b.owner, e_b.offset_coordinates,
-                                             DiploEventType.ENEMY_BUILDING_IN_CLAIMED_ZONE, -2, 3, self.name)
+                                             DiploEventType.ENEMY_BUILDING_IN_CLAIMED_ZONE, -2, 3)
         for e_a in ai_stat.map.opp_army_list:
-            if essentials.is_obj_in_list(e_a, self.claimed_tiles):
+            if essentials.is_obj_in_list(e_a, list(self.claimed_tiles)):
                 self.diplomacy.add_event(e_a.owner, e_a.offset_coordinates,
-                                         DiploEventType.ENEMY_ARMY_INVADING_CLAIMED_ZONE, -2, 3, self.name)
+                                         DiploEventType.ENEMY_ARMY_INVADING_CLAIMED_ZONE, -2, 3)
 
     def evaluate_hostile_players(self, ai_stat: AI_GameStatus):
         for other_p_id in self.other_players:
@@ -408,7 +407,7 @@ class AI_Mazedonian(AI):
 
     def weight_options(self, options: List[Option], ai_stat: AI_GameStatus, move: AI_Move):
         used_weights: List[str] = []
-        for opt in options:
+        for opt in options:                 # --------------------- Action options ----------
             opt.weighted_score = opt.score.value
             if opt.score == Priority.P_NO:  # no option (should not depend on weights) -> contain invalid info
                 continue
@@ -421,7 +420,7 @@ class AI_Mazedonian(AI):
 
         used_weights.append(" | ")
 
-        for m in self.priolist_targets:
+        for m in self.priolist_targets:         # --------------------- Movement options ----------
             if m.score == Priority.P_NO:
                 continue
             for w in self.m_weights:
@@ -557,15 +556,16 @@ class AI_Mazedonian(AI):
                 possible_fields = []
                 score = 0
                 for n in essentials.get_neighbours_on_set(ai_t, ai_stat.map.buildable_tiles):
-                    if essentials.num_resources_on_adjacent(n) == 0:
+                    if basic.num_resources_on_adjacent(n) == 0:
                         possible_fields.append(n)
                     if essentials.is_obj_in_list(n, ai_stat.map.scoutable_tiles):
                         score += 1
                 score += len(possible_fields)
                 amount_of_fields = min(3, len(possible_fields))
                 sampled = random.sample(possible_fields, amount_of_fields)
+                score += len(essentials.get_neighbours_on_set(ai_t, ai_stat.map.scoutable_tiles)) / 2
                 # if build site is next to a resource --> reduce value by 1 for each resource field
-                score = score - essentials.num_resources_on_adjacent(ai_t)
+                score = score - basic.num_resources_on_adjacent(ai_t)
                 # make the score dependent on safety level of region
                 #score = score - self.compass.get_threat_level(ai_t).value * 2
                 if ai_t in self.danger_zone:
@@ -600,7 +600,7 @@ class AI_Mazedonian(AI):
         best_site = (-1, -1)
         if ai_stat.me.resources >= ai_stat.cost_building_construction[BuildingType.HUT]:
             for ai_t in ai_stat.map.buildable_tiles:
-                score = essentials.num_resources_on_adjacent(ai_t)
+                score = basic.num_resources_on_adjacent(ai_t)
                 if best_score < score:
                     best_score = score
                     best_site = ai_t.offset_coordinates
@@ -613,7 +613,7 @@ class AI_Mazedonian(AI):
             for c in self.claimed_tiles:
                 if not c.is_buildable:  # if tile is not buildable, forget it
                     continue
-                res_next_to_can = essentials.num_resources_on_adjacent(c)
+                res_next_to_can = basic.num_resources_on_adjacent(c)
 
                 if res_next_to_can == 0:
                     # very hard constraint (go by value would be better)
@@ -724,7 +724,7 @@ class AI_Mazedonian(AI):
             # 2. increase value by proximity to claimed tiles
             num_of_claimed_tiles = 0
             for t_at_dist_1 in dist1:
-                if essentials.is_obj_in_list(t_at_dist_1, self.claimed_tiles):
+                if essentials.is_obj_in_list(t_at_dist_1, list(self.claimed_tiles)):
                     num_of_claimed_tiles = num_of_claimed_tiles + 1
             value = value + (num_of_claimed_tiles * self.w_scouting_claimed)
             # 3. try to smooth out border
@@ -868,9 +868,7 @@ class AI_Mazedonian(AI):
         self._dump(f"Free tiles: {self.num_free_tiles} ({self.num_free_tiles/len(ai_stat.map.discovered_tiles)*100:.1} %)")
         # hint(f"N: {self.compass.}, E: {self.compass.east}, S: {self.compass.south}, W: {self.compass.west}")
         # dump active events:
-        self._dump("Events: -------------------")
-        for event in self.diplomacy.events:
-            self._dump(f"{event.description} [{event.lifetime}]")
+        self.dump_diplomacy()
 
     def get_army_spawn_loc(self, ai_stat: AI_GameStatus) -> Tuple[int, int]:
         nei: List[Tile] = essentials.get_neighbours_on_set(ai_stat.map.building_list[0].base_tile, ai_stat.map.walkable_tiles)

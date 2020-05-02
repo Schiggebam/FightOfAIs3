@@ -4,7 +4,8 @@ from src.ai.toolkit import essentials
 from src.ai.AI_GameStatus import AI_GameStatus
 from src.ai.AI_Macedon import AI_Mazedonian
 from src.ai.AI_MapRepresentation import AI_Army, AI_Building
-from src.ai.ai_blueprint import WaitOption, BuildOption, RecruitmentOption, ScoutingOption, RaiseArmyOption
+from src.ai.toolkit.basic import WaitOption, BuildOption, RecruitmentOption, ScoutingOption, RaiseArmyOption, \
+    has_building_under_construction
 from src.misc.game_constants import hint, BuildingType
 
 
@@ -152,10 +153,10 @@ def setup_weights(self) -> List[Tuple[Callable, float]]:
         if ai_stat.me.population_limit <= ai_stat.me.population:
             if type(elem) is BuildOption:
                 if elem.type == BuildingType.BARRACKS:
-                    if not essentials.has_building_under_construction(BuildingType.BARRACKS, ai_stat):
+                    if not has_building_under_construction(BuildingType.BARRACKS, ai_stat):
                         return True
             if type(elem) is WaitOption:
-                if not essentials.has_building_under_construction(BuildingType.BARRACKS, ai_stat):
+                if not has_building_under_construction(BuildingType.BARRACKS, ai_stat):
                     return True
             return False
 

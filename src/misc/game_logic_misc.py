@@ -3,11 +3,12 @@ import queue
 from math import ceil
 from typing import Tuple
 
-from src.game_accessoires import Army
+from src.game_accessoires import Army, Unit
+from src.hex_map import Hexagon
 
 from src.misc.building import Building
 from src.misc.game_constants import BuildingType, BuildingState, LogType, DiploEventType, UnitType, error, \
-    BattleAfterMath
+    BattleAfterMath, PlayerType
 from src.player import Player
 
 
@@ -35,7 +36,7 @@ class IncomeCalculator:
 
     def calculate_food(self, player: Player) -> int:
         food_inc = 0
-        if player.is_barbaric:
+        if player.player_type is PlayerType.BARBARIC or player.player_type is PlayerType.VILLAGER:
             return 0  # no food mechancis for barbaric players
         for building in player.buildings:
             if building.construction_time > 0 or building.building_state == BuildingState.UNDER_CONSTRUCTION or \
@@ -70,6 +71,35 @@ class IncomeCalculator:
     @staticmethod
     def building_culture_influce(building: Building):
         return building.culture_per_turn
+
+
+class InitialCondition:
+    """
+    this class will setup a player. In a future version, most of this should depend on XML input
+    """
+    @staticmethod
+    def set_init_values(player: Player, base_hex: Hexagon, gl):
+        if player.player_type is PlayerType.HUMAN or player.player_type is PlayerType.AI:
+            player.food = 35
+            player.amount_of_resources = 20
+            unit = Unit(player.get_initial_unit_type())
+            army = Army(gl.hex_map.get_hex_by_offset(player.init_army_loc), player.id)
+            army.add_unit(unit)
+            gl.add_army(army, player)
+        elif player.player_type is PlayerType.VILLAGER:
+            player.food = 30
+            player.amount_of_resources = 5
+        elif player.player_type is PlayerType.BARBARIC:
+            player.amount_of_resources = 5
+            player.food = 10
+        player.discovered_tiles.add(base_hex)
+        b_type = player.get_initial_building_type()
+        b: Building = Building(base_hex, b_type, player.id)
+        gl.add_building(b, player)
+        b.construction_time = 0
+        b.set_state_active()
+        tmp = gl.hex_map.get_neighbours_dist(base_hex, b.sight_range)
+        player.discovered_tiles.update(tmp)
 
 
 class FightCalculator:

@@ -1,6 +1,9 @@
+from __future__ import annotations
+
 import copy
 import queue
-from typing import List, Union, Tuple, Callable
+from dataclasses import dataclass
+from typing import List, Union, Tuple, Callable, Set, Optional
 
 from src.ai.AI_MapRepresentation import Tile, AI_Element
 from src.hex_map import Hexagon
@@ -49,56 +52,201 @@ def simple_heat_map(initial_set: List[AI_OBJ], working_set: List[AI_OBJ],
     return heat_map
 
 
+def bfs(start: Tile, target: Tile, domain: List[Tile]) -> List[Tile]:
+    """
+
+    :param start:
+    :param target:
+    :param domain:
+    :return:
+    """
+    path: List[Tile] = []
+    tmp = queue.Queue()
+    tmp.put((0, start))
+    discovered = set()
+    path_endpoint = None
+    for d in domain:
+        d.pre = None
+        d.dist = -1
+
+    while not tmp.empty():
+        d, s = tmp.get()
+        if s in discovered:
+            continue
+        discovered.add(s)
+        if s.offset_coordinates == target.offset_coordinates:
+            path_endpoint = s
+            break
+        nei = get_neighbours_on_set(s, domain)
+        for n in nei:
+            if n not in discovered:
+                n.dist = d + 1
+                n.pre = s
+                tmp.put((d + 1, n))
+
+    if path_endpoint:
+        cur = path_endpoint
+        while cur.pre is not None:
+            path.append(cur)
+            cur = cur.pre
+
+    for p in path:
+        print(p.offset_coordinates, end="")
+    print(" ")
+    return path
+
+
+class AStarNode:
+    """Node for path finding (a star)"""
+    def __init__(self, tile: Tile, parent=None):
+        self.base_tile = tile
+        self.parent = parent
+        self.g = 0
+        self.h = 0
+        self.f = 0
+
+    def __eq__(self, other: AStarNode):
+        return self.base_tile.offset_coordinates == other.base_tile.offset_coordinates
+
+
+def a_star(start: Tile, target: Tile, domain: List[Tile]) -> List[Tile]:
+    """
+    A* path finding routine, in sparse hexagonal maps a relatively fast way of finding the shortest path
+    from start to target
+    As heuristic, I use the distance between two nodes
+
+    :param start: start tile
+    :param target: target tile
+    :param domain: search domain which as to be explored. This has to be a connected graph. Also, start and finish
+    should be part of the domain
+    :return: a path, including the start and finish tile
+    """
+    if target not in domain or start not in domain:
+        print("no pathfinding possible")
+        return [start]
+
+    start_node = AStarNode(start)
+    end_node = AStarNode(target)
+
+    open_list = []
+    closed_list = []
+
+    open_list.append(start_node)
+    while len(open_list) > 0:
+        current_node = open_list[0]
+        current_index = 0
+        for index, item in enumerate(open_list):
+            if item.f < current_node.f:
+                current_node = item
+                current_index = index
+
+        open_list.pop(current_index)
+        closed_list.append(current_node)
+
+        if current_node == end_node:
+            path = []
+            current = current_node
+            while current is not None:
+                path.append(current.base_tile)
+                current = current.parent
+            return path[::-1]   # is this the same as [::-1] <-> reverse?
+
+        children = []
+        for child in get_neighbours_on_set(current_node, domain):
+            children.append(AStarNode(child, parent=current_node))
+
+        for child in children:
+            for c in closed_list:
+                if child == c:
+                    continue
+
+            child.g = current_node.g + 1
+            child.h = get_distance(end_node.base_tile, child.base_tile)
+            child.f = child.g + child.h
+
+            for open_node in open_list:
+                if child == open_node and child.g > open_node.g:
+                    continue
+
+            open_list.append(child)
+
+
 def dijkstra_pq(start: Tile, target: Tile, domain: List[Tile]) -> List[Tile]:
     """
     simple path-finding routine, based on dijkstra's algorithm
+    This algorithm is inferior to a_star
 
     :param start: start Tile from where to start the search
     :param target: target Tile, search will abort upon reaching it
-    :param domain: the search domain
+    :param domain: the search domain, start and target tile have to be part of the domain (!)
     :return: a sequence of connected tiles, which represent the path
     """
-
-    path: List[Tile] = []
-    Q = []
-    for d in domain:
-        d.dist = 1000
-        d.pre = None
-        Q.append(d)
-    start.dist = 0
-    while len(Q) > 0:
-        Q.sort(key=lambda x: x.dist, reverse=False)
-        u = Q.pop(0)
-        for v in get_neighbours(u):
-            if v in domain and v in Q:
-                alt = u.dist + 1
-                if alt < v.dist:
-                    v.dist = alt
-                    v.pre = u
-    x = target
-    path.append(x)
-    while x.offset_coordinates != start.offset_coordinates:
-        x = x.pre
-        path.append(x)
-        if x is None:  # this is a bit weird in conjunction with the while condition.
-            break
-    # path.append(start)
-    path.reverse()
-    # check validity of path.
-    # problem = False
-    # for i in range(len(path) - 1):
-    #     if getDistance(path[i].offset_coordinates, path[i+1].offset_coordinates) != 1:
-    #         error("Problem in pathfinding")
-    #         problem = True
-    # if problem:
+    pass
+    # return bfs(start, target, domain)
+    # path: List[Tile] = []
+    # Q = []
+    # for d in domain:
+    #     d.dist = 1000
+    #     d.pre = None
+    #     Q.append(Item(d, 1000, None))
+    # start.dist = 0
+    # while len(Q) > 0:
+    #     Q.sort(key=lambda x: x.dist, reverse=False)
+    #     u = Q.pop(0)
+    #     for v in get_neighbours_on_set(u.tile, domain):
+    #         if v.has_army():
+    #             print("attacking!!!!!!{}".format(v.offset_coordinates))
+    #         if is_obj_in_list(v, domain) and v in Q:
+    #             alt = u.dist + 1
+    #             if alt < v.dist:
+    #                 v.dist = alt
+    #                 v.pre = u
+    # x = target
+    # path.append(x)
+    # while x.offset_coordinates != start.offset_coordinates:
+    #     x = x.pre
+    #     path.append(x)
+    #     if x is None:  # this is a bit weird in conjunction with the while condition.
+    #         break
+    #
+    # for p in path:
+    #     if p not in Q:
+    #         print(f"PROBLEM {p.offset_coordinates}")
+    # for d in domain:
+    #     print(d.offset_coordinates, end = "")
+    # print("")
+    # # path.append(start)
+    # path.reverse()
+    # # check validity of path.
+    # # problem = False
+    # # for i in range(len(path) - 1):
+    # #     if getDistance(path[i].offset_coordinates, path[i+1].offset_coordinates) != 1:
+    # #         error("Problem in pathfinding")
+    # #         problem = True
+    # # if problem:
+    # #     for p in path:
+    # #         print(p.offset_coordinates, end=" ")
+    # #     print("")
+    # if start.offset_coordinates == path[0].offset_coordinates and\
+    #         target.offset_coordinates == path[len(path) - 1].offset_coordinates:
+    #     return path
+    # else:
+    #     debug("Found path is incomplete")
     #     for p in path:
-    #         print(p.offset_coordinates, end=" ")
-    #     print("")
-    if start == path[0] and target == path[len(path) - 1]:
-        return path
-    else:
-        debug("Found path is incomplete")
-        return [start]
+    #         print(p.offset_coordinates, end="")
+    #     print(" ")
+    #     return [start]
+
+
+def create_subset_by_cond(orig: Union[List[Tile], Set[Tile]], cond: Callable[[Tile], bool]) -> List[Tile]:
+    """
+    create a subset, where each element satisfies the condition
+    wrapper function for a python list comprehension
+    :param orig: original set
+    :param cond: condition which has to be satisfied
+    :return: subset
+    """
+    return [x for x in orig if cond(x)]
 
 
 def get_tile_by_xy(coords, discovered_tiles: []):
@@ -108,20 +256,23 @@ def get_tile_by_xy(coords, discovered_tiles: []):
     return None
 
 
-def get_neighbours_on_set(tile: AI_OBJ, working_set: List[Tile]) -> List[Tile]:
+def get_neighbours_on_set(tile: Union[AI_OBJ, AStarNode], working_set: List[Tile]) -> List[Tile]:
     """
-
 
     :param tile:
     :param working_set: the domain, in which the neighbors are searched
     :return: a list of all neighbors of the tile, which are also in the working list
     """
-    nei = get_neighbours(tile)
-    filtered = [x for x in nei if x in working_set]
-    return filtered
+    # return [x for x in get_neighbours(tile) if x in working_set]
+    ret = []
+    for x in get_neighbours(tile):
+        for w in working_set:
+            if x.offset_coordinates == w.offset_coordinates:
+                ret.append(x)
+    return ret
 
 
-def get_neighbours(e: AI_OBJ) -> List[Tile]:
+def get_neighbours(e: Union[AI_OBJ, AStarNode]) -> List[Tile]:
     """
     returns all the available neighbours of a tile
     (!) If you are interested in all neighbors which share also a list, use:

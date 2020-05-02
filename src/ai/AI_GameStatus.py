@@ -3,6 +3,7 @@ import timeit
 from typing import Tuple, Optional, Union, List, Any, Dict
 
 from src.ai.AI_MapRepresentation import Map, AI_Player, AI_Opponent
+
 from src.misc.game_constants import error, UnitType, BuildingType, MoveType, UnitCost, debug
 
 """This file (together with AI_map_representation) handles the interaction between game and AI/HI"""
@@ -78,15 +79,18 @@ class AI_GameInterface:
     def launch_AI(self, id: int, ai_str: str, ai_name: str, other_players: [int]):
         from src.ai.ai_npc import AI_NPC
         from src.ai.AI_Macedon import AI_Mazedonian
+        from src.ai.npc.ai_barbaric import Barbaric
+        from src.ai.npc.ai_villager import Villager
+
         if ai_str == "cultivated":
             self.dict_of_ais[id] = AI_Mazedonian(ai_name, id, other_players)
         elif ai_str == "expansionist":
             self.dict_of_ais[id] = AI_Mazedonian(ai_name, id, other_players)
         elif ai_str == "barbaric":
-            self.dict_of_ais[id] = AI_NPC(id, other_players, AI_NPC.Script.BARBARIC_HOSTILE)
+            self.dict_of_ais[id] = Barbaric(other_players, AI_NPC.Script.BARBARIC_HOSTILE)
         elif ai_str == "villager":
-            self.dict_of_ais[id] = AI_NPC(id, other_players, AI_NPC.Script.VILLAGER)
-        debug("size of AI dict: " + str(len(self.dict_of_ais)))
+            self.dict_of_ais[id] = Villager(other_players, AI_NPC.Script.VILLAGER)
+        # debug("size of AI dict: " + str(len(self.dict_of_ais)))
 
     @staticmethod
     def create_ai_status(ai_stat: AI_GameStatus, turn_nr,

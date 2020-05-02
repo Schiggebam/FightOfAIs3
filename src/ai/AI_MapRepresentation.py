@@ -29,12 +29,12 @@ class Tile:
         self.tile_nw: Optional[Tile] = None
 
         self.cube_coordinates = HexMap.offset_to_cube_coords(self.offset_coordinates)
-        # for pathfinding:
-        self.pre: Optional[Tile] = None
-        self.dist: int = 0
 
-    # def opp_visible_buildings(self) -> List[AI_Building]:
+    # def __eq__(self, other):
+    #     return self.offset_coordinates == other.offset_coordinates
 
+    # def __hash__(self):
+    #     hash(repr(self))
 
     def has_resource(self):
         return self.resource is not None
@@ -231,6 +231,7 @@ class Map:
             if t.offset_coordinates == ai_b.offset_coordinates:
                 ai_b.visible = True
                 break
+        tile.building = ai_b
         return ai_b
 
     def get_tile(self, offset_coordinates: Tuple[int, int]) -> Tile:

@@ -3,7 +3,7 @@ from typing import Dict, Any, List, Tuple, Callable
 from src.ai.AI_MapRepresentation import AI_Building, AI_Army
 from src.ai.ai_npc import AI_NPC
 from src.ai.AI_GameStatus import AI_GameStatus
-from src.ai.ai_blueprint import ArmyMovementOption, Option, RaiseArmyOption, RecruitmentOption, WaitOption
+from src.ai.toolkit.basic import ArmyMovementOption, Option, RaiseArmyOption, RecruitmentOption, WaitOption
 from src.misc.game_constants import BuildingType, UnitType
 
 
@@ -19,7 +19,7 @@ def on_setup(prop: Dict[str, Any]):
                           (BuildingType.CAMP_2, BuildingType.CAMP_3)]
     """contains all units available to this ai"""
     prop['units'] = [UnitType.BABARIC_SOLDIER]
-    """minumum range away from building that the tile is still considered claimed.
+    """minimum range away from building that the tile is still considered claimed.
     Only claimed tiles will be considered to be buildable"""
     prop['range_claimed_tiles'] = 1
     """holds the max amount of buildings for this player"""
@@ -64,6 +64,13 @@ def setup_movement_weights(self: AI_NPC) -> List[Tuple[Callable, float]]:
             return True
         return False
     w.append((w1, -2))
+
+    def w1_1(elem: ArmyMovementOption, ai_stat: AI_GameStatus) -> bool:
+        """increase army movement in defencive state"""
+        if self.state == AI_NPC.AI_State.DEFENSIVE:
+            return True
+        return False
+    w.append((w1_1, 3))
 
     def w2(elem: ArmyMovementOption, ai_stat: AI_GameStatus) -> bool:
         """only strong armies should attack a barracks"""

@@ -33,7 +33,7 @@ GAME_LOGIC_CLK_SPEED = 0.75
 
 
 class Definitions:
-    VERSION: str = str(0.2)
+    VERSION: str = str(0.3)
     UI_TEXTURE_PATH = "../resources/other/"
     SHOW_AI_CTRL = True
     SHOW_STARTUP_CTRL = True
@@ -259,6 +259,7 @@ class DiploEventType(Enum):
     ENEMY_BUILDING_IN_CLAIMED_ZONE = 102
     ENEMY_ARMY_INVADING_CLAIMED_ZONE = 103
     ATTACKED_BY_FACTION = 104
+    PROTECTIVE_ARMY_SPOTTED = 105
 
     @staticmethod
     def get_event_description(event: DiploEventType, loc: Tuple[int, int]):
@@ -272,6 +273,8 @@ class DiploEventType(Enum):
             return "Enemy army is invading claimed zone"
         elif event is DiploEventType.ATTACKED_BY_FACTION:
             return "Attacked by Faction"
+        elif event is DiploEventType.PROTECTIVE_ARMY_SPOTTED:
+            return "Protection by army"
         else:
             error("Unknown event!")
             return ""
@@ -290,6 +293,11 @@ class UnitType(Enum):
         elif str_code == "unit_c":
             return UnitType.BABARIC_SOLDIER
         return -1
+
+
+class OfferType(Enum):
+    RESOURCES_FOR_CULTURE = 210
+    CULTURE_FOR_RESOURCES = 211
 
 
 class PlayerColour(Enum):

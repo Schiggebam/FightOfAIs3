@@ -153,23 +153,21 @@ class GameLogic:
                     other_players_ids.append(p.id)
             self.ai_interface.launch_AI(player.id, player.ai_str, "AI_" + player.name, other_players_ids)
             base_hex: Hexagon = self.hex_map.get_hex_by_offset(player.spaw_loc)
-            player.discovered_tiles.add(base_hex)
-            player.food = 35
-            player.amount_of_resources = 10
-            b_type = player.get_initial_building_type()
-            b: Building = Building(base_hex, b_type, player.id)
-            self.add_building(b, player)
-            b.construction_time = 0
-            b.set_state_active()
-            tmp = self.hex_map.get_neighbours_dist(base_hex, b.sight_range)
-            player.discovered_tiles.update(tmp)
+            InitialCondition.set_init_values(player, base_hex, self)
+            # b_type = player.get_initial_building_type()
+            # b: Building = Building(base_hex, b_type, player.id)
+            # self.add_building(b, player)
+            # b.construction_time = 0
+            # b.set_state_active()
+            # tmp = self.hex_map.get_neighbours_dist(base_hex, b.sight_range)
+            # player.discovered_tiles.update(tmp)
             if player.player_type is PlayerType.HUMAN:
                 self.has_human_player = True
-            if not player.is_barbaric:
-                unit = Unit(player.get_initial_unit_type())
-                army = Army(self.hex_map.get_hex_by_offset(player.init_army_loc), player.id)
-                army.add_unit(unit)
-                self.add_army(army, player)
+            # if not player.is_barbaric:
+            #     unit = Unit(player.get_initial_unit_type())
+            #     army = Army(self.hex_map.get_hex_by_offset(player.init_army_loc), player.id)
+            #     army.add_unit(unit)
+            #     self.add_army(army, player)
             player_ids.append((player.id, player.colour_code))
 
         self.__reorder_spritelist(self.z_levels[Z_GAME_OBJ])
@@ -809,7 +807,9 @@ class GameLogic:
         if building.building_type == BuildingType.FARM:
             for a in building.associated_tiles:
                 self.extend_building(building, a, "cf")
-        if building.building_type == BuildingType.VILLAGE_1:
+        if building.building_type == BuildingType.VILLAGE_1 or \
+                building.building_type == BuildingType.VILLAGE_2 or \
+                building.building_type == BuildingType.VILLAGE_3:
             for n in self.hex_map.get_neighbours(building.tile):
                 building.associated_tiles.append(n)
         building.tile.ground.walkable = False
@@ -884,7 +884,6 @@ class GameLogic:
                         pre_att_u = army.get_units_as_tuple()
                         pre_b = b.defensive_value
                         outcome: BattleAfterMath = FightCalculator.army_vs_building(army, b)
-                        print(outcome)
                         post_att_u = army.get_units_as_tuple()
                         post_b = b.defensive_value
                         Logger.log_battle_army_vs_building(pre_att_u, post_att_u, pre_b, post_b,
