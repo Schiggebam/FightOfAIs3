@@ -6,10 +6,18 @@ from dataclasses import dataclass
 from src.game_accessoires import Resource, Army
 from src.hex_map import HexMap
 from src.misc.building import Building
-from src.misc.game_constants import GroundType, error, UnitType, ResourceType, BuildingType, BuildingState, PlayerType
+from src.misc.game_constants import GroundType, error, UnitType, ResourceType, BuildingType, BuildingState, PlayerType, \
+    TradeType, TradeCategory, TradeState
 
 
 class Tile:
+    """
+    Represents a tile on the AI side of the logic
+    The class is the core of the encapsulation of the game to pack in the AI state.
+    The tile is strongly connected by reference to its neighbors and to objects located on the tile
+    This redundancy in information allows for fast, efficient algorithms in the AI logic
+    Neighbours are set via the connect_graph function in Map, do not set them manually
+    """
     def __init__(self, o_c: Tuple[int, int], gt: GroundType):
         self.offset_coordinates: Tuple[int, int] = o_c
         self.ground_type: Optional[GroundType] = gt
@@ -63,6 +71,7 @@ class Tile:
     def has_n_nw(self):
         return self.tile_nw is not None
 
+
 @dataclass
 class AI_Player:
     id: int
@@ -75,7 +84,6 @@ class AI_Player:
     population_limit: int
 
 
-
 @dataclass
 class AI_Opponent:
     id: int
@@ -86,10 +94,67 @@ class AI_Opponent:
     # attack_loc: List[Tuple[int, Tuple[int, int]]]    # aggressor's id and location of attack
 
 
+@dataclass
+class AI_Trade:
+    """
+    Trade representation on AI side. See src/misc/trade_hub.py for more information
+    """
+    """ID of the owner of the trade, in contrary to the target id"""
+    owner_id: int
+    """type -> see TradeType"""
+    type: TradeType
+    """tuple, with category (resource, culture etc.) and amount"""
+    offer: (TradeCategory, int)
+    """tuple, with category (resource, culture etc.) and amount"""
+    demand: (TradeCategory, int)
+    """state -> see TradeState"""
+    state: TradeState
+    """target_ID -1 is an offer, which can be accepted by anyone.
+    However, a specific player can be targeted"""
+    target_id: int = -1
+
+    def can_accept(self, p: AI_Player) -> bool:
+        """
+        :param p: AI_player, representing own state
+        :return: True, if the player has enough resources, culture or food to accept the offer
+        """
+        if self.demand[0] is TradeCategory.FOOD:
+            return p.food > self.demand[1]
+        elif self.demand[0] is TradeCategory.CULTURE:
+            return p.culture > self.demand[1]
+        elif self.demand[0] is TradeCategory.RESOURCE:
+            return p.resources > self.demand[1]
+        return False
+
+    def get_ratio(self) -> float:
+        """
+        ratio is only properly defined for offers, not for gifts and claims
+        To be somewhat consistent, any gift will return a value of 100 and a claim of 0
+        :return: the ratio of the trade offer/demand -> thus greater is better
+        """
+        if self.type is TradeType.OFFER:
+            return self.offer[1] / self.demand[1]
+        else:
+            return 0 if self.type is TradeType.CLAIM else 100
+
+    def dump(self) -> str:
+        """
+        :return: get a string representation of the trade, mostly for output
+        """
+        sbuf = f"Trade: Owner {self.owner_id}, "
+        if self.offer:
+            sbuf += f"Offer[{self.offer[0].name}: {self.offer[1]}], "
+        if self.demand:
+            sbuf += f"Demand[{self.demand[0].name}: {self.demand[1]}], "
+        sbuf += f"State: {self.state.name}"
+        return sbuf
+
+
 class AI_Element:
     def __init__(self, t: Tile):
         self.base_tile: Tile = t
         self.offset_coordinates: Tuple[int, int] = self.base_tile.offset_coordinates
+
 
 class AI_Army(AI_Element):
     def __init__(self, t: Tile):
@@ -121,7 +186,11 @@ class AI_Building(AI_Element):
         # to check it (otherwise pathfinding might fail)
         self.visible = True
 
+
 class Map:
+    """
+    Wrapper class, holding most of the information which is available to the AI at a turn
+    """
     def __init__(self):
         self.map: Dict[Tuple[int, int], Tile] = {}
         # additional list which contain subsets of map (only the reference on the actual tile) for fast reference
@@ -251,19 +320,3 @@ class Map:
             print("")
             traceback.print_exc()
             raise KeyError
-
-
-
-    def print_map(self):
-        for k, v in self.map.items():
-            print(f" {v.tile_ne}  {v.tile_e} {v.tile_se} {v.tile_sw} {v.tile_w} {v.tile_nw}")
-            print(v.tile_sw)
-            print(v.tile_sw)
-            print(v.tile_sw)
-        # for v in self.discovered_tiles:
-        #     if v.has_resource():
-        #         print(f"{v.offset_coordinates} -> {v.tile_ne} {v.tile_e} {v.tile_se} {v.tile_sw} {v.tile_w} {v.tile_nw}")
-        # print("more shit")
-        # for k, v in self.map.items():
-        #     if v.is_buildable:
-        #         print(f"{v.offset_coordinates} -> {v.tile_ne} {v.tile_e} {v.tile_se} {v.tile_sw} {v.tile_w} {v.tile_nw}")

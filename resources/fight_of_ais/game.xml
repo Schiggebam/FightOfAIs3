@@ -113,58 +113,6 @@
         <st_lg_4_6_var_0 code="st_lg_4_6_var_0" offsetX="0" offsetY="0" scale="1">../resources/generated/st_lg_4_6_var_0.png</st_lg_4_6_var_0>
         <!-- end of generated textures -->
     </textures>
-    <map>
-        wd  wd  wd  wd  wd  wd  wd  wd  wd  wd  wd  wd  wd  wd  wd  wd  wd  wd  wd  wd
-          wd  wd  gr  gr  gr  gr  gr  gr  gr  gr  gr  gr  gr  gr  gr  gr  gr  gr  wd  wd
-        wd  wd  gr  gr  xx  xx  xx  xx  gr  gr  gr  gr  gr  xx  xx  xx  xx  gr  wd  wd
-          wd  wd  gr  xx  gc  gc  gc  xx  gr  gr  gr  gr  xx  gc  gc  gc  xx  gr  wd  wd
-        wd  wd  gr  xx  gc  gc  gc  gc  xx  gr  gr  gr  xx  gc  gc  gc  gc  xx  wd  wd
-          wd  wd  xx  gc  gc  gc  gc  gc  xx  gr  gr  gr  xx  gc  gc  gc  xx  gr  wd  wd
-        wd  wd  gr  xx  gc  gc  gc  gc  gc  xx  gr  gr  gr  xx  gc  gc  xx  gr  wd  wd
-          wd  wd  xx  gc  gc  gc  gc  gc  xx  gr  gr  gr  xx  gc  gc  xx  gr  gr  wd  wd
-        wd  wd  gr  xx  xx  gc  gc  xx  xx  gr  gr  gr  gr  xx  xx  xx  gr  gr  wd  wd
-          wd  wd  gr  gr  xx  xx  xx  gr  gr  gr  gr  gr  gr  gr  gr  gr  gr  gr  wd  wd
-        wd  wd  gr  gr  gr  gr  gr  gr  gr  gr  gr  gr  gr  gr  gr  gr  gr  gr  wd  wd
-          wd  wd  gr  gr  gr  gr  gr  gr  gr  gr  gr  gr  gr  gr  gr  gr  gr  gr  wd  wd
-        wd  wd  gr  gr  gr  gr  gr  gr  gr  gr  gr  gr  gr  gr  gr  gr  gr  gr  wd  wd
-          wd  wd  gr  gr  gr  gr  gr  gr  gr  gr  gr  gr  gr  gr  gr  gr  gr  gr  wd  wd
-        wd  wd  gr  gr  gr  gr  gr  gr  gr  gr  gr  gr  gr  gr  gr  gr  gr  gr  wd  wd
-          wd  wd  gr  gr  gr  gr  gr  gr  gr  gr  gr  gr  gr  gr  gr  gr  gr  gr  wd  wd
-        wd  wd  gr  gr  gr  gr  gr  uu  uu  uu  uu  uu  uu  gr  gr  gr  gr  gr  wd  wd
-          wd  wd  gr  gr  gr  gr  uu  st  st  st  st  st  uu  gr  gr  gr  gr  wd  wd  wd
-        wd  wd  gr  gr  gr  gr  uu  st  st  st  st  st  st  uu  gr  gr  gr  wd  wd  wd
-          wd  wd  gr  gr  gr  gr  uu  st  st  st  st  st  uu  gr  gr  gr  gr  wd  wd  wd
-        wd  wd  wd  gr  gr  gr  gr  uu  uu  uu  uu  uu  uu  gr  gr  gr  gr  gr  wd  wd
-          wd  wd  wd  gr  gr  gr  gr  gr  gr  gr  gr  gr  gr  gr  gr  gr  gr  wd  wd  wd
-        wd  wd  wd  wd  wd  gr  gr  gr  gr  gr  gr  gr  gr  gr  gr  gr  gr  wd  wd  wd
-          wd  wd  wd  wd  wd  wd  wd  wd  wd  wd  wd  wd  wd  wd  wd  wd  wd  wd  wd  wd
-        wd  wd  wd  wd  wd  wd  wd  wd  wd  wd  wd  wd  wd  wd  wd  wd  wd  wd  wd  wd
-    </map>
-    <map_obj>
-        --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --
-          --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --
-        --  --  --  --  --  f2  --  --  --  --  --  --  --  --  --  --  --  --  --  --
-          --  --  --  f2  f2  f2  --  --  --  --  --  --  --  --  --  f2  --  --  --  --
-        --  --  --  f2  f2  f2  --  --  --  --  --  --  --  --  f2  f2  f2  --  --  --
-          --  --  --  --  f2  --  --  --  --  --  --  --  --  --  f2  f2  --  --  --  --
-        --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --
-          --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --
-        --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --
-          --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --
-        --  --  --  --  --  --  --  --  f2  f2  f2  --  --  --  --  --  --  --  --  --
-          --  --  --  --  --  --  --  f2  --  f2  f2  --  --  --  --  --  --  --  --  --
-        --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --
-          --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --
-        --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  r1  --  --  --
-          --  --  --  r1  --  --  --  --  --  --  --  --  --  f2  f2  r1  --  --  --  --
-        --  --  --  --  r1  r1  --  --  --  --  --  --  --  --  --  --  r1  --  --  --
-          --  --  f2  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --
-        --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --
-          --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --
-        --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --
-          --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --
-        --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --
-    </map_obj>
     <resources>
         <rock code="r1" amount="100">description</rock>
         <gold code="g1" amount="200">description</gold>
@@ -208,10 +156,10 @@
             resource_per_turn="1" sight_range="3" food_consumption="0" construction_time="0"
             defensive_value="10" flag_x="5" flag_y="65" grant_pop="5">description</Village1>
         <Village2 code="vl2" construction_cost="10" culture_per_turn="1" resource_per_field="0"
-            resource_per_turn="2" sight_range="3" food_consumption="0" construction_time="0"
+            resource_per_turn="1" sight_range="3" food_consumption="0" construction_time="0"
             defensive_value="12" flag_x="5" flag_y="65" grant_pop="10">description</Village2>
         <Village3 code="vl3" construction_cost="12" culture_per_turn="2" resource_per_field="0"
-            resource_per_turn="3" sight_range="3" food_consumption="0" construction_time="0"
+            resource_per_turn="2" sight_range="3" food_consumption="0" construction_time="0"
             defensive_value="15" flag_x="5" flag_y="65" grant_pop="15">description</Village3>
         <Barracks code="br" construction_cost="25" culture_per_turn="0" resource_per_field="0"
                resource_per_turn="0" sight_range="3" food_consumption="0" construction_time="2"
@@ -233,27 +181,7 @@
         <Barbaric_Soldier code="unit_c" name="barbaric soldier" attack="1" defence="2" population="1"
                           cost_resource="3" cost_culture="0">description</Barbaric_Soldier>
     </units>
-    <players>
-        <!-- Documentation:
-            colour: can be 'red', 'teal', 'yellow', 'blue', 'green' or 'pink'
-            spawn_x, spawn_y: spawn location of the players initial building
-                hint: the initial building is defined in player.py
-            ai: this can be: 'expansionist', 'barbaric', 'villager' or 'human'
-            army_rel_to_spawn_x, army_rel_to_spawn_y: defines the location of the initial army,
-                                                      relative to the initial building
-        -->
-        <player1 colour="red" spawn_x="10" spawn_y="10" ai="expansionist"
-                 army_rel_to_spawn_x="-1" army_rel_to_spawn_y="-1">peter pan</player1>
-        <!--<player2 colour="teal" spawn_x="14" spawn_y="6" ai="expansionist"
-                 army_rel_to_spawn_x="0" army_rel_to_spawn_y="-1">peter pan</player2>-->
-<!--        <human colour="green" spawn_x="10" spawn_y="10" ai="human"-->
-<!--               army_rel_to_spawn_x="-1" army_rel_to_spawn_y="0">BLUBKOPF</human>-->
-        <barbar1 colour="yellow" spawn_x="5" spawn_y="9" ai="barbaric"
-                 army_rel_to_spawn_x="+1" army_rel_to_spawn_y="-1">Barbaric 1</barbar1>
-<!--        <barbar2 colour="blue" spawn_x="12" spawn_y="15" ai="barbaric"-->
-<!--                 army_rel_to_spawn_x="+1" army_rel_to_spawn_y="-1">Barbaric 2</barbar2>-->
-        <village colour="teal" spawn_x="12" spawn_y="15" ai="villager"
-                 army_rel_to_spawn_x="-2" army_rel_to_spawn_y="0">Villager 1</village>
-
-    </players>
+    <other>
+        <cost_scouting>1</cost_scouting>
+    </other>
 </game>

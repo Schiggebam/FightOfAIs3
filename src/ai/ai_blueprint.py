@@ -1,13 +1,7 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
-from typing import Callable, Tuple, List, Union, Optional, Dict
-from enum import Enum
-
-from src.ai.toolkit import essentials
 from src.ai.AI_GameStatus import AI_GameStatus, AI_Move
-from src.ai.AI_MapRepresentation import AI_Building, AI_Army, Tile
-from src.misc.game_constants import DiploEventType, error, Priority, UnitType, BuildingType, debug, hint, Definitions
+from src.misc.game_constants import DiploEventType, debug, hint, Definitions
 from src.misc.game_logic_misc import Logger
 
 
@@ -30,9 +24,12 @@ class AI_Diplo:
     LOGGED_EVENTS = (DiploEventType.ENEMY_BUILDING_IN_CLAIMED_ZONE,
                      DiploEventType.ENEMY_ARMY_INVADING_CLAIMED_ZONE)
 
+    event_count = 0
+
     class AI_DiploEvent:
         """ Intern class to handle Events. They are broadcasted to the Logger"""
-        def __init__(self, target_id: int, rel_change: float, lifetime: int, event: DiploEventType, description: str):
+        def __init__(self, event_id: int, target_id: int, rel_change: float, lifetime: int,
+                     event: DiploEventType, description: str):
             self.rel_change = rel_change
             self.lifetime = lifetime
             self.lifetime_max = lifetime
@@ -40,6 +37,7 @@ class AI_Diplo:
             self.loc = (-1, -1)
             self.event: DiploEventType = event
             self.target_id: int = target_id
+            self.event_id = event_id
 
         def add_loc(self, loc: (int, int)):
             self.loc = loc
@@ -51,9 +49,13 @@ class AI_Diplo:
         for o_p in other_players:
             self.diplomacy.append([o_p, float(AI_Diplo.DIPLO_BASE_VALUE)])
 
+    def add_event_no_loc(self, target_id: int, event: DiploEventType, rel_change: float, lifetime: int,):
+        self.add_event(target_id, (-1, -1), event, rel_change, lifetime)
+
     def add_event(self, target_id: int, loc: (int, int), event: DiploEventType, rel_change: float, lifetime: int):
         """
-        add an event. For more details read class description
+        add an event. For more details read class description.
+        will not add an event, if there is already an event with equal target_id, event_type and location
 
         :param target_id: id of the owner of the cause of the event. For instance, the owner id of the hostile army
         :param loc: location of the event. This will be used to identify if a event for this cause exists already
@@ -69,11 +71,12 @@ class AI_Diplo:
                 return
         # otherwise, if event does not exist, yet
         event_str = DiploEventType.get_event_description(event, loc)
-        ai_event = AI_Diplo.AI_DiploEvent(target_id, rel_change, lifetime, event, event_str)
+        ai_event = AI_Diplo.AI_DiploEvent(AI_Diplo.__next_id(), target_id, rel_change, lifetime, event, event_str)
         ai_event.add_loc(loc)
         self.events.append(ai_event)
         if event in AI_Diplo.LOGGED_EVENTS:
             Logger.log_diplomatic_event(event, rel_change, loc, lifetime, self.name)
+        print(self.events)
 
     def calc_round(self):
         """
@@ -116,6 +119,11 @@ class AI_Diplo:
                 lowest_value = value
                 lowest_pid = pid
         return lowest_pid
+
+    @staticmethod
+    def __next_id() -> int:
+        AI_Diplo.event_count += 1
+        return AI_Diplo.event_count
 
 
 

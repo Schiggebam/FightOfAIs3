@@ -1,9 +1,6 @@
-
-import timeit
 from typing import Tuple, Optional, Union, List, Any, Dict
 
-from src.ai.AI_MapRepresentation import Map, AI_Player, AI_Opponent
-
+from src.ai.AI_MapRepresentation import Map, AI_Player, AI_Opponent, AI_Trade
 from src.misc.game_constants import error, UnitType, BuildingType, MoveType, UnitCost, debug
 
 """This file (together with AI_map_representation) handles the interaction between game and AI/HI"""
@@ -29,9 +26,12 @@ class AI_Move:
         self.loc: Tuple[int, int] = (0, 0)
         """In case of recruiting a unit or building, this field holds the Unit/BuildingType"""
         self.type: Union[BuildingType, UnitType, None] = None
-        """addidional args, currently only used to transfer a list of offset_c. to specify 
+        """additional args, currently only used to transfer a list of offset_c. to specify 
         where to put the fields in case a farm has to be built"""
         self.info: List[Any] = []  # currently only for the associated tiles
+        """trades. If the AI decides to accept a trade -> type should be accepted. 
+        If it decides to make a new offer/demand/gift -> type should be new"""
+        self.trades: List[AI_Trade] = []
 
         """Debug/UI"""
         self.str_rep_of_action: str = ""  # just for printing
@@ -61,6 +61,8 @@ class AI_GameStatus:
         self.me: Optional[AI_Player] = None
         """the information which is available to the AI of their opponents"""
         self.opponents: Optional[List[AI_Opponent]] = None
+        """list of active trades, these can be offers, claims or gifts"""
+        self.trades: List[AI_Trade] = []
 
     def clear(self):
         pass
@@ -96,26 +98,15 @@ class AI_GameInterface:
     def create_ai_status(ai_stat: AI_GameStatus, turn_nr,
                          scout_cost, ai_map: Map, me: AI_Player, opponents: List[AI_Opponent],
                          building_costs: Dict[BuildingType, int],
-                         unit_cost: Dict[UnitType, UnitCost]):
+                         unit_cost: Dict[UnitType, UnitCost], trades: List[AI_Trade]):
         ai_stat.turn_nr = turn_nr
         ai_stat.map = ai_map
         ai_stat.me = me
         ai_stat.opponents = opponents
-
+        ai_stat.trades = trades
         ai_stat.costScout = scout_cost
-        # TODO costs to dict:
         ai_stat.cost_building_construction = building_costs
         ai_stat.cost_unit_recruitment = unit_cost
-
-    # def run(self,  ai_stat: AI_GameStatus, move: AI_Move, player_id):
-    #     self.dict_of_ais[player_id].do_move(ai_stat, move)
-    #     # performance logging
-    #     from src.ai.performance import ScoreSpentResources
-    #     score = ScoreSpentResources.evaluate(ai_stat.map)
-    #     from src.ai.performance import PerformanceLogger
-    #     PerformanceLogger.log_performance_file(ai_stat.turn_nr, ai_stat.me.id, score)
-    #     self.__has_finished = True
-    #     self.time_end = timeit.default_timer()
 
     def do_a_move(self, ai_stat: AI_GameStatus, move: AI_Move, player_id):
         """spawns a new thread which does the AI calculations to reduce load/stalls in update thread"""

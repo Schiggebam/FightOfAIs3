@@ -84,7 +84,8 @@ class AI_NPC(AI):
         movement_options.extend(self.calculate_army_movement(ai_stat))
 
         self.weight_options(ai_stat, move, all_options, movement_options)
-
+        self.evaluate_trades(ai_stat, move)
+        self.dump_diplomacy()
 
         # keep values
         if len(ai_stat.map.army_list) > 0:
@@ -94,6 +95,9 @@ class AI_NPC(AI):
         self.previous_amount_of_buildings = len(ai_stat.map.building_list)
         self.hostile_player.clear()
         self.claimed_tiles.clear()
+
+    def evaluate_trades(self, ai_stat: AI_GameStatus, move: AI_Move):
+        pass
 
     def calculate_army_movement(self, ai_stat: AI_GameStatus) -> List[ArmyMovementOption]:
         pass

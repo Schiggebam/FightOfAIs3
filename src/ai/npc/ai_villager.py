@@ -1,9 +1,10 @@
 from typing import Tuple
 
+from src.ai.AI_MapRepresentation import AI_Trade
 from src.ai.ai_npc import *
 from src.ai.toolkit.essentials import get_distance, get_neighbours_on_set, get_tile_by_xy
 from src.ai.toolkit.movement import next_step_to_target, protective_movement
-from src.misc.game_constants import DiploEventType
+from src.misc.game_constants import DiploEventType, TradeType, TradeCategory, TradeState
 
 
 class Villager(AI_NPC):
@@ -62,7 +63,6 @@ class Villager(AI_NPC):
             else:
                 self.diplomacy.add_event(e_a.owner, e_a.offset_coordinates, DiploEventType.PROTECTIVE_ARMY_SPOTTED,
                                          +2.0, 1)
-        self.dump_diplomacy()
 
     def calculate_army_movement(self, ai_stat: AI_GameStatus) -> List[ArmyMovementOption]:
         """
@@ -120,3 +120,18 @@ class Villager(AI_NPC):
                 if next_step:
                     movements.append(ArmyMovementOption(h_target, Priority.P_MEDIUM, next_step.offset_coordinates))
         return movements
+
+    def evaluate_trades(self, ai_stat: AI_GameStatus, move: AI_Move):
+        for trade in ai_stat.trades:
+            if trade.owner_id == ai_stat.me.id:
+                continue
+        if ai_stat.me.food > 10:
+            # self._dump("new trade: food for culture")
+            move.trades.append(AI_Trade(ai_stat.me.id, TradeType.OFFER, (TradeCategory.FOOD, 10),
+                                        (TradeCategory.CULTURE, 20), TradeState.NEW))
+            # self._dump("new gift for player 0")
+            # move.trades.append(AI_Trade(ai_stat.me.id, TradeType.GIFT, (TradeCategory.FOOD, 5), None,
+            #                             TradeState.NEW, target_id=0))
+            move.trades.append(AI_Trade(ai_stat.me.id, TradeType.CLAIM, None, (TradeCategory.CULTURE, 5),
+                                        TradeState.NEW, target_id=0))
+

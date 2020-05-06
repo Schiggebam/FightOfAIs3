@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<game xmlns:xi="http://www.w3.org/2001/XInclude">
+    <xi:include href="fight_of_ais/game.xml"/>
+    <map>
+        wd  wd  wd  wd  wd  wd  wd  wd  wd  wd  wd  wd  wd  wd  wd  wd  wd  wd  wd  wd
+          wd  wd  gr  gr  gr  gr  gr  gr  gr  gr  gr  gr  gr  gr  gr  gr  gr  gr  wd  wd
+        wd  wd  gr  gr  xx  xx  xx  xx  gr  gr  gr  gr  gr  xx  xx  xx  xx  gr  wd  wd
+          wd  wd  gr  xx  gc  gc  gc  xx  gr  gr  gr  gr  xx  gc  gc  gc  xx  gr  wd  wd
+        wd  wd  gr  xx  gc  gc  gc  gc  xx  gr  gr  gr  xx  gc  gc  gc  gc  xx  wd  wd
+          wd  wd  xx  gc  gc  gc  gc  gc  xx  gr  gr  gr  xx  gc  gc  gc  xx  gr  wd  wd
+        wd  wd  gr  xx  gc  gc  gc  gc  gc  xx  gr  gr  gr  xx  gc  gc  xx  gr  wd  wd
+          wd  wd  xx  gc  gc  gc  gc  gc  xx  gr  gr  gr  xx  gc  gc  xx  gr  gr  wd  wd
+        wd  wd  gr  xx  xx  gc  gc  xx  xx  gr  gr  gr  gr  xx  xx  xx  gr  gr  wd  wd
+          wd  wd  gr  gr  xx  xx  xx  gr  gr  gr  gr  gr  gr  gr  gr  gr  gr  gr  wd  wd
+        wd  wd  gr  gr  gr  gr  gr  gr  gr  gr  gr  gr  gr  gr  gr  gr  gr  gr  wd  wd
+          wd  wd  gr  gr  gr  gr  gr  gr  gr  gr  gr  gr  gr  gr  gr  gr  gr  gr  wd  wd
+        wd  wd  gr  gr  gr  gr  gr  gr  gr  gr  gr  gr  gr  gr  gr  gr  gr  gr  wd  wd
+          wd  wd  gr  gr  gr  gr  gr  gr  gr  gr  gr  gr  gr  gr  gr  gr  gr  gr  wd  wd
+        wd  wd  gr  gr  gr  gr  gr  gr  gr  gr  gr  gr  gr  gr  gr  gr  gr  gr  wd  wd
+          wd  wd  gr  gr  gr  gr  gr  gr  gr  gr  gr  gr  gr  gr  gr  gr  gr  gr  wd  wd
+        wd  wd  gr  gr  gr  gr  gr  uu  uu  uu  uu  uu  uu  gr  gr  gr  gr  gr  wd  wd
+          wd  wd  gr  gr  gr  gr  uu  st  st  st  st  st  uu  gr  gr  gr  gr  wd  wd  wd
+        wd  wd  gr  gr  gr  gr  uu  st  st  st  st  st  st  uu  gr  gr  gr  wd  wd  wd
+          wd  wd  gr  gr  gr  gr  uu  st  st  st  st  st  uu  gr  gr  gr  gr  wd  wd  wd
+        wd  wd  wd  gr  gr  gr  gr  uu  uu  uu  uu  uu  uu  gr  gr  gr  gr  gr  wd  wd
+          wd  wd  wd  gr  gr  gr  gr  gr  gr  gr  gr  gr  gr  gr  gr  gr  gr  wd  wd  wd
+        wd  wd  wd  wd  wd  gr  gr  gr  gr  gr  gr  gr  gr  gr  gr  gr  gr  wd  wd  wd
+          wd  wd  wd  wd  wd  wd  wd  wd  wd  wd  wd  wd  wd  wd  wd  wd  wd  wd  wd  wd
+        wd  wd  wd  wd  wd  wd  wd  wd  wd  wd  wd  wd  wd  wd  wd  wd  wd  wd  wd  wd
+    </map>
+    <map_obj>
+        --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --
+          --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --
+        --  --  --  --  --  f2  --  --  --  --  --  --  --  --  --  --  --  --  --  --
+          --  --  --  f2  f2  f2  --  --  --  --  --  --  --  --  --  f2  --  --  --  --
+        --  --  --  f2  f2  f2  --  --  --  --  --  --  --  --  f2  f2  f2  --  --  --
+          --  --  --  --  f2  --  --  --  --  --  --  --  --  --  f2  f2  --  --  --  --
+        --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --
+          --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --
+        --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --
+          --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --
+        --  --  --  --  --  --  --  --  f2  f2  f2  --  --  --  --  --  --  --  --  --
+          --  --  --  --  --  --  --  f2  --  f2  f2  --  --  --  --  --  --  --  --  --
+        --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --
+          --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --
+        --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  r1  --  --  --
+          --  --  --  r1  --  --  --  --  --  --  --  --  --  f2  f2  r1  --  --  --  --
+        --  --  --  --  r1  r1  --  --  --  --  --  --  --  --  --  --  r1  --  --  --
+          --  --  f2  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --
+        --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --
+          --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --
+        --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --
+          --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --
+        --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --
+    </map_obj>
+    <players>
+        <!-- Documentation:
+            colour: can be 'red', 'teal', 'yellow', 'blue', 'green' or 'pink'
+            spawn_x, spawn_y: spawn location of the players initial building
+                hint: the initial building is defined in player.py
+            ai: this can be: 'expansionist', 'barbaric', 'villager' or 'human'
+            army_rel_to_spawn_x, army_rel_to_spawn_y: defines the location of the initial army,
+                                                      relative to the initial building
+        -->
+<!--        <player1 colour="red" spawn_x="10" spawn_y="10" ai="expansionist"-->
+<!--                 army_rel_to_spawn_x="-1" army_rel_to_spawn_y="-1">peter pan</player1>-->
+        <!--<player2 colour="teal" spawn_x="14" spawn_y="6" ai="expansionist"
+                 army_rel_to_spawn_x="0" army_rel_to_spawn_y="-1">peter pan</player2>-->
+        <human colour="green" spawn_x="10" spawn_y="10" ai="human"
+               army_rel_to_spawn_x="-1" army_rel_to_spawn_y="0">BLUBKOPF</human>
+        <barbar1 colour="yellow" spawn_x="5" spawn_y="9" ai="barbaric"
+                 army_rel_to_spawn_x="+1" army_rel_to_spawn_y="-1">Barbaric 1</barbar1>
+<!--        <barbar2 colour="blue" spawn_x="12" spawn_y="15" ai="barbaric"-->
+<!--                 army_rel_to_spawn_x="+1" army_rel_to_spawn_y="-1">Barbaric 2</barbar2>-->
+        <village colour="teal" spawn_x="12" spawn_y="15" ai="villager"
+                 army_rel_to_spawn_x="-2" army_rel_to_spawn_y="0">Villager 1</village>
+
+    </players>
+</game>

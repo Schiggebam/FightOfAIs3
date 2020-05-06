@@ -9,6 +9,7 @@ from src.hex_map import HexMap, MapStyle
 from src.misc.animation import Animator
 from src.misc.game_constants import *
 from src.misc.game_logic_misc import *
+from src.misc.trade_hub import TradeHub
 from src.texture_store import TextureStore
 from src.ui.extern.extern_ai_display import AIControl
 
@@ -28,6 +29,7 @@ class GameLogic:
         self.scenario: Scenario = Scenario()
         self.income_calc: IncomeCalculator = IncomeCalculator(self.hex_map, self.scenario)
         self.animator: Animator = Animator()
+        self.trade_hub: TradeHub = TradeHub()
 
         tex_dict = {}
         self.game_file_reader.read_textures_to_dict(tex_dict)
@@ -279,6 +281,7 @@ class GameLogic:
             self.nextPlayerButtonPressed = False
             if self.current_player == 0:  # next time player 0 plays -> new turn
                 self.turn_nr = self.turn_nr + 1
+                self.trade_hub.next_turn(self.player_list)
             self.current_player = (self.current_player + 1) % len(self.player_list)
             if self.player_list[self.current_player].player_type is PlayerType.HUMAN:
                 self.playNextTurn = True
@@ -399,6 +402,8 @@ class GameLogic:
                         tmp.has_attacked = True
                         # tmp.attack_loc.append((pid, loc))
 
+        trades = self.trade_hub.get_trades_for_ai(player.id)
+
         scout_cost = 1
         b_costs: Dict[BuildingType, int] = {}
         for t_b in BuildingType:
@@ -409,11 +414,8 @@ class GameLogic:
             u_costs[t_u] = Unit.get_unit_cost(t_u)
 
         AI_GameInterface.create_ai_status(ai_game_status, self.turn_nr, scout_cost,
-                                          ai_map, me, opponents, b_costs, u_costs)
+                                          ai_map, me, opponents, b_costs, u_costs, trades)
         player.attacked_set.clear()
-
-
-
 
     def destroy_player(self, player):
         """cleans up the board, if a player has lost"""
@@ -583,6 +585,10 @@ class GameLogic:
             else:
                 error("No army available")
 
+        # handle trades.
+        if len(ai_move.trades) > 0:
+            self.trade_hub.handle_ai_output(ai_move.trades, player, self.player_list)
+        # self.trade_hub.print_active_trades()
 
 
     def __check_validity(self, ai_move: AI_Move):

@@ -47,7 +47,6 @@ class Barbaric(AI_NPC):
         for opp in ai_stat.opponents:
             if opp.has_attacked:
                 self.diplomacy.add_event(opp.id, (0, 0), DiploEventType.ATTACKED_BY_FACTION, -3.0, 3)
-        self.dump_diplomacy()
 
     def calculate_army_movement(self, ai_stat: AI_GameStatus) -> List[ArmyMovementOption]:
         targets: List[Union[AI_Building, AI_Army]] = []

@@ -1,0 +1,8 @@
+<?xml version="1.0" ?>
+<ModelInfo>
+  <Model ModelName="glow">
+    <Variables>
+     <Variable Alias="glow_val" Input="False" Output="True" />
+    </Variables>
+  </Model>
+</ModelInfo>

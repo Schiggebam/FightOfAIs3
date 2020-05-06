@@ -260,6 +260,10 @@ class DiploEventType(Enum):
     ENEMY_ARMY_INVADING_CLAIMED_ZONE = 103
     ATTACKED_BY_FACTION = 104
     PROTECTIVE_ARMY_SPOTTED = 105
+    # ---- TRADE  EVENTS ---
+    RECEIVED_GIFT = 116
+    RECEIVED_CLAIM = 117
+    DONE_DEAL = 118
 
     @staticmethod
     def get_event_description(event: DiploEventType, loc: Tuple[int, int]):
@@ -276,8 +280,7 @@ class DiploEventType(Enum):
         elif event is DiploEventType.PROTECTIVE_ARMY_SPOTTED:
             return "Protection by army"
         else:
-            error("Unknown event!")
-            return ""
+            return event.name
 
 class UnitType(Enum):
     KNIGHT = 0
@@ -295,9 +298,20 @@ class UnitType(Enum):
         return -1
 
 
-class OfferType(Enum):
-    RESOURCES_FOR_CULTURE = 210
-    CULTURE_FOR_RESOURCES = 211
+class TradeType(Enum):
+    """in a gift, specify only the offer of the trade. Nothing is given in return"""
+    GIFT = 220
+    """normal offer, where both demand and offer are specified"""
+    OFFER = 221
+    """only the demand is specified.
+    make sure to set the target_id field in AI_Trade if a specific player is targeted"""
+    CLAIM = 222
+
+
+class TradeCategory(Enum):
+    RESOURCE = 210
+    CULTURE = 211
+    FOOD = 212
 
 
 class PlayerColour(Enum):
@@ -402,6 +416,16 @@ class BuildingState(Enum):
     ACTIVE = 31
     DESTROYED = 32
 
+
+class TradeState(Enum):
+    """The AI can choose to accept a trade by setting the state from OPEN to ACCEPTED"""
+    ACCEPTED = 0
+    """default state of a trade"""
+    OPEN = 1
+    """if the AI chooses to open a new state, set it to new"""
+    NEW = 2
+    """Currently, only supported in relation with claims"""
+    REFUSED = 3
 
 class GameLogicState(Enum):
     NOT_READY = 0

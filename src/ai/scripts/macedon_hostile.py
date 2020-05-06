@@ -3,10 +3,10 @@ from typing import Any, Dict, Callable, Tuple, List
 from src.ai.toolkit import essentials
 from src.ai.AI_GameStatus import AI_GameStatus
 from src.ai.AI_Macedon import AI_Mazedonian
-from src.ai.AI_MapRepresentation import AI_Army, AI_Building
+from src.ai.AI_MapRepresentation import AI_Army, AI_Building, AI_Trade
 from src.ai.toolkit.basic import WaitOption, BuildOption, RecruitmentOption, ScoutingOption, RaiseArmyOption, \
     has_building_under_construction, UpgradeOption
-from src.misc.game_constants import hint, BuildingType
+from src.misc.game_constants import hint, BuildingType, TradeType, TradeState, DiploEventType, TradeCategory
 
 
 def on_setup(prop: Dict[str, Any]):
@@ -265,3 +265,46 @@ def setup_movement_weights(self: AI_Mazedonian) -> List[Tuple[Callable, float]]:
 
     hint(f"AI has found {len(aw)} movement weight functions.")
     return aw
+
+
+def setup_trade_weights(self: AI_Mazedonian) -> List[Callable[[AI_Trade, AI_GameStatus], None]]:
+    tw: List[Callable[[AI_Trade, AI_GameStatus], None]] = []
+
+    def tw1(trade: AI_Trade, ai_stat: AI_GameStatus):
+        """Idea: if receive a gift, accept it, and raise the diplomacy slightly"""
+        if trade.type is TradeType.GIFT:
+            trade.state = TradeState.ACCEPTED
+            self.diplomacy.add_event_no_loc(trade.owner_id, DiploEventType.RECEIVED_GIFT, +2, 5)
+            self._dump("Accepted gift: " + trade.dump())
+
+    tw.append(tw1)
+
+    def tw2(trade: AI_Trade, ai_stat: AI_GameStatus):
+        """Idea: if receive a claim, do not react to it, decrease diplomatic value"""
+        if trade.type is TradeType.CLAIM:
+            trade.state = TradeState.REFUSED
+            self.diplomacy.add_event_no_loc(trade.owner_id, DiploEventType.RECEIVED_CLAIM, -2, 5)
+            self._dump("Refused claim: " + trade.dump())
+
+    tw.append(tw2)
+
+    def tw3(trade: AI_Trade, ai_stat: AI_GameStatus):
+        """Idea: accept every offer which includes resources at a reasonable ratio"""
+        if trade.type is TradeType.OFFER:
+            if trade.can_accept(ai_stat.me):
+                if trade.get_ratio() > 0.5:
+                    if trade.offer[0] is TradeCategory.RESOURCE:
+                        if trade.demand[0] is TradeCategory.FOOD:
+                            if ai_stat.me.food > 30 and not self.is_loosing_food:
+                                trade.state = TradeState.ACCEPTED
+                        if trade.demand[0] is TradeCategory.CULTURE:
+                            if ai_stat.me.culture > 10:
+                                trade.state = TradeState.ACCEPTED
+        if trade.state is TradeState.ACCEPTED:
+            self.diplomacy.add_event_no_loc(trade.owner_id, DiploEventType.DONE_DEAL, +1, +5)
+            self._dump("Deal done : " + trade.dump())
+
+
+    tw.append(tw3)
+
+    return tw

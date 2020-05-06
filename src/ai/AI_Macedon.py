@@ -2,16 +2,16 @@ import random
 import timeit
 from dataclasses import dataclass
 from enum import Enum
-from typing import Set, List, Tuple, Union, Optional, Dict, Any
+from typing import Set, List, Tuple, Union, Optional, Dict, Any, Callable
 
 from src.ai.AI_GameStatus import AI_GameStatus, AI_Move
-from src.ai.AI_MapRepresentation import Tile, AI_Army, AI_Building
+from src.ai.AI_MapRepresentation import Tile, AI_Army, AI_Building, AI_Trade
 from src.ai.ai_blueprint import AI
 from src.ai.toolkit import essentials, basic
 from src.ai.toolkit.basic import Weight, BuildOption, RecruitmentOption, WaitOption, Compass, ScoutingOption, Option, \
     CardinalDirection, UpgradeOption
 from src.misc.game_constants import DiploEventType, hint, BuildingType, error, debug, UnitType, Priority, MoveType, \
-    PlayerType
+    PlayerType, TradeType, TradeState
 
 DETAILED_DEBUG = False
 BASIC_DEBUG = True
@@ -93,7 +93,7 @@ class AI_Mazedonian(AI):
 
         # values to move to the xml file: and dependent on personality
         self.properties: Dict[str, Any] = {}
-        from src.ai.scripts.macedon_hostile import on_setup, setup_weights, setup_movement_weights
+        from src.ai.scripts.macedon_hostile import on_setup, setup_weights, setup_movement_weights, setup_trade_weights
         on_setup(self.properties)
 
         # self.safety_dist_to_enemy_army: int = 3
@@ -125,6 +125,7 @@ class AI_Mazedonian(AI):
 
         self.weights: List[Weight] = []
         self.m_weights: List[Weight] = []
+        self.trade_decisions: List[Callable[[AI_Trade, AI_GameStatus], None]] = setup_trade_weights(self)
         for c, v in setup_weights(self):
             self.weights.append(Weight(c, v))
         for c, v in setup_movement_weights(self):
@@ -137,7 +138,6 @@ class AI_Mazedonian(AI):
         self.set_vars(ai_stat)
         self.create_heat_maps(ai_stat, move)
         self.update_diplo_events(ai_stat)
-        self.diplomacy.calc_round()
         t1_1 = timeit.default_timer()
         self.evaluate_hostile_players(ai_stat)
         self.estimate_opponent_strength(ai_stat)
@@ -171,6 +171,7 @@ class AI_Mazedonian(AI):
         all_options.append(WaitOption(Priority.P_MEDIUM))  # do nothing is an option
         self.weight_options(all_options, ai_stat, move)
         self.evaluate_army_movement(ai_stat, move)
+        self.evaluate_trades(ai_stat, move)
         self.set_counters(ai_stat)
         t4 = timeit.default_timer()
         # debug(f"Timings: {t2 - t1}, {t3 - t2}, {t4 - t3}, total: {t4 - t1}")
@@ -178,6 +179,14 @@ class AI_Mazedonian(AI):
         # debug(f"Detailled timing: {t_test_2 - t_test_1}")
         # clear out some data:
         self.reset_vars()
+        self.diplomacy.calc_round()
+        self.dump_diplomacy()
+
+    def evaluate_trades(self, ai_stat: AI_GameStatus, move: AI_Move):
+        for trade in ai_stat.trades:
+            for decision in self.trade_decisions:
+                decision(trade, ai_stat)
+        move.trades = ai_stat.trades
 
     def evaluate_army_movement(self, ai_stat: AI_GameStatus, move: AI_Move):
         if len(ai_stat.map.army_list) == 0:
@@ -905,7 +914,7 @@ class AI_Mazedonian(AI):
         self._dump(f"Free tiles: {self.num_free_tiles} ({self.num_free_tiles/len(ai_stat.map.discovered_tiles)*100:.1} %)")
         # hint(f"N: {self.compass.}, E: {self.compass.east}, S: {self.compass.south}, W: {self.compass.west}")
         # dump active events:
-        self.dump_diplomacy()
+
 
     def get_army_spawn_loc(self, ai_stat: AI_GameStatus) -> Tuple[int, int]:
         nei: List[Tile] = essentials.get_neighbours_on_set(ai_stat.map.building_list[0].base_tile, ai_stat.map.walkable_tiles)

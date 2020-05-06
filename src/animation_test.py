@@ -40,6 +40,7 @@ class FPSCounter:
         else:
             return len(self.frame_times) / sum(self.frame_times)
 
+
 class BadFlag(arcade.Sprite):
     def __init__(self, x, y):
         self.counter = 0
@@ -53,23 +54,23 @@ class BadFlag(arcade.Sprite):
         self.set_texture(self.current_tex)
         self.center_x = x
         self.center_y = y
+        self.scale = 0.25
 
     def update_a(self):
-        self.current_tex = (self.current_tex + 1) % self.counter
         self.set_texture(self.current_tex)
 
 
-class Flag(arcade.AnimatedTimeSprite):
-    def __init__(self, x, y):
-        super().__init__()
-        path = "../resources/objects/animated/flag_100_sprite_green.png"
-        for i in range(10):
-            tex: arcade.Texture = arcade.load_texture(path, x=0, y=i*100, width=108, height=100)
-            self.append_texture(tex)
-        self.set_texture(0)
-        self.center_x = x
-        self.center_y = y
-        self.scale = 0.25
+# class Flag(arcade.AnimatedTimeSprite):
+#     def __init__(self, x, y):
+#         super().__init__()
+#         path = "../resources/objects/animated/flag_100_sprite_green.png"
+#         for i in range(10):
+#             tex: arcade.Texture = arcade.load_texture(path, x=0, y=i*100, width=108, height=100)
+#             self.append_texture(tex)
+#         self.set_texture(0)
+#         self.center_x = x
+#         self.center_y = y
+#         self.scale = 0.25
 
 
 
@@ -130,7 +131,7 @@ class MyGame(arcade.Window):
         self.flag_sl = arcade.SpriteList(use_spatial_hash=False, is_static=True)
         for i in range(10):
             for j in range(10):
-                flag = GoodFlag(50 + 50 * i, 100 + j * 75)
+                flag = BadFlag(50 + 50 * i, 100 + j * 75)
                 self.flag_sl.append(flag)
                 flag.set_texture(0)
 
@@ -167,11 +168,11 @@ class MyGame(arcade.Window):
         self.tot_time += delta_time
         # Start update timer
         t1 = timeit.default_timer()
-        print(self.tot_time)
+
         # #if self.tot_time > 0.2:
-        # for s in self.flag_sl:
-        #     s.update_animation()
-        #     #s.update_a()
+        for s in self.flag_sl:
+            s.update_animation()
+            s.update_a()
         # self.tot_time = 0
 
 

@@ -50,8 +50,6 @@ class ZlvlRenderer:
 
         self.ui.draw()
 
-
-
     def update(self, delta_t: float):
         rel = int(float(CAMERA_SENSITIVITY) * delta_t)
         if self.up_key:
