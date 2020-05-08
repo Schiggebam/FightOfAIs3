@@ -5,6 +5,7 @@ import os
 from os import sys, path
 import timeit
 
+from src.sound_engine import SoundEngine
 from src.misc.camera import Camera
 
 sys.path.append(path.dirname(path.dirname(path.abspath(__file__))))
@@ -264,7 +265,12 @@ def main():
     dcn: Optional[Decision] = None
     if Definitions.SHOW_STARTUP_CTRL:
         startup_ctrl = StartUp("../resources/")
-        startup_ctrl.start()  # start thread
+        startup_ctrl.start()  # start thread#
+
+        # sound_engine code
+        sndengine = SoundEngine()
+        sndengine.play_my_sound("menuLoop")
+
         while True:
             time.sleep(.5)
             dcn = startup_ctrl.has_decision()
